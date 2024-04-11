@@ -31,8 +31,19 @@
             "threshold": -39.5
         },
         "plugins_order": [
+            "rnnoise#0",
             "autogain#0",
             "limiter#0"
-        ]
+        ],
+        "rnnoise#0": {
+            "bypass": false,
+            "enable-vad": false,
+            "input-gain": 0.0,
+            "model-path": "/home/shane/.config/easyeffects/rnnoise/sh.rnnn",
+            "output-gain": 0.0,
+            "release": 20.0,
+            "vad-thres": 30.0,
+            "wet": 0.0
+        }
     }
 }

@@ -2,10 +2,6 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-# TODO: Add a dev shell for deploying this, include nix 2.19 and nix-output-monitor
-# This could also be done by making ./rebuild into a #!/usr/bin/env nix, but I think that's less reliable
-# Maybe these two ideas could be combined together somehow?
-
 {
   description = "My system configuration";
 
@@ -40,8 +36,11 @@
       system = "x86_64-linux";
       functions = {
         findFirst = pred: list:
-          let first = builtins.elemAt list 0;
-          in if pred first then first else functions.findFirst pred (builtins.tail list);
+          if builtins.length list == 0 then
+            throw "findFirst: list is empty"
+          else
+            let first = builtins.elemAt list 0;
+            in if pred first then first else functions.findFirst pred (builtins.tail list);
         configs = file:
           functions.findFirst builtins.pathExists [
             "${self}/secrets/config/${file}"
@@ -54,15 +53,16 @@
       };
       pkgs-base = functions.importRepo inputs."pkgs-${base}";
     in {
-      devShells."${system}".default =
+      devShells.${system}.default =
         pkgs-base.mkShell { shellHook = ''exec nix repl --expr "builtins.getFlake \"$PWD?submodules=1\""''; };
-      packages."${system}".default = with pkgs-base;
+      formatter.${system} = pkgs-base.nixfmt;
+      packages.${system}.default = with pkgs-base;
         buildEnv {
           name = "flake-shell";
           paths = [ git nil nixfmt nix-output-monitor nixVersions.nix_2_19 ];
         };
-      formatter."${system}" = pkgs-base.nixfmt;
-      nixosConfigurations."system" = inputs."pkgs-${base}".lib.nixosSystem {
+      legacyPackages.${system} = self.nixosConfigurations.system.pkgs;
+      nixosConfigurations.system = inputs."pkgs-${base}".lib.nixosSystem {
         modules = [
           inputs."hm-${base}".nixosModules.home-manager
           {
@@ -72,7 +72,7 @@
               useUserPackages = true;
             };
             nixpkgs = with functions; {
-              hostPlatform = "${system}";
+              hostPlatform = system;
               inherit config;
               overlays = with inputs;
                 [
@@ -81,18 +81,18 @@
                     unstable = if base == "unstable" then prev else importRepo pkgs-unstable;
                     pinned = if base == "pinned" then prev else importRepo pkgs-pinned;
                     local = builtins.listToAttrs (map (file: {
-                      name = builtins.replaceStrings [ ".nix" ] [ "" ] "${file}";
+                      name = builtins.replaceStrings [ ".nix" ] [ "" ] file;
                       value = pkgs-base.callPackage "${./packages}/${file}" {
                         pkgs = pkgs-base;
                         inherit functions settings;
                       };
-                    }) (builtins.attrNames (builtins.readDir "${./packages}")));
+                    }) (builtins.attrNames (builtins.readDir ./packages)));
                   })
                 ];
             };
-            environment.etc."nix/inputs/pkgs".source = "${inputs."pkgs-${base}"}";
+            environment.etc."nix/inputs/pkgs".source = inputs."pkgs-${base}";
             nix = {
-              registry.pkgs.flake = inputs."pkgs-${base}"; # This doesn't have config passed
+              registry.pkgs.flake = self;
               settings = {
                 auto-optimise-store = true;
                 experimental-features = [ "nix-command" "flakes" ];

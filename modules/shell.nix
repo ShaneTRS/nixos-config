@@ -77,7 +77,7 @@ in {
         doas = {
           enable = true;
           extraRules = cfg.doas.extraRules ++ map (cmd: {
-            users = [ "${settings.user}" ];
+            users = [ settings.user ];
             keepEnv = true;
             noPass = true;
             cmd = cmd;

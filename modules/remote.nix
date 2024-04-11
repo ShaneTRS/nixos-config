@@ -48,7 +48,7 @@ in {
   config = mkIf cfg.enable (mkMerge [
     {
       security.doas.extraRules = mkIf cfg.usb.enable [{
-        users = [ "${settings.user}" ];
+        users = [ settings.user ];
         keepEnv = true;
         noPass = true;
         cmd = "usbip";

@@ -73,7 +73,7 @@ in {
         enable = true;
         displayManager.autoLogin = {
           enable = mkDefault true;
-          user = "${settings.user}";
+          user = settings.user;
         };
       };
     })

@@ -17,7 +17,7 @@ in {
   config = mkMerge [
     {
       shanetrs.settings = { inherit (settings) hostname graphics user; };
-      networking.hostName = "${cfg.hostname}";
+      networking.hostName = cfg.hostname;
     }
 
     # (mkIf (cfg.example == null) dummyCheck) # This gets "eagerly" evaluated

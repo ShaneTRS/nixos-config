@@ -61,7 +61,7 @@ in {
       git = mkOverride 900 {
         enable = true;
         userEmail = "${settings.user}@${settings.hostname}";
-        userName = "${settings.user}";
+        userName = settings.user;
         extraConfig = {
           safe.directory = "/etc/nixos";
           credential.helper = "store";
