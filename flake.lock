@@ -1,0 +1,123 @@
+{
+  "nodes": {
+    "hm-pinned": {
+      "inputs": {
+        "nixpkgs": [
+          "pkgs-pinned"
+        ]
+      },
+      "locked": {
+        "lastModified": 1706981411,
+        "narHash": "sha256-cLbLPTL1CDmETVh4p0nQtvoF+FSEjsnJTFpTxhXywhQ=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "652fda4ca6dafeb090943422c34ae9145787af37",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "652fda4ca6dafeb090943422c34ae9145787af37",
+        "type": "github"
+      }
+    },
+    "hm-stable": {
+      "inputs": {
+        "nixpkgs": [
+          "pkgs-stable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1712386041,
+        "narHash": "sha256-dA82pOMQNnCJMAsPG7AXG35VmCSMZsJHTFlTHizpKWQ=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "d6bb9f934f2870e5cbc5b94c79e9db22246141ff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "release-23.11",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "hm-unstable": {
+      "inputs": {
+        "nixpkgs": [
+          "pkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1712759992,
+        "narHash": "sha256-2APpO3ZW4idlgtlb8hB04u/rmIcKA8O7pYqxF66xbNY=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "31357486b0ef6f4e161e002b6893eeb4fafc3ca9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "pkgs-pinned": {
+      "locked": {
+        "lastModified": 1709309926,
+        "narHash": "sha256-VZFBtXGVD9LWTecGi6eXrE0hJ/mVB3zGUlHImUs2Qak=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "79baff8812a0d68e24a836df0a364c678089e2c7",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "rev": "79baff8812a0d68e24a836df0a364c678089e2c7",
+        "type": "indirect"
+      }
+    },
+    "pkgs-stable": {
+      "locked": {
+        "lastModified": 1712741485,
+        "narHash": "sha256-bCs0+MSTra80oXAsnM6Oq62WsirOIaijQ/BbUY59tR4=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b2cf36f43f9ef2ded5711b30b1f393ac423d8f72",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-23.11",
+        "type": "indirect"
+      }
+    },
+    "pkgs-unstable": {
+      "locked": {
+        "lastModified": 1712608508,
+        "narHash": "sha256-vMZ5603yU0wxgyQeHJryOI+O61yrX2AHwY6LOFyV1gM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4cba8b53da471aea2ab2b0c1f30a81e7c451f4b6",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "ref": "nixos-unstable",
+        "type": "indirect"
+      }
+    },
+    "root": {
+      "inputs": {
+        "hm-pinned": "hm-pinned",
+        "hm-stable": "hm-stable",
+        "hm-unstable": "hm-unstable",
+        "pkgs-pinned": "pkgs-pinned",
+        "pkgs-stable": "pkgs-stable",
+        "pkgs-unstable": "pkgs-unstable"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

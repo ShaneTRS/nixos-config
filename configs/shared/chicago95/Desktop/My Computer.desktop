@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=My Computer
+Comment=
+Exec=xfce4-settings-manager
+Icon=session-properties
+Path=
+Terminal=false
+StartupNotify=false

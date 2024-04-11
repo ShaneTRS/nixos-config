@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Inbox
+Comment=
+Exec=palemoon
+Icon=internet-mail
+Path=
+Terminal=false
+StartupNotify=false

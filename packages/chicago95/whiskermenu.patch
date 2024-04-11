@@ -1,0 +1,13 @@
+diff --git a/Theme/Chicago95/gtk-3.0/apps/whiskermenu.css b/Theme/Chicago95/gtk-3.0/apps/whiskermenu.css
+index 9b3afa9..84909dc 100644
+--- a/Theme/Chicago95/gtk-3.0/apps/whiskermenu.css
++++ b/Theme/Chicago95/gtk-3.0/apps/whiskermenu.css
+@@ -105,7 +105,7 @@ the whisker menu without having to correct their pointer location. */
+ /*    background-image: url("../assets/branding_L95.png"); */
+ /*    background-image: url("../assets/branding_L95_aliased.png"); */
+ /*    background-image: url("../assets/branding_C95.png"); */
+-    background-image: url("../assets/branding_C95_aliased.png");
++    background-image: url("../assets/branding_W95-orig.png");
+     background-repeat: no-repeat;
+     background-position: 0% 100%; }
+     #whiskermenu-window frame > stack,

@@ -1,0 +1,22 @@
+[xfdesktop-version-4.10.3+-rcfile_format]
+4.10.3+=true
+
+[$HOME/Desktop/My Computer.desktop]
+row=0
+col=0
+
+[$HOME/Desktop/Network Neighborhood.desktop]
+row=1
+col=0
+
+[$HOME/Desktop/Inbox.desktop]
+row=2
+col=0
+
+[$HOME/Desktop/Recycle Bin.desktop]
+row=3
+col=0
+
+[$HOME/Desktop/The Microsoft Network.desktop]
+row=4
+col=0

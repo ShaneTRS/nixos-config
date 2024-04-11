@@ -1,0 +1,51 @@
+#!/usr/bin/env nix
+#!nix shell --command bash
+
+[ -z "$SRC" ] && SRC="$HOME/.config/nixos"
+[ -z "$SECRETS" ] && SECRETS="$SRC/secrets"
+[ -z "$INTERACTIVE" ] && INTERACTIVE=true
+[ -z "$COMMIT" ] && COMMIT=true
+[ -z "$UPDATE" ] && UPDATE=false
+cd "$SRC" || exit
+
+update-repo() {(
+  cd "$1" || return
+  # Refresh tree to pick up any changes
+  git update-index --refresh >/dev/null
+
+  # Don't track changes in listed files
+  [ -n "$2" ] && git restore --staged "${@:1}"
+  [ -n "$2" ] && git update-index --assume-unchanged --skip-worktree "$@"
+
+  # Automatically commit when the tree is dirty before a real build
+  if ! git diff-index --quiet HEAD --; then
+    # shellcheck disable=SC3010
+    if $INTERACTIVE; then
+      git diff --color-words |
+        awk '!/--- a|+++ b|index [0-9a-z]{6}/ {print $0}' |
+        less -RK || exec echo "Cancelled configuration update"
+    fi
+    git add -A && git commit -m "AUTO: Configuration updated"
+  fi
+)}
+
+$COMMIT && [ "$1" != "test" ] && update-repo . hardware.nix
+$COMMIT && [ "$1" != "test" ] && update-repo secrets
+
+# Track changes in hardware.nix, so it can be used in the build
+git update-index --really-refresh hardware.nix
+
+# Update the repos and rebuild the system
+$UPDATE && nix flake update
+doas nixos-rebuild "$@" --flake ".?submodules=1#system" \
+    --log-format internal-json 2>&1 | nom --json
+
+# Ignore changes in hardware.nix again, for convenience in IDEs
+git restore --staged "hardware.nix"
+git update-index --assume-unchanged --skip-worktree hardware.nix
+
+# Symlink the shared and user home directories
+ln -sf "$SECRETS/home/." "$SRC/homes/secrets" 2>/dev/null
+"$SRC/homes/symlink" shared "$(awk -F'"' '/user =/{print $2}' flake.nix)" secrets/.
+
+exec true

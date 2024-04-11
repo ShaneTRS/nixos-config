@@ -1,0 +1,27 @@
+TigerVNC Configuration file Version 1.0
+
+X509CA=/home/shane/.vnc/x509_ca.pem
+X509CRL=/home/shane/.vnc/x509_crl.pem
+SecurityTypes=None,VncAuth,RA2ne,RA2ne_256,Plain,DH,MSLogonII,TLSNone,TLSVnc,TLSPlain,X509None,X509Vnc,X509Plain
+ReconnectOnError=0
+Shared=1
+AutoSelect=0
+FullColor=1
+LowColorLevel=2
+PreferredEncoding=raw
+CustomCompressLevel=1
+CompressLevel=0
+NoJPEG=0
+QualityLevel=7
+FullScreen=1
+FullScreenMode=Current
+FullScreenSelectedMonitors=1
+ViewOnly=0
+EmulateMiddleButton=0
+DotWhenNoCursor=0
+AcceptClipboard=1
+SendClipboard=1
+SendPrimary=1
+SetPrimary=1
+MenuKey=Scroll_Lock
+FullscreenSystemKeys=1

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=The Microsoft Network
+Comment=
+Exec=palemoon
+Icon=im-msn_2
+Path=
+Terminal=false
+StartupNotify=false
