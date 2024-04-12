@@ -42,11 +42,13 @@
             let first = builtins.elemAt list 0;
             in if pred first then first else functions.findFirst pred (builtins.tail list);
         configs = file:
-          functions.findFirst builtins.pathExists [
-            "${self}/secrets/config/${file}"
-            "${self}/configs/${settings.user}/${file}"
-            "${self}/configs/shared/${file}"
-          ];
+          let
+            attempt = builtins.tryEval (functions.findFirst builtins.pathExists [
+              "${self}/secrets/config/${file}"
+              "${self}/configs/${settings.user}/${file}"
+              "${self}/configs/shared/${file}"
+            ]);
+          in if attempt.success then attempt.value else throw "configs: '${file}' not found";
         secrets = "${self}/secrets"; # Returns the secrets directory
         flake = builtins.toString self; # Returns the base directory of the flake
         importRepo = repo: import repo { inherit system config; };

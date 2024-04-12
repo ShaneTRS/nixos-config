@@ -90,10 +90,10 @@ in {
             Unit.Description = "Low-latency VNC display server";
             Service = {
               Environment = "DISPLAY=:0";
-              ExecStart = ''
-                ${pkgs.local.not-nice}/bin/not-nice x0vncserver Geometry=2732x1536 -rfbauth "${
-                  functions.configs "vnc-passwd"
-                }" -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15'';
+              ExecStart = let attempt = builtins.tryEval (functions.configs "vnc-passwd");
+              in "${pkgs.local.not-nice}/bin/not-nice x0vncserver Geometry=2732x1536 ${
+                if attempt.success then ''-rfbauth "${attempt.value}"'' else ""
+              } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
@@ -189,13 +189,14 @@ in {
           (pkgs.makeDesktopItem {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";
-            # TODO: Make secret optional by setting the entirety of -passwd="${functions.configs "vnc-passwd"}" conditionally
             exec = "${
-                pkgs.writeScriptBin "loop-vncviewer" ''
+                let attempt = builtins.tryEval (functions.configs "vnc-passwd");
+                in pkgs.writeScriptBin "loop-vncviewer" ''
                   #!/usr/bin/env sh
                   while true; do
-                    vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 \
-                    -passwd="${functions.configs "vnc-passwd"}" /home/${settings.user}/.vnc/loop.tigervnc \
+                    vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
+                      if attempt.success then ''-passwd="${attempt.value}"'' else ""
+                    } /home/${settings.user}/.vnc/loop.tigervnc \
                     "$(${pkgs.local.addr-sort}/bin/addr-sort ${
                       lib.concatStringsSep " " config.shanetrs.remote.addresses.host
                     })"

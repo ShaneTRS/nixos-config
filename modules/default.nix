@@ -50,9 +50,10 @@ in {
   };
   home-manager.users.${settings.user} = {
     home.file = {
-      ".ssh" = mkIf (builtins.pathExists (functions.configs ".ssh")) (mkOverride 900 {
+      ".ssh" = let attempt = builtins.tryEval (functions.configs ".ssh");
+      in mkIf attempt.success (mkOverride 900 {
         recursive = true;
-        source = functions.configs ".ssh";
+        source = attempt.value;
       });
     };
     programs = {
