@@ -1,6 +1,6 @@
 { config, lib, functions, pkgs, settings, ... }:
 let
-  cfg = config.shanetrs.shell;
+  cfg = config.shanetrs.shell // { all_features = cfg.bash.features ++ cfg.zsh.features; };
   inherit (lib) mkEnableOption mkForce mkIf mkMerge mkOption types;
 in {
   options.shanetrs.shell = let
@@ -47,23 +47,28 @@ in {
         }];
       };
     };
+    extraPackages = mkOption {
+      type = types.listOf types.package;
+      default = [ ];
+    };
   };
 
-  config = let globbed_features = cfg.bash.features ++ cfg.zsh.features;
-  in mkMerge [
+  config = mkMerge [
     {
       users.defaultUserShell = mkIf (cfg.default != null) cfg.default;
       environment.systemPackages = with pkgs;
         [
-          (mkIf (builtins.elem "fastfetch" globbed_features) (fastfetch.overrideAttrs
+          (mkIf (builtins.elem "fastfetch" cfg.all_features) (fastfetch.overrideAttrs
             (old: { cmakeFlags = (old.cmakeFlags or [ ]) ++ [ "-DENABLE_IMAGEMAGICK7=true" ]; })))
-        ];
+        ] ++ cfg.extraPackages;
+      fonts.packages =
+        mkIf (builtins.elem "fastfetch" cfg.all_features) [ (pkgs.nerdfonts.override { fonts = [ "Hack" ]; }) ];
       home-manager.users.${settings.user} = {
-        home.packages = with pkgs; [ (mkIf (builtins.elem "ugrep" globbed_features) ugrep) ];
+        home.packages = with pkgs; [ (mkIf (builtins.elem "ugrep" cfg.all_features) ugrep) ];
         programs = {
-          eza.enable = mkIf (builtins.elem "eza" globbed_features) true;
-          fzf.enable = mkIf (builtins.elem "zoxide" globbed_features) true;
-          zoxide = mkIf (builtins.elem "zoxide" globbed_features) {
+          eza.enable = mkIf (builtins.elem "eza" cfg.all_features) true;
+          fzf.enable = mkIf (builtins.elem "zoxide" cfg.all_features) true;
+          zoxide = mkIf (builtins.elem "zoxide" cfg.all_features) {
             enable = true;
             options = [ "--cmd cd" ];
           };

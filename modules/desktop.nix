@@ -1,4 +1,4 @@
-{ config, lib, pkgs, settings, ... }:
+{ config, functions, lib, pkgs, settings, ... }:
 let
   cfg = config.shanetrs.desktop;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
@@ -75,7 +75,11 @@ in {
           enable = mkDefault true;
           user = settings.user;
         };
+        xkb.options = "compose:menu";
       };
+      home-manager.users.${settings.user}.home.file.".XCompose" =
+        let attempt = builtins.tryEval (functions.configs ".XCompose");
+        in mkIf attempt.success { source = attempt.value; };
     })
 
     (mkIf (cfg.session == "gnome") {
