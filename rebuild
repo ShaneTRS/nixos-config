@@ -11,7 +11,7 @@ cd "$SRC" || exit
 update-repo() {(
   cd "$1" || return
   # Refresh tree to pick up any changes
-  git update-index --refresh >/dev/null
+  git add -A; git update-index --refresh >/dev/null
 
   # Don't track changes in listed files
   [ -n "$2" ] && git restore --staged "${@:1}"
@@ -25,7 +25,7 @@ update-repo() {(
         awk '!/--- a|+++ b|index [0-9a-z]{6}/ {print $0}' |
         less -RK || exec echo "Cancelled configuration update"
     fi
-    git add -A && git commit -m "AUTO: Configuration updated"
+    git commit -am "AUTO: Configuration updated"
   fi
 )}
 

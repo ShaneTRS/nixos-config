@@ -50,8 +50,6 @@ in {
   };
   home-manager.users.${settings.user} = {
     home.file = {
-      ".git-credentials".source = mkIf (builtins.pathExists (functions.configs ".git-credentials"))
-        (mkOverride 900 (functions.configs ".git-credentials"));
       ".ssh" = mkIf (builtins.pathExists (functions.configs ".ssh")) (mkOverride 900 {
         recursive = true;
         source = functions.configs ".ssh";
