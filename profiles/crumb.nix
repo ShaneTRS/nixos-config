@@ -45,7 +45,7 @@
     };
   };
 
-  home-manager.users.${settings.user} = {
+  user = {
     xdg.configFile = {
       "Vencord" = {
         recursive = true;

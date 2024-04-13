@@ -48,7 +48,7 @@ in {
     mutableUsers = mkOverride 900 false;
     groups.realtime = mkOverride 900 { };
   };
-  home-manager.users.${settings.user} = {
+  user = {
     home.file = {
       ".ssh" = let attempt = builtins.tryEval (functions.configs ".ssh");
       in mkIf attempt.success (mkOverride 900 {

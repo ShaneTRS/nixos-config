@@ -64,9 +64,9 @@
           paths = [ git nil nixfmt nix-output-monitor nixVersions.nix_2_19 ];
         };
       legacyPackages.${system} = self.nixosConfigurations.system.pkgs;
-      nixosConfigurations.system = inputs."pkgs-${base}".lib.nixosSystem {
+      nixosConfigurations.system = let inherit (inputs."pkgs-${base}") lib;
+      in lib.nixosSystem {
         modules = [
-          inputs."hm-${base}".nixosModules.home-manager
           {
             home-manager = {
               extraSpecialArgs = { inherit functions settings; };
@@ -104,6 +104,8 @@
               };
             };
           }
+          inputs."hm-${base}".nixosModules.home-manager
+          (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" settings.user ])
           (./profiles + "/${settings.profile or settings.hostname}.nix")
           ./hardware.nix
           ./modules

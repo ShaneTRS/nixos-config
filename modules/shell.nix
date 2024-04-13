@@ -63,7 +63,7 @@ in {
         ] ++ cfg.extraPackages;
       fonts.packages =
         mkIf (builtins.elem "fastfetch" cfg.all_features) [ (pkgs.nerdfonts.override { fonts = [ "Hack" ]; }) ];
-      home-manager.users.${settings.user} = {
+      user = {
         home.packages = with pkgs; [ (mkIf (builtins.elem "ugrep" cfg.all_features) ugrep) ];
         programs = {
           eza.enable = mkIf (builtins.elem "eza" cfg.all_features) true;
@@ -101,7 +101,7 @@ in {
           ${cfg.zsh.extraRc}
         '';
       };
-      home-manager.users.${settings.user} = { config, ... }: {
+      user = { config, ... }: {
         home.packages = with pkgs; [ zsh-completions ];
         programs = {
           fzf.enableZshIntegration = true;
@@ -133,7 +133,7 @@ in {
     })
 
     (mkIf cfg.bash.enable {
-      home-manager.users.${settings.user}.programs = {
+      user.programs = {
         bash = {
           enable = true;
           historyFile = ".config/.bash_history";

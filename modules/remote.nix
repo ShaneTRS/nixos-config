@@ -67,7 +67,7 @@ in {
         load-module module-null-sink sink_name=roc-output sink_properties=device.description='${cfg.audio.sinkName}'
       '';
 
-      home-manager.users.${settings.user} = let
+      user = let
         roc-send-bin = pkgs.writeShellApplication {
           name = "roc-send.service";
           runtimeInputs = with pkgs; [ local.addr-sort local.not-nice pulseaudio roc-toolkit ];
@@ -114,7 +114,7 @@ in {
     })
 
     (mkIf (cfg.role == "client") {
-      home-manager.users.${settings.user} = let
+      user = let
         roc-recv-bin = pkgs.writeShellApplication {
           name = "roc-recv.service";
           runtimeInputs = with pkgs; [ local.not-nice roc-toolkit ];

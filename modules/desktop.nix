@@ -77,15 +77,14 @@ in {
         };
         xkb.options = "compose:menu";
       };
-      home-manager.users.${settings.user}.home.file.".XCompose" =
-        let attempt = builtins.tryEval (functions.configs ".XCompose");
-        in mkIf attempt.success { source = attempt.value; };
+      user.home.file.".XCompose" = let attempt = builtins.tryEval (functions.configs ".XCompose");
+      in mkIf attempt.success { source = attempt.value; };
     })
 
     (mkIf (cfg.session == "gnome") {
       xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gnome ];
       # environment.gnome.excludePackages
-      home-manager.users.${settings.user} = {
+      user = {
         dconf = {
           enable = true;
           settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
@@ -103,7 +102,7 @@ in {
     })
 
     (mkIf (cfg.session == "gnome" && cfg.preset == "pop") {
-      home-manager.users.${settings.user} = {
+      user = {
         dconf.settings = { "org/gnome/shell".enabled-extensions = [ "pop-shell@system76.com" ]; };
         home.packages = with pkgs; [ gnomeExtensions.pop-shell ];
       };
@@ -113,7 +112,7 @@ in {
       xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-kde ];
       # Maybe try to use plasma-manager for some settings
       programs.partition-manager.enable = true;
-      home-manager.users.${settings.user} = {
+      user = {
         home.packages = cfg.extraPackages;
         programs = {
           firefox = {
@@ -149,7 +148,7 @@ in {
         displayManager.defaultSession = "xfce";
         desktopManager.xfce.enable = true;
       };
-      home-manager.users.${settings.user}.home.packages = cfg.extraPackages;
+      user.home.packages = cfg.extraPackages;
     })
 
     (mkIf (cfg.session == "xfce" && cfg.preset == "win95") (let chicago95 = pkgs.local.chicago95;
@@ -159,7 +158,7 @@ in {
         fontconfig.allowBitmaps = true;
       };
       environment.systemPackages = with pkgs.xfce; [ xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin ];
-      home-manager.users.${settings.user} = {
+      user = {
         xdg.configFile = {
           "gtk-3.0" = {
             recursive = true;

@@ -2,14 +2,14 @@
 let
   cfg = config.shanetrs.settings;
   inherit (lib) mkIf mkMerge mkOption types;
-  # dummyCheck = {environment.systemPackages = [];};
+  dummyCheck = { environment.systemPackages = [ ]; };
 in {
-  # This is for type checking of settings
-  # This is a messy solution, as types are only checked via cfg, not via settings
-  # (which is how it is accessed in other modules)
-
   options.shanetrs.settings = {
     hostname = mkOption { type = types.str; };
+    profile = mkOption {
+      type = types.str;
+      default = cfg.hostname;
+    };
     graphics = mkOption { type = types.enum [ "intel" "nvidia" "virtualbox" ]; };
     user = mkOption { type = types.str; };
   };
@@ -20,7 +20,9 @@ in {
       networking.hostName = cfg.hostname;
     }
 
-    # (mkIf (cfg.example == null) dummyCheck) # This gets "eagerly" evaluated
+    # These get "eagerly" evaluated
+    (mkIf (cfg.profile == null) dummyCheck)
+    (mkIf (cfg.user == null) dummyCheck)
 
     (mkIf (cfg.graphics == "nvidia") {
       services.xserver.videoDrivers = [ "nvidia" ];
@@ -43,7 +45,7 @@ in {
         enable = true;
         x11 = true;
       };
-      home-manager.users.${cfg.user}.xsession = {
+      user.xsession = {
         enable = true;
         # This is a workaround for a NixOS option bug, I believe
         profileExtra = ''

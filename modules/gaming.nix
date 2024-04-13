@@ -1,4 +1,4 @@
-{ config, lib, pkgs, settings, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.shanetrs.gaming;
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
@@ -49,7 +49,7 @@ in {
   };
 
   config = mkMerge [
-    (mkIf cfg.epic.enable { home-manager.users.${settings.user}.home.packages = with pkgs; [ heroic ]; })
+    (mkIf cfg.epic.enable { user.home.packages = with pkgs; [ heroic ]; })
     (mkIf cfg.gamescope.enable {
       programs.gamescope = {
         enable = true;
@@ -60,7 +60,7 @@ in {
       };
     })
     (mkIf cfg.minecraft.enable {
-      home-manager.users.${settings.user} = {
+      user = {
         programs.java = {
           enable = true;
           package = cfg.java;

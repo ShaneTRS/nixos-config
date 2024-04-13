@@ -1,4 +1,4 @@
-{ config, lib, pkgs, settings, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.shanetrs.browser;
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
@@ -95,7 +95,7 @@ in {
 
   config = mkMerge [
     (mkIf cfg.firefox.enable {
-      home-manager.users.${settings.user}.programs.firefox = {
+      user.programs.firefox = {
         enable = true;
         package = cfg.firefox.package;
         profiles.default = {
@@ -118,7 +118,7 @@ in {
 
     (mkIf cfg.chromium.enable {
       # TODO: Implement search engines manually
-      home-manager.users.${settings.user}.programs.chromium = {
+      user.programs.chromium = {
         enable = true;
         extensions = map (id: { inherit id; }) cfg.chromium.extensions;
         package = cfg.chromium.package;

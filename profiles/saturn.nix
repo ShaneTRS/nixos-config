@@ -47,7 +47,7 @@
     };
   };
 
-  home-manager.users.${settings.user} = {
+  user = {
     home = {
       packages = with pkgs; [
         (discord-canary.override {

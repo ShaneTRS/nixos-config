@@ -1,4 +1,4 @@
-{ config, lib, pkgs, functions, settings, ... }:
+{ config, lib, pkgs, functions, ... }:
 let
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
   cfg = config.shanetrs.programs;
@@ -43,7 +43,7 @@ in {
   config = mkMerge [
     (mkIf cfg.easyeffects.enable {
       programs.dconf.enable = true;
-      home-manager.users.${settings.user} = {
+      user = {
         home.packages = [ cfg.easyeffects.package ];
         xdg.configFile."easyeffects" = {
           recursive = true;
@@ -53,7 +53,7 @@ in {
     })
     (mkIf cfg.vscode.enable {
       environment.systemPackages = with pkgs; mkIf (builtins.elem "nix" cfg.vscode.features) [ nil nixfmt ];
-      home-manager.users.${settings.user} = {
+      user = {
         programs.vscode = {
           enable = true;
           package = cfg.vscode.package;
