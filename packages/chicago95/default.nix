@@ -1,11 +1,9 @@
-{ pkgs, functions, ... }:
-# TODO: Consider moving config into the packages directory
-let chicago95conf = builtins.path { path = functions.configs "chicago95"; };
-in pkgs.stdenvNoCC.mkDerivation {
+{ pkgs, ... }:
+pkgs.stdenvNoCC.mkDerivation {
   pname = "chicago95";
   version = "3.1.0";
 
-  buildInputs = with pkgs; [ gdk-pixbuf xfce.xfce4-panel-profiles chicago95conf ];
+  buildInputs = with pkgs; [ gdk-pixbuf xfce.xfce4-panel-profiles ./import ];
 
   src = pkgs.fetchFromGitHub {
     owner = "grassmunk";
@@ -30,7 +28,7 @@ in pkgs.stdenvNoCC.mkDerivation {
     mv Extras/'Microsoft Windows 95 Startup Sound.ogg' $out/share/sounds/Chicago95/startup.ogg
     mv Fonts/bitmap/cronyx-cyrillic $out/share/fonts
 
-    cp -r ${chicago95conf} $out/import
+    cp -r ${./import} $out/import
     mkdir -p $out/repo
     cp -r . $out/repo
 

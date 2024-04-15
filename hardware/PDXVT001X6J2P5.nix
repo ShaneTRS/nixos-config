@@ -51,7 +51,7 @@
     size = 8192;
   }];
   nix = {
-    settings.max-jobs = 0;
+    settings.max-jobs = 1;
     distributedBuilds = true;
     buildMachines = [{
       hostName = "192.168.1.11";

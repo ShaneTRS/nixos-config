@@ -27,7 +27,10 @@
   outputs = { self, ... }@inputs:
     let
       machine = builtins.fromTOML (builtins.readFile ./machine.toml);
-      functions = {
+      inherit (machine) base serial system;
+      config.allowUnfree = true; # Needed for proprietary software
+      functions = let flake = self.outPath;
+      in {
         findFirst = pred: list: # Find first item to match predicate
           if builtins.length list == 0 then
             throw "findFirst: list is empty"
@@ -37,17 +40,17 @@
         configs = file: # Import a config, with most personal taking precedence
           let
             attempt = builtins.tryEval (functions.findFirst builtins.pathExists [
-              "${self}/secrets/config/${file}"
-              "${self}/configs/${machine.user}/${file}"
-              "${self}/configs/shared/${file}"
+              "${flake}/secrets/config/${file}"
+              "${flake}/configs/${machine.user}/${file}"
+              "${flake}/configs/shared/${file}"
             ]);
           in if attempt.success then attempt.value else throw "configs: '${file}' not found";
-        secrets = "${self}/secrets"; # Returns the secrets directory
-        flake = builtins.toString self; # Returns the base directory of the flake
-        importRepo = with machine; repo: import repo { inherit system config; }; # Pass system and config to repo
+        inherit flake; # Returns the base directory of the flake
+        secrets = "${flake}/secrets"; # Returns the secrets directory
+        importRepo = repo: import repo { inherit system config; }; # Pass system and config to repo
       };
-      pkgs-base = functions.importRepo inputs."pkgs-${machine.base}";
-    in with machine; {
+      pkgs-base = functions.importRepo inputs."pkgs-${base}";
+    in {
       devShells.${system}.default =
         pkgs-base.mkShell { shellHook = ''exec nix repl --expr "builtins.getFlake \"$PWD?submodules=1\""''; };
       formatter.${system} = pkgs-base.nixfmt;
