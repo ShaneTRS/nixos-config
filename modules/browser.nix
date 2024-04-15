@@ -10,6 +10,13 @@ in {
         type = types.package;
         default = pkgs.firefox;
       };
+      settings = mkOption {
+        type = types.attrs;
+        default = {
+          "widget.use-xdg-desktop-portal.file-picker" = 1;
+          "general.autoScroll" = 1;
+        };
+      };
       extensions = mkOption {
         type = types.attrsOf types.str;
         default = {
@@ -19,58 +26,64 @@ in {
           "{446900e4-71c2-419f-a6a7-df9c091e268b}" = "bitwarden-password-manager/latest";
         };
       };
-      searchEngines = mkOption {
-        type = types.attrsOf types.attrs;
-        default = {
-          "Home Manager" = {
-            urls = [{
-              template = "https://home-manager-options.extranix.com";
-              params = [
-                {
+      search = {
+        default = mkOption {
+          type = types.str;
+          default = "DuckDuckGo";
+        };
+        engines = mkOption {
+          type = types.attrsOf types.attrs;
+          default = {
+            "Home Manager" = {
+              urls = [{
+                template = "https://home-manager-options.extranix.com";
+                params = [
+                  {
+                    name = "query";
+                    value = "{searchTerms}";
+                  }
+                  {
+                    name = "release";
+                    value = "release-23.11";
+                  }
+                ];
+              }];
+              icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+              definedAliases = [ "!homeopt" "!homeopts" ];
+            };
+            "MyNixOS" = {
+              urls = [{
+                template = "https://mynixos.com/search";
+                params = [{
+                  name = "q";
+                  value = "{searchTerms}";
+                }];
+              }];
+              icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake-white.svg";
+              definedAliases = [ "!mynix" "!mynixos" ];
+            };
+            "NixOS Wiki" = { # Temporary fix
+              urls = [{
+                template = "https://wiki.nixos.org/w/index.php";
+                params = [{
+                  name = "search";
+                  value = "{searchTerms}";
+                }];
+              }];
+              icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+              definedAliases = [ "!nix" "!nixos" ];
+            };
+            "NixOS Options" = { # Temporary fix
+              urls = [{
+                template = "https://search.nixos.org/options";
+                params = [{
                   name = "query";
                   value = "{searchTerms}";
-                }
-                {
-                  name = "release";
-                  value = "release-23.11";
-                }
-              ];
-            }];
-            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-            definedAliases = [ "!homeopt" "!homeopts" ];
-          };
-          "MyNixOS" = {
-            urls = [{
-              template = "https://mynixos.com/search";
-              params = [{
-                name = "q";
-                value = "{searchTerms}";
+                }];
               }];
-            }];
-            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake-white.svg";
-            definedAliases = [ "!mynix" "!mynixos" ];
-          };
-          "NixOS Wiki" = { # Temporary fix
-            urls = [{
-              template = "https://wiki.nixos.org/w/index.php";
-              params = [{
-                name = "search";
-                value = "{searchTerms}";
-              }];
-            }];
-            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-            definedAliases = [ "!nix" "!nixos" ];
-          };
-          "NixOS Options" = { # Temporary fix
-            urls = [{
-              template = "https://search.nixos.org/options";
-              params = [{
-                name = "query";
-                value = "{searchTerms}";
-              }];
-            }];
-            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-            definedAliases = [ "!nixopt" "!nixopts" ];
+              icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+              definedAliases = [ "!nixopt" "!nixopts" ];
+            };
           };
         };
       };
@@ -101,13 +114,10 @@ in {
         profiles.default = {
           search = {
             force = true;
-            default = "DuckDuckGo";
-            engines = cfg.firefox.searchEngines;
+            default = cfg.firefox.search.default;
+            engines = cfg.firefox.search.engines;
           };
-          settings = {
-            "widget.use-xdg-desktop-portal.file-picker" = 1;
-            "general.autoScroll" = 1;
-          };
+          settings = cfg.firefox.settings;
         };
         policies.ExtensionSettings = builtins.mapAttrs (key: value: {
           install_url = "https://addons.mozilla.org/firefox/downloads/latest/${value}.xpi";

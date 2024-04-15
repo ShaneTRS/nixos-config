@@ -55,7 +55,10 @@ in {
   };
 
   config = mkIf cfg.enable (mkMerge [
-    { xdg.portal.enable = true; }
+    {
+      security.rtkit.enable = true; # Interactive privilege escalation
+      xdg.portal.enable = true;
+    }
 
     (mkIf cfg.audio {
       sound.enable = true;

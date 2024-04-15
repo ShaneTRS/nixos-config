@@ -57,7 +57,7 @@
       packages.${system}.default = with pkgs-base;
         buildEnv {
           name = "flake-shell";
-          paths = [ gawk git nil nixfmt nix-output-monitor nixVersions.nix_2_19 ugrep ];
+          paths = [ gawk git nil nixfmt nix-output-monitor nixVersions.nix_2_19 sudo ugrep ];
         };
       legacyPackages.${system} = self.nixosConfigurations.system.pkgs;
       nixosConfigurations.system = let inherit (inputs."pkgs-${base}") lib;

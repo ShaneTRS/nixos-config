@@ -1,23 +1,7 @@
-{ functions, pkgs, machine, ... }: {
-  boot = {
-    kernelPackages = pkgs.linuxPackages_zen;
-    kernelParams = [ "quiet" "splash" ];
-  };
-
-  zramSwap = {
-    enable = true;
-    memoryPercent = 70;
-  };
+{ pkgs, ... }: {
 
   environment.systemPackages = with pkgs; [ local.not-nice ];
   programs.dconf.enable = true; # Enable dconf for GTK apps
-  security.rtkit.enable = true; # Interactive privilege escalation
-
-  users.users.${machine.user} = {
-    isNormalUser = true;
-    hashedPasswordFile = functions.configs "passwd";
-    extraGroups = [ "networkmanager" "wheel" "realtime" ];
-  };
 
   shanetrs = {
     browser = {
@@ -37,7 +21,11 @@
       enable = true;
       role = "host";
     };
-    programs.vscode.enable = true;
+    programs = {
+      discord.enable = true;
+      easyeffects.enable = true;
+      vscode.enable = true;
+    };
     shell = {
       enable = true;
       exec = "zsh";
@@ -47,16 +35,10 @@
   user = {
     home = {
       packages = with pkgs; [
-        (discord-canary.override {
-          withOpenASAR = true;
-          withVencord = true;
-        })
-        easyeffects
         gimp
         helvum
         jellyfin-media-player
         obs-studio
-        # prismlauncher
         (writeShellApplication {
           name = "persephone.audio";
           runtimeInputs = with pkgs; [ noisetorch pulseaudio local.addr-sort ];
@@ -85,9 +67,6 @@
         })
         vlc
       ];
-      stateVersion = "23.11";
     };
   };
-
-  system.stateVersion = "23.11";
 }
