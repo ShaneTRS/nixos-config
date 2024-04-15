@@ -1,28 +1,28 @@
-{ config, lib, pkgs, settings, ... }:
+{ config, lib, pkgs, ... }:
 let
-  cfg = config.shanetrs.settings;
-  inherit (lib) mkIf mkMerge mkOption types;
-  dummyCheck = { environment.systemPackages = [ ]; };
+  cfg = config.shanetrs.hardware;
+  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
 in {
-  options.shanetrs.settings = {
-    hostname = mkOption { type = types.str; };
-    profile = mkOption {
-      type = types.str;
-      default = cfg.hostname;
-    };
+  options.shanetrs.hardware = {
+    enable = mkEnableOption "Hardware configuration and driver installation";
     graphics = mkOption { type = types.enum [ "intel" "nvidia" "virtualbox" ]; };
-    user = mkOption { type = types.str; };
+    firmware = mkOption {
+      type = types.nullOr (types.enum [ "redist" "all" ]);
+      default = null;
+    };
+    # drivers = mkOption {
+    #   type = types.listOf (types.enum [ "g710+" ]);
+    #   default = [ ];
+    # };
   };
 
-  config = mkMerge [
-    {
-      shanetrs.settings = { inherit (settings) hostname graphics user; };
-      networking.hostName = cfg.hostname;
-    }
-
-    # These get "eagerly" evaluated
-    (mkIf (cfg.profile == null) dummyCheck)
-    (mkIf (cfg.user == null) dummyCheck)
+  config = mkIf cfg.enable (mkMerge [
+    (mkIf (cfg.firmware != null) {
+      hardware = {
+        enableRedistributableFirmware = mkIf (cfg.firmware == "redist") true;
+        enableAllFirmware = mkIf (cfg.firmware == "all") true;
+      };
+    })
 
     (mkIf (cfg.graphics == "nvidia") {
       services.xserver.videoDrivers = [ "nvidia" ];
@@ -58,5 +58,5 @@ in {
     })
 
     (mkIf (cfg.graphics == "intel") { hardware.opengl.extraPackages = with pkgs; [ intel-media-driver ]; })
-  ];
+  ]);
 }

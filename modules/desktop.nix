@@ -1,4 +1,4 @@
-{ config, functions, lib, pkgs, settings, ... }:
+{ config, functions, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.desktop;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
@@ -73,7 +73,7 @@ in {
         enable = true;
         displayManager.autoLogin = {
           enable = mkDefault true;
-          user = settings.user;
+          user = machine.user;
         };
         xkb.options = "compose:menu";
       };

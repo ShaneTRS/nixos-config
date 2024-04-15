@@ -1,0 +1,8 @@
+base = "stable"           # Branch of NixOS
+system = "x86_64-linux"   # Architecture to target
+serial = ""               # Motherboard serial number
+
+hostname = "lachesis"     # The hostname (and profile, if unspecified) for the device
+user = "shane"            # The home and configs to import
+
+config.allowUnfree = true # Needed for proprietary software

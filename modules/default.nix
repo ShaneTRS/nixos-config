@@ -1,4 +1,4 @@
-{ config, lib, functions, pkgs, settings, ... }:
+{ config, lib, functions, pkgs, machine, ... }:
 let inherit (lib) mkForce mkIf mkOverride;
 in {
   imports = map (file: "${./.}/${file}") (builtins.filter (x: x != "default.nix")
@@ -18,7 +18,10 @@ in {
       driSupport32Bit = true;
     };
   };
-  networking.networkmanager.enable = mkOverride 900 true;
+  networking = {
+    networkmanager.enable = mkOverride 900 true;
+    hostName = machine.hostname;
+  };
   services = {
     earlyoom.enable = mkOverride 900 true;
     openssh.enable = mkOverride 900 true;
@@ -59,8 +62,8 @@ in {
     programs = {
       git = mkOverride 900 {
         enable = true;
-        userEmail = "${settings.user}@${settings.hostname}";
-        userName = settings.user;
+        userEmail = "${machine.user}@${machine.hostname}";
+        userName = machine.user;
         extraConfig = {
           safe.directory = "/etc/nixos";
           credential.helper = "store";
@@ -77,7 +80,7 @@ in {
   systemd.services = {
     NetworkManager-wait-online.enable = false;
     nixos-upgrade.script = mkForce ''
-      ${pkgs.doas}/bin/doas -u "${settings.user}" ${pkgs.bash}/bin/sh -c 'INTERACTIVE=false UPDATE=true "${functions.flake}/rebuild" switch'
+      ${pkgs.doas}/bin/doas -u "${machine.user}" ${pkgs.bash}/bin/sh -c 'INTERACTIVE=false UPDATE=true "${functions.flake}/rebuild" switch'
     '';
   };
   system.autoUpgrade.dates = mkOverride 900 "Thu *-*-* 04:40:00"; # Once a week at Thursday, 4:40am

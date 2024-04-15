@@ -1,4 +1,4 @@
-{ functions, pkgs, settings, ... }: {
+{ functions, pkgs, machine, ... }: {
   boot = {
     kernelPackages = pkgs.linuxPackages_zen;
     kernelParams = [ "quiet" "splash" ];
@@ -13,7 +13,7 @@
   programs.dconf.enable = true; # Enable dconf for GTK apps
   security.rtkit.enable = true; # Interactive privilege escalation
 
-  users.users.${settings.user} = {
+  users.users.${machine.user} = {
     isNormalUser = true;
     hashedPasswordFile = functions.configs "passwd";
     extraGroups = [ "networkmanager" "wheel" "realtime" ];

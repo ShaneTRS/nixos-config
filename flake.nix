@@ -26,42 +26,35 @@
 
   outputs = { self, ... }@inputs:
     let
-      base = "stable"; # Controls default package source, and the available options
-      settings = {
-        graphics = "intel"; # Graphics driver
-        hostname = "lachesis"; # The hostname (and profile) for the device
-        user = "shane"; # The home and configs to import
-      };
-      config.allowUnfree = true; # Needed for proprietary software
-      system = "x86_64-linux";
+      machine = builtins.fromTOML (builtins.readFile ./machine.toml);
       functions = {
-        findFirst = pred: list:
+        findFirst = pred: list: # Find first item to match predicate
           if builtins.length list == 0 then
             throw "findFirst: list is empty"
           else
             let first = builtins.elemAt list 0;
             in if pred first then first else functions.findFirst pred (builtins.tail list);
-        configs = file:
+        configs = file: # Import a config, with most personal taking precedence
           let
             attempt = builtins.tryEval (functions.findFirst builtins.pathExists [
               "${self}/secrets/config/${file}"
-              "${self}/configs/${settings.user}/${file}"
+              "${self}/configs/${machine.user}/${file}"
               "${self}/configs/shared/${file}"
             ]);
           in if attempt.success then attempt.value else throw "configs: '${file}' not found";
         secrets = "${self}/secrets"; # Returns the secrets directory
         flake = builtins.toString self; # Returns the base directory of the flake
-        importRepo = repo: import repo { inherit system config; };
+        importRepo = with machine; repo: import repo { inherit system config; }; # Pass system and config to repo
       };
-      pkgs-base = functions.importRepo inputs."pkgs-${base}";
-    in {
+      pkgs-base = functions.importRepo inputs."pkgs-${machine.base}";
+    in with machine; {
       devShells.${system}.default =
         pkgs-base.mkShell { shellHook = ''exec nix repl --expr "builtins.getFlake \"$PWD?submodules=1\""''; };
       formatter.${system} = pkgs-base.nixfmt;
       packages.${system}.default = with pkgs-base;
         buildEnv {
           name = "flake-shell";
-          paths = [ git nil nixfmt nix-output-monitor nixVersions.nix_2_19 ];
+          paths = [ gawk git nil nixfmt nix-output-monitor nixVersions.nix_2_19 ugrep ];
         };
       legacyPackages.${system} = self.nixosConfigurations.system.pkgs;
       nixosConfigurations.system = let inherit (inputs."pkgs-${base}") lib;
@@ -69,7 +62,7 @@
         modules = [
           {
             home-manager = {
-              extraSpecialArgs = { inherit functions settings; };
+              extraSpecialArgs = { inherit functions machine; };
               useGlobalPkgs = true;
               useUserPackages = true;
             };
@@ -86,7 +79,7 @@
                       name = builtins.replaceStrings [ ".nix" ] [ "" ] file;
                       value = pkgs-base.callPackage "${./packages}/${file}" {
                         pkgs = pkgs-base;
-                        inherit functions settings;
+                        inherit functions machine;
                       };
                     }) (builtins.attrNames (builtins.readDir ./packages)));
                   })
@@ -100,17 +93,17 @@
                 experimental-features = [ "nix-command" "flakes" ];
                 nix-path = "nixpkgs=/etc/nix/inputs/pkgs"; # nix-shell uses nixpkgs
                 substituters = [ "file:///var/cache/nix" ];
-                trusted-users = [ settings.user ];
+                trusted-users = [ machine.user ];
               };
             };
           }
           inputs."hm-${base}".nixosModules.home-manager
-          (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" settings.user ])
-          (./profiles + "/${settings.profile or settings.hostname}.nix")
-          ./hardware.nix
+          (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" machine.user ])
+          (./profiles + "/${machine.profile or machine.hostname}.nix")
+          (if serial == "" then { } else "${./hardware}/${serial}.nix")
           ./modules
         ];
-        specialArgs = { inherit functions settings; };
+        specialArgs = { inherit functions machine; };
       };
     };
 }

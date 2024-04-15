@@ -1,4 +1,4 @@
-{ config, lib, functions, pkgs, settings, ... }:
+{ config, lib, functions, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.shell // { all_features = cfg.bash.features ++ cfg.zsh.features; };
   inherit (lib) mkEnableOption mkForce mkIf mkMerge mkOption types;
@@ -82,7 +82,7 @@ in {
         doas = {
           enable = true;
           extraRules = cfg.doas.extraRules ++ map (cmd: {
-            users = [ settings.user ];
+            users = [ machine.user ];
             keepEnv = true;
             noPass = true;
             cmd = cmd;

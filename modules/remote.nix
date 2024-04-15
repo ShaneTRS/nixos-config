@@ -1,4 +1,4 @@
-{ config, lib, pkgs, functions, settings, ... }:
+{ config, lib, pkgs, functions, machine, ... }:
 let
   inherit (lib) concatStringsSep mkEnableOption mkIf mkMerge mkOption types;
   cfg = config.shanetrs.remote;
@@ -48,7 +48,7 @@ in {
   config = mkIf cfg.enable (mkMerge [
     {
       security.doas.extraRules = mkIf cfg.usb.enable [{
-        users = [ settings.user ];
+        users = [ machine.user ];
         keepEnv = true;
         noPass = true;
         cmd = "usbip";
@@ -196,7 +196,7 @@ in {
                   while true; do
                     vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
                       if attempt.success then ''-passwd="${attempt.value}"'' else ""
-                    } /home/${settings.user}/.vnc/loop.tigervnc \
+                    } /home/${machine.user}/.vnc/loop.tigervnc \
                     "$(${pkgs.local.addr-sort}/bin/addr-sort ${
                       lib.concatStringsSep " " config.shanetrs.remote.addresses.host
                     })"

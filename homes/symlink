@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")" || exit
 
-[ -f "$PWD/.last" ] && while read -r FILE; do
+[ -f "$PWD/last" ] && while read -r FILE; do
     FILE="${FILE#*/}" # Strip target user
     [ -L "$HOME/$FILE" ] && # Only remove symlinks
         rm "$HOME/$FILE"
-done < "$PWD/.last"
-echo -n > "$PWD/.last" # Wipe list
+done < "$PWD/last"
+echo -n > "$PWD/last" # Wipe list
 
 for i in "$@"; do
-    find "$i" -type f >> .last
+    find "$i" -type f >> last
 done
 
-[ -f "$PWD/.last" ] && while read -r FILE; do
+[ -f "$PWD/last" ] && while read -r FILE; do
     TARGET="${FILE%%/*}"; FILE="${FILE#*/}"
     ln -sf "$PWD/$TARGET/$FILE" "$HOME/$FILE" # Replace existing files
-done < "$PWD/.last"
+done < "$PWD/last"

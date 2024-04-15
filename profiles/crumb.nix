@@ -1,4 +1,4 @@
-{ functions, pkgs, settings, lib, ... }: {
+{ functions, pkgs, machine, lib, ... }: {
   boot = {
     kernelPackages = pkgs.linuxPackages_zen;
     kernelParams = [ "quiet" "splash" ];
@@ -9,7 +9,7 @@
   security.rtkit.enable = true; # Interactive privilege escalation
   services.zerotierone.enable = true;
 
-  users.users.${settings.user} = {
+  users.users.${machine.user} = {
     isNormalUser = true;
     hashedPasswordFile = functions.configs "passwd";
     extraGroups = [ "networkmanager" "wheel" "realtime" ];

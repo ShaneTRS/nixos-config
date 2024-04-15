@@ -6,46 +6,66 @@
 [ -z "$INTERACTIVE" ] && INTERACTIVE=true
 [ -z "$COMMIT" ] && COMMIT=true
 [ -z "$UPDATE" ] && UPDATE=false
-cd "$SRC" || exit
+[ -z "$MACHINE" ] && MACHINE="machine.toml"
+# Should probably fallback to "su -c" instead
+[ -z "$SUDO" ] && which doas &>/dev/null &&
+  SUDO="doas" || SUDO="sudo"
+
+cd "$SRC" || exit 1
+
+if grep --quiet 'serial ?= ?""' "$MACHINE"; then
+  echo Serial number is missing! Grabbing from system..
+  SERIAL=$(doas cat /sys/devices/virtual/dmi/id/board_serial)
+  sed -iE "s:serial ?= ?\"\":serial = \"$SERIAL\":g" "$MACHINE"
+  HW_CONF="hardware/$SERIAL.nix"
+  if ! [ -f "$HW_CONF" ]; then
+    printf "# %s (%s)\n{ }\n" \
+      "$(cat /sys/devices/virtual/dmi/id/product_name)" \
+      "$(cat /sys/devices/virtual/dmi/id/product_version)" > "$HW_CONF"
+    echo "Hardware config is missing! The build will fail."
+    exit 1
+  fi
+fi
 
 update-repo() {(
-  cd "$1" || return
+  cd "$1" || exit 1
   # Refresh tree to pick up any changes
   git add -A; git update-index --refresh >/dev/null
-
-  # Don't track changes in listed files
-  [ -n "$2" ] && git restore --staged "${@:1}"
-  [ -n "$2" ] && git update-index --assume-unchanged --skip-worktree "$@"
-
   # Automatically commit when the tree is dirty before a real build
   if ! git diff-index --quiet HEAD --; then
     # shellcheck disable=SC3010
     if $INTERACTIVE; then
-      git diff --color-words |
-        awk '!/--- a|+++ b|index [0-9a-z]{6}/ {print $0}' |
-        less -RK || exec echo "Cancelled configuration update"
+      if ! git diff --color-words | awk '!/--- a|+++ b|index [0-9a-z]{6}/ {print $0}' | less -RK; then 
+        echo "Cancelled configuration update";
+        exit 1
+      fi
     fi
     git commit -am "AUTO: Configuration updated"
   fi
-)}
+) || exit 1; }
 
-$COMMIT && [ "$1" != "test" ] && update-repo . hardware.nix
-$COMMIT && [ "$1" != "test" ] && update-repo secrets
+track() {
+  if [ "$1" == "add" ]; then
+    git update-index --really-refresh "${@:2}"
+  elif [ "$1" == "rm" ]; then
+    git restore --staged "${@:2}"
+    git update-index --assume-unchanged --skip-worktree "${@:2}"
+  fi
+}
 
-# Track changes in hardware.nix, so it can be used in the build
-git update-index --really-refresh hardware.nix
-
-# Update the repos and rebuild the system
 $UPDATE && nix flake update
-doas nixos-rebuild "$@" --flake ".?submodules=1#system" \
-    --log-format internal-json 2>&1 | nom --json
 
-# Ignore changes in hardware.nix again, for convenience in IDEs
-git restore --staged "hardware.nix"
-git update-index --assume-unchanged --skip-worktree hardware.nix
+track rm "$MACHINE"
+$COMMIT && [ "$1" != "test" ] && update-repo .
+$COMMIT && [ "$1" != "test" ] && update-repo secrets
+track add "$MACHINE"
+
+$SUDO nixos-rebuild "$@" --flake ".?submodules=1#system" \
+    --log-format internal-json 2>&1 | nom --json
+track rm "$MACHINE"
 
 # Symlink the shared and user home directories
 ln -sf "$SECRETS/home/." "$SRC/homes/secrets" 2>/dev/null
-"$SRC/homes/symlink" shared "$(awk -F'"' '/user =/{print $2}' flake.nix)" secrets/.
+"$SRC/homes/symlink" shared "$(awk -F'"' '/user ?=/{print $2}' $MACHINE)" secrets/.
 
 exec true
