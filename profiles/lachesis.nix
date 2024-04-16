@@ -1,6 +1,5 @@
 { pkgs, ... }: {
 
-  # These aren't needed on a thin-client
   services.earlyoom.enable = false;
   zramSwap.enable = false;
 
@@ -35,7 +34,7 @@
     home.packages = with pkgs; [
       helvum
       jellyfin-media-player
-      moonlight-qt
+      # moonlight-qt
       local.spotify
       vlc
       (writeShellScriptBin "backlight-8b501" ''

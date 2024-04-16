@@ -51,12 +51,11 @@
     size = 8192;
   }];
   nix = {
-    settings.max-jobs = 1;
+    settings.max-jobs = 0;
     distributedBuilds = true;
     buildMachines = [{
-      hostName = "192.168.1.11";
+      hostName = "192.168.1.11?ssh-key=/root/.ssh/shane_rsa";
       sshUser = "shane";
-      sshKey = "/root/.ssh/shane_rsa";
       systems = [ "x86_64-linux" ];
       supportedFeatures = [ "benchmark" "big-parallel" "kvm" ];
       maxJobs = 6;
