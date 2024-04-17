@@ -6,8 +6,8 @@
 
   shanetrs = {
     browser = {
-      enable = true;
-      exec = "chromium";
+      firefox.enable = true;
+      chromium.enable = true;
     };
     desktop = {
       enable = true;
@@ -28,8 +28,9 @@
       vscode.enable = true;
     };
     shell = {
-      enable = true;
-      exec = "zsh";
+      default = pkgs.zsh;
+      zsh.enable = true;
+      doas.enable = true;
     };
   };
 

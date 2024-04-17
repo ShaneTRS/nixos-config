@@ -1,6 +1,9 @@
 #!/usr/bin/env nix
 #!nix shell --command bash
 
+# TODO: Make a sister script for garbage collection
+# TODO: Change ./homes and ./configs to have support for profiles
+
 [ -z "$SRC" ] && SRC="$HOME/.config/nixos"
 [ -z "$SECRETS" ] && SECRETS="$SRC/secrets"
 [ -z "$INTERACTIVE" ] && INTERACTIVE=true
@@ -27,7 +30,8 @@ if grep --quiet 'serial ?= ?""' "$MACHINE"; then
   fi
 fi
 
-build() { $SUDO nixos-rebuild "$@" --flake ".?submodules=1#system" --log-format internal-json 2>&1 | nom --json; }
+build() { $SUDO nixos-rebuild "$@" --flake ".?submodules=1#default" --log-format internal-json 2>&1 | nom --json; }
+machine() { awk -F'"' "/$1 ?=/{print \$2}" "$MACHINE"; }
 
 track() {
   if [ "$1" == "add" ]; then
@@ -64,8 +68,15 @@ if $COMMIT && [ -n "$BUILD" ] && [ "$1" != "test" ]; then
   update-repo secrets
 fi
 
-# Symlink the shared and user home directories
+MACHINE_USER="$(machine user)"
+MACHINE_PROFILE="$(machine profile)"; [ -z "$MACHINE_PROFILE" ] &&
+  MACHINE_PROFILE="$(machine hostname)"
+
+# Symlink the secret user home directory
 ln -sf "$SECRETS/home/." "$SRC/homes/secrets" 2>/dev/null
-"$SRC/homes/symlink" shared "$(awk -F'"' '/user ?=/{print $2}' "$MACHINE")" secrets/.
+"$SRC/homes/symlink" \
+  "secrets/$MACHINE_PROFILE/." "secrets/all/." \
+  "$MACHINE_USER/$MACHINE_PROFILE" "$MACHINE_USER/all" \
+  "global/$MACHINE_PROFILE" "global/all"
 
 exec true

@@ -26,23 +26,29 @@
 
   outputs = { self, ... }@inputs:
     let
-      machine = builtins.fromTOML (builtins.readFile ./machine.toml);
+      machine = let this = builtins.fromTOML (builtins.readFile ./machine.toml);
+      in this // { profile = this.profile or this.hostname; };
       inherit (machine) base serial system;
       config.allowUnfree = true; # Needed for proprietary software
       functions = let flake = self.outPath;
       in {
-        findFirst = pred: list: # Find first item to match predicate
+        findFirst = pred: list:
           if builtins.length list == 0 then
             throw "findFirst: list is empty"
-          else
+          else # Find first item to match predicate
             let first = builtins.elemAt list 0;
             in if pred first then first else functions.findFirst pred (builtins.tail list);
-        configs = file: # Import a config, with most personal taking precedence
-          let
+        configs = file:
+          let # Import a config, with most personal taking precedence
             attempt = builtins.tryEval (functions.findFirst builtins.pathExists [
-              "${flake}/secrets/config/${file}"
-              "${flake}/configs/${machine.user}/${file}"
-              "${flake}/configs/shared/${file}"
+              "${flake}/secrets/config/${machine.profile}/${file}"
+              "${flake}/secrets/config/all/${file}"
+
+              "${flake}/configs/${machine.user}/${machine.profile}/${file}"
+              "${flake}/configs/${machine.user}/all/${file}"
+
+              "${flake}/configs/global/${machine.profile}/${file}"
+              "${flake}/configs/global/all/${file}"
             ]);
           in if attempt.success then attempt.value else throw "configs: '${file}' not found";
         inherit flake; # Returns the base directory of the flake
@@ -59,8 +65,8 @@
           name = "flake-shell";
           paths = [ gawk git nil nixfmt nix-output-monitor nixVersions.nix_2_19 sudo ugrep ];
         };
-      legacyPackages.${system} = self.nixosConfigurations.system.pkgs;
-      nixosConfigurations.system = let inherit (inputs."pkgs-${base}") lib;
+      legacyPackages.${system} = self.nixosConfigurations.default.pkgs;
+      nixosConfigurations.default = let inherit (inputs."pkgs-${base}") lib;
       in lib.nixosSystem {
         modules = [
           {

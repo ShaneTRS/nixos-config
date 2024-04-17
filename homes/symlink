@@ -3,6 +3,7 @@ cd "$(dirname "$0")" || exit
 
 [ -f "$PWD/last" ] && while read -r FILE; do
     FILE="${FILE#*/}" # Strip target user
+    FILE="${FILE#*/}" # Strip target profile
     [ -L "$HOME/$FILE" ] && # Only remove symlinks
         rm "$HOME/$FILE"
 done < "$PWD/last"
@@ -13,6 +14,9 @@ for i in "$@"; do
 done
 
 [ -f "$PWD/last" ] && while read -r FILE; do
-    TARGET="${FILE%%/*}"; FILE="${FILE#*/}"
-    ln -sf "$PWD/$TARGET/$FILE" "$HOME/$FILE" # Replace existing files
+    TARGET="$(realpath "$FILE")"
+    FILE="${FILE#*/}" # Strip target user
+    FILE="${FILE#*/}" # Strip target profile"
+    [ ! -L "$HOME/$FILE" ] &&
+        ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
 done < "$PWD/last"
