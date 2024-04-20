@@ -5,7 +5,6 @@ let
 in {
   options.shanetrs.programs = {
     enable = mkEnableOption "Program configuration and integration";
-    # TODO: Add a custom binary for running this, that automatically runs it without OpenASAR for the first time
     discord = {
       enable = mkEnableOption "Discord configuration and integration";
       branch = mkOption {
@@ -14,59 +13,102 @@ in {
       };
       vencord = {
         enable = mkOption {
-          type = types.bool;
+          type = types.enum [ true false "manual" ];
           default = true;
         };
         quickCss = mkOption {
           type = types.str;
-          default = "";
+          default = ''
+            .theme-dark .messagelogger-edited {
+              visibility: hidden;
+              position: absolute;
+            }
+            .messagelogger-deleted :is(div, h1, h2, h3, p) {
+              visibility: hidden;
+              position: absolute;
+            }
+            svg.vc-trans-icon {
+              width: 0;
+            }
+            .botTag__4211a {
+              display: none;
+            }
+          '';
         };
-        # settings = mkOption {
-        #   type = types.attrs;
-        #   default = {
-        #     useQuickCss = true;
-        #     plugins = {
-        #       CallTimer.enabled = true;
-        #       EmoteCloner.enabled = true;
-        #       Experiments.enabled = true;
-        #       FakeNitro = {
-        #         enabled = true;
-        #         transformEmojis = false;
-        #         enableStickerBypass = false;
-        #       };
-        #       ForceOwnerCrown.enabled = true;
-        #       MessageLogger.enabled = true;
-        #       NoUnblockToJump.enabled = true;
-        #       ShowHiddenChannels = {
-        #         enabled = true;
-        #         showMode = 1;
-        #       };
-        #       SpotifyCrack.enabled = true;
-        #       TypingTweaks.enabled = true;
-        #       VolumeBooster = {
-        #         enabled = true;
-        #         multipler = 2;
-        #       };
-        #       WhoReacted.enabled = true;
-        #       MoreCommands.enabled = true;
-        #       NoCanaryMessageLinks.enabled = true;
-        #       PlatformIndicators = {
-        #         enabled = true;
-        #         list = false;
-        #         badges = true;
-        #       };
-        #       GameActivityToggle.enabled = true;
-        #       UserVoiceShow.enabled = true;
-        #       PermissionsViewer.enabled = true;
-        #       Translate.enabled = true;
-        #       FixSpotifyEmbeds = {
-        #         enabled = true;
-        #         volume = 10;
-        #       };
-        #       DisableCallIdle.enable = true;
-        #     };
-        #   };
-        # };
+        plugins = mkOption {
+          type = types.attrs;
+          default = {
+            CallTimer.enabled = true;
+            EmoteCloner.enabled = true;
+            Experiments.enabled = true;
+            FakeNitro = {
+              enabled = true;
+              transformEmojis = false;
+              enableStickerBypass = false;
+            };
+            ForceOwnerCrown.enabled = true;
+            MessageLogger.enabled = true;
+            NoUnblockToJump.enabled = true;
+            ShowHiddenChannels = {
+              enabled = true;
+              showMode = 1;
+            };
+            SpotifyCrack.enabled = true;
+            TypingTweaks.enabled = true;
+            VolumeBooster = {
+              enabled = true;
+              multipler = 2;
+            };
+            WhoReacted.enabled = true;
+            MoreCommands.enabled = true;
+            NoCanaryMessageLinks.enabled = true;
+            PlatformIndicators = {
+              enabled = true;
+              list = false;
+              badges = true;
+            };
+            GameActivityToggle.enabled = true;
+            UserVoiceShow.enabled = true;
+            PermissionsViewer.enabled = true;
+            Translate.enabled = true;
+            FixSpotifyEmbeds = {
+              enabled = true;
+              volume = 10;
+            };
+            DisableCallIdle.enable = true;
+          };
+        };
+        settings = mkOption {
+          type = types.attrs;
+          default = {
+            notifyAboutUpdates = true;
+            autoUpdate = true;
+            useQuickCss = true;
+            themeLinks = [ ];
+            enableReactDevtools = false;
+            frameless = false;
+            transparent = false;
+            winCtrlQ = false;
+            plugins = cfg.discord.vencord.plugins;
+            winNativeTitleBar = false;
+            notifications = {
+              timeout = 5000;
+              position = "bottom-right";
+              useNative = "not-focused";
+              logLimit = 50;
+            };
+            autoUpdateNotification = false;
+            macosTranslucency = false;
+            disableMinSize = true;
+            cloud = {
+              authenticated = false;
+              url = "https://api.vencord.dev/";
+              settingsSync = false;
+              settingsSyncVersion = 1711701851176;
+            };
+            enabledThemes = [ ];
+          };
+        };
       };
       openasar.enable = mkOption {
         type = types.bool;
@@ -82,7 +124,7 @@ in {
           };
         in (branches.${cfg.discord.branch}.override {
           withOpenASAR = cfg.discord.openasar.enable;
-          withVencord = cfg.discord.vencord.enable;
+          withVencord = cfg.discord.vencord.enable != false;
         });
       };
     };
@@ -122,14 +164,16 @@ in {
   };
 
   config = mkMerge [
-
     (mkIf cfg.discord.enable {
       user = {
+        # TODO: Add a custom binary for running this, that automatically
+        # runs it without OpenASAR for the first time
         home.packages = [ cfg.discord.package ];
-        xdg.configFile."Vencord/settings/quickCss.css".text = mkIf cfg.discord.vencord.enable
-          (builtins.readFile (functions.configs "Vencord/settings/quickCss.css") + "\n" + cfg.discord.vencord.quickCss);
-        xdg.configFile."Vencord/settings/settings.json".source =
-          mkIf cfg.discord.vencord.enable (functions.configs "Vencord/settings/settings.json");
+        xdg.configFile = let vcfg = cfg.discord.vencord;
+        in {
+          "Vencord/settings/quickCss.css".text = mkIf (vcfg.enable == true) vcfg.quickCss;
+          "Vencord/settings/settings.json".text = mkIf (vcfg.enable == true) (builtins.toJSON vcfg.settings);
+        };
       };
     })
 
@@ -143,6 +187,7 @@ in {
         };
       };
     })
+
     (mkIf cfg.vscode.enable {
       environment.systemPackages = with pkgs; mkIf (builtins.elem "nix" cfg.vscode.features) [ nil nixfmt ];
       user = {

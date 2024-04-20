@@ -10,6 +10,7 @@
     pkgs-unstable.url = "nixpkgs/nixos-unstable";
     pkgs-pinned.url = "nixpkgs/79baff8812a0d68e24a836df0a364c678089e2c7"; # March 1st, 2024
 
+    # This cannot be simplified because flake.nix is *not* a real nix file. Only `self.outputs` is.
     hm-stable = {
       url = "github:nix-community/home-manager/release-23.11";
       inputs.nixpkgs.follows = "pkgs-stable";
@@ -43,10 +44,8 @@
             attempt = builtins.tryEval (functions.findFirst builtins.pathExists [
               "${flake}/secrets/config/${machine.profile}/${file}"
               "${flake}/secrets/config/all/${file}"
-
               "${flake}/configs/${machine.user}/${machine.profile}/${file}"
               "${flake}/configs/${machine.user}/all/${file}"
-
               "${flake}/configs/global/${machine.profile}/${file}"
               "${flake}/configs/global/all/${file}"
             ]);

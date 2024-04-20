@@ -19,12 +19,7 @@ nix-shell() {(
   done
   eval "NIX_SHELL_PACKAGES=\"${NIX_SHELL_PACKAGES#* }\" NIXPKGS_ALLOW_UNFREE=1 nix shell --impure $ARGS"
 )}
-where() {(
-  WHERE="$(which "$@")"
-  READLINK="$(readlink "$WHERE")"
-  [ -n "$READLINK" ] && WHERE="$READLINK"
-  echo "$WHERE"
-)}
+where() { readlink -f "$(which "$@")"; }
 
 zle -N history-search
 zstyle ':completion:*' menu select
