@@ -1,6 +1,6 @@
 { pkgs, ... }: {
 
-  environment.systemPackages = with pkgs; [ git vlc ];
+  environment.systemPackages = with pkgs; [ vlc ];
   services.flatpak.enable = true;
   system.autoUpgrade.enable = true;
 

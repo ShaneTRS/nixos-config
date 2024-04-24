@@ -15,7 +15,7 @@ in {
     enable = true;
     memoryPercent = 70;
   };
-  environment.systemPackages = with pkgs; [ git nixVersions.nix_2_19 ];
+  environment.systemPackages = with pkgs; [ git ];
   hardware = mkOverride 900 {
     pulseaudio.enable = false;
     opengl = {
@@ -56,11 +56,11 @@ in {
   time.timeZone = mkOverride 900 "America/Phoenix";
   users = {
     mutableUsers = mkOverride 900 false;
-    groups.realtime = mkOverride 900 { };
+    groups.realtime.members = [ machine.user ];
     users.${machine.user} = {
       isNormalUser = true;
       hashedPasswordFile = functions.configs "passwd";
-      extraGroups = [ "networkmanager" "wheel" "realtime" ];
+      extraGroups = [ "networkmanager" "wheel" ];
     };
   };
   user = {

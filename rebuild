@@ -1,18 +1,16 @@
 #!/usr/bin/env nix
 #!nix shell --command bash
 
-# TODO: Make a sister script for garbage collection
-# TODO: Change ./homes and ./configs to have support for profiles
+SRC="${SRC:-$HOME/.config/nixos}"
+SECRETS="${SECRETS:-$SRC/secrets}"
+MACHINE="${MACHINE:-machine.toml}"
 
-[ -z "$SRC" ] && SRC="$HOME/.config/nixos"
-[ -z "$SECRETS" ] && SECRETS="$SRC/secrets"
-[ -z "$INTERACTIVE" ] && INTERACTIVE=true
-[ -z "$COMMIT" ] && COMMIT=true
-[ -z "$UPDATE" ] && UPDATE=false
-[ -z "$MACHINE" ] && MACHINE="machine.toml"
+INTERACTIVE=${INTERACTIVE:-true}
+COMMIT=${COMMIT:-true}
+UPDATE=${UPDATE:-false}
+
 # Should probably fallback to "su -c" instead
-[ -z "$SUDO" ] && which doas &>/dev/null &&
-  SUDO="doas" || SUDO="sudo"
+SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
 
 cd "$SRC" || exit 1
 
@@ -59,9 +57,10 @@ then
 fi
 
 $UPDATE && nix flake update
-track add "$MACHINE"
+IFS=: read -ra SKIP <<< "$SKIP"
+track add "$MACHINE" "${SKIP[@]}"
 BUILD=$(build "$@" && echo 1)
-track rm "$MACHINE"
+track rm "$MACHINE" "${SKIP[@]}"
 
 if $COMMIT && [ -n "$BUILD" ] && [ "$1" != "test" ]; then
   update-repo .

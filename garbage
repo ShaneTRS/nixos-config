@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
+TIME="${TIME:-30d}"
+
+$SUDO nix-collect-garbage --delete-older-than "$TIME" || exit
+nix-collect-garbage --delete-older-than "$TIME"

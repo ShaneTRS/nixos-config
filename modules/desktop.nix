@@ -80,8 +80,17 @@ in {
         };
         xkb.options = "compose:menu";
       };
-      user.home.file.".XCompose" = let attempt = builtins.tryEval (functions.configs ".XCompose");
-      in mkIf attempt.success { source = attempt.value; };
+      user = {
+        xsession = {
+          enable = true;
+          profileExtra = ''
+            XCOMPOSEFILE="$HOME/.config/XCompose"
+            XCOMPOSECACHE="$HOME/.cache/XCompose"
+          '';
+        };
+        xdg.configFile."XCompose" = let attempt = builtins.tryEval (functions.configs ".XCompose");
+        in mkIf attempt.success { source = attempt.value; };
+      };
     })
 
     (mkIf (cfg.session == "gnome") {

@@ -95,6 +95,7 @@
             };
             environment.etc."nix/inputs/pkgs".source = inputs."pkgs-${base}";
             nix = {
+              package = pkgs-base.nixVersions.nix_2_19;
               registry.pkgs.flake = self;
               settings = {
                 auto-optimise-store = true;
@@ -102,6 +103,7 @@
                 nix-path = "nixpkgs=/etc/nix/inputs/pkgs"; # nix-shell uses nixpkgs
                 substituters = [ "file:///var/cache/nix" ];
                 trusted-users = [ machine.user ];
+                use-xdg-base-directories = true;
               };
             };
           }
