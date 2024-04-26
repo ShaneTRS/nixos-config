@@ -6,7 +6,8 @@ PS1="%F{1}$NIX_SHELL_PACKAGES $PS1"
 alias nixos-rebuild=use_doas
 use_doas() { echo "error: you're trying to run this command as a normal user!" 1>&2; false; }
 nix-run() {
-  NIXPKGS_ALLOW_UNFREE=1 nix shell --impure "pkgs#$1" --command sh -c "which $1 &>/dev/null && exec $*; exec ${*:2}";
+  NIXPKGS_ALLOW_UNFREE=1 nix shell --impure "pkgs#$1" \
+    --command sh -c "which ${1#*.} &>/dev/null && exec ${1#*.} ${*:2}; exec ${*:2}"
 }
 nix-shell() {(
   for i in "$@"; do

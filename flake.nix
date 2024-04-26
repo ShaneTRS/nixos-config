@@ -32,16 +32,15 @@
       inherit (machine) base serial system;
       config.allowUnfree = true; # Needed for proprietary software
       functions = let flake = self.outPath;
-      in {
+      in rec {
         findFirst = pred: list:
           if builtins.length list == 0 then
             throw "findFirst: list is empty"
           else # Find first item to match predicate
-            let first = builtins.elemAt list 0;
-            in if pred first then first else functions.findFirst pred (builtins.tail list);
+            let first = builtins.elemAt list 0; in if pred first then first else findFirst pred (builtins.tail list);
         configs = file:
           let # Import a config, with most personal taking precedence
-            attempt = builtins.tryEval (functions.findFirst builtins.pathExists [
+            attempt = builtins.tryEval (findFirst builtins.pathExists [
               "${flake}/secrets/config/${machine.profile}/${file}"
               "${flake}/secrets/config/all/${file}"
               "${flake}/configs/${machine.user}/${machine.profile}/${file}"
@@ -62,7 +61,7 @@
       packages.${system}.default = with pkgs-base;
         buildEnv {
           name = "flake-shell";
-          paths = [ gawk git nil nixfmt nix-output-monitor nixVersions.nix_2_19 sudo ugrep ];
+          paths = [ bash coreutils gawk gnused git nil nixfmt nix-output-monitor nixVersions.nix_2_19 sudo ugrep ];
         };
       legacyPackages.${system} = self.nixosConfigurations.default.pkgs;
       nixosConfigurations.default = let inherit (inputs."pkgs-${base}") lib;

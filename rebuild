@@ -14,9 +14,9 @@ SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
 
 cd "$SRC" || exit 1
 
-if grep --quiet 'serial ?= ?""' "$MACHINE"; then
+if ugrep --quiet 'serial ?= ?""' "$MACHINE"; then
   echo Serial number is missing! Grabbing from system..
-  SERIAL=$(doas cat /sys/devices/virtual/dmi/id/board_serial)
+  SERIAL=$($SUDO cat /sys/devices/virtual/dmi/id/board_serial || exit)
   sed -iE "s:serial ?= ?\"\":serial = \"$SERIAL\":g" "$MACHINE"
   HW_CONF="hardware/$SERIAL.nix"
   if ! [ -f "$HW_CONF" ]; then
@@ -28,7 +28,7 @@ if grep --quiet 'serial ?= ?""' "$MACHINE"; then
   fi
 fi
 
-build() { $SUDO nixos-rebuild "$@" --flake ".?submodules=1#default" --log-format internal-json 2>&1 | nom --json; }
+build() { $SUDO nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default" --log-format internal-json 2>&1 | nom --json; }
 machine() { awk -F'"' "/$1 ?=/{print \$2}" "$MACHINE"; }
 
 track() {
