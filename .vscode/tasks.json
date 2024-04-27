@@ -1,0 +1,35 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Configuration REPL",
+            "type": "shell",
+            "command": "nix develop"
+        },
+        {
+            "label": "Collect garbage",
+            "type": "shell",
+            "command": "./garbage"
+        },
+        {
+            "label": "Update now",
+            "type": "shell",
+            "command": "./rebuild switch"
+        },
+        {
+            "label": "Update on boot",
+            "type": "shell",
+            "command": "./rebuild boot"
+        },
+        {
+            "label": "Update temporarily",
+            "type": "shell",
+            "command": "./rebuild test",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

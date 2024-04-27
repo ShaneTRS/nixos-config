@@ -1,5 +1,5 @@
 #!/usr/bin/env nix
-#!nix shell --command bash
+#!nix shell --extra-experimental-features ``nix-command flakes`` --command bash
 
 SRC="${SRC:-$HOME/.config/nixos}"
 SECRETS="${SECRETS:-$SRC/secrets}"
@@ -17,7 +17,7 @@ cd "$SRC" || exit 1
 if ugrep --quiet 'serial ?= ?""' "$MACHINE"; then
   echo Serial number is missing! Grabbing from system..
   SERIAL=$($SUDO cat /sys/devices/virtual/dmi/id/board_serial || exit)
-  sed -iE "s:serial ?= ?\"\":serial = \"$SERIAL\":g" "$MACHINE"
+  sed -i -E "s:serial ?= ?\"\":serial = \"$SERIAL\":g" "$MACHINE"
   HW_CONF="hardware/$SERIAL.nix"
   if ! [ -f "$HW_CONF" ]; then
     printf "# %s (%s)\n{ }\n" \

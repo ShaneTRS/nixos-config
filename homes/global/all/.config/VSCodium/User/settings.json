@@ -13,4 +13,7 @@
     },
     "editor.formatOnSave": true,
     "terminal.integrated.enableMultiLinePasteWarning": false,
+    "task.problemMatchers.neverPrompt": {
+        "shell": true
+    },
 }
