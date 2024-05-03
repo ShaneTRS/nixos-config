@@ -1,22 +1,62 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.hardware;
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.hardware = {
-    enable = mkEnableOption "Hardware configuration and driver installation";
-    graphics = mkOption { type = types.enum [ "intel" "nvidia" "virtualbox" ]; };
+    enable = mkEnableOption "Hardware driver installation and configuration";
+    drivers = {
+      artist12.enable = mkEnableOption "XP-Pen Artist 12 driver installation";
+      g710 = {
+        enable = mkEnableOption "Logitech G710 driver installation and configuration";
+        user = mkOption {
+          type = types.str;
+          default = "${machine.user}";
+        };
+        captureDelays = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        pidFile = mkOption {
+          type = types.str;
+          default = "/var/run/sidewinderd.pid";
+        };
+        encryptedWorkDir = mkOption {
+          type = types.bool;
+          default = false;
+        };
+        workDir = mkOption {
+          type = types.nullOr types.str;
+          default = null; # "/home/${machine.user}/.local/share/sidewinderd"
+        };
+      };
+    };
     firmware = mkOption {
       type = types.nullOr (types.enum [ "redist" "all" ]);
       default = null;
     };
-    # drivers = mkOption {
-    #   type = types.listOf (types.enum [ "g710+" ]);
-    #   default = [ ];
-    # };
+    graphics = mkOption { type = types.enum [ "intel" "nvidia" "virtualbox" ]; };
   };
 
   config = mkIf cfg.enable (mkMerge [
+    (mkIf cfg.drivers.g710.enable {
+      environment.etc."sidewinderd.conf".text = ''
+        user = "${cfg.drivers.g710.user}";
+        capture_delays = ${if cfg.drivers.g710.captureDelays then "true" else "false"};
+        pid-file = "${cfg.drivers.g710.pidFile}";
+        encrypted_workdir = ${if cfg.drivers.g710.encryptedWorkDir then "true" else "false"};
+        ${if cfg.drivers.g710.workDir != null then ''workdir = "${cfg.drivers.g710.workDir}";'' else ""}
+      '';
+      systemd.services.sidewinderd = {
+        script = "${pkgs.local.sidewinderd}/bin/sidewinderd";
+        wantedBy = [ "multi-user.target" ];
+      };
+    })
+
+    (mkIf cfg.drivers.artist12.enable {
+      environment.systemPackages = with pkgs; [ libsForQt5.xp-pen-deco-01-v2-driver ];
+    })
+
     (mkIf (cfg.firmware != null) {
       hardware = {
         enableRedistributableFirmware = mkIf (cfg.firmware == "redist") true;
@@ -26,7 +66,6 @@ in {
 
     (mkIf (cfg.graphics == "nvidia") {
       services.xserver.videoDrivers = [ "nvidia" ];
-      boot.kernelParams = [ "nvidia-drm.modeset=1" ];
       virtualisation.podman.enableNvidia = true;
       hardware.nvidia = {
         modesetting.enable = true;
@@ -35,7 +74,7 @@ in {
           finegrained = false;
         };
         open = false;
-        nvidiaSettings = false;
+        # nvidiaSettings = false;
         package = config.boot.kernelPackages.nvidiaPackages.beta;
       };
     })

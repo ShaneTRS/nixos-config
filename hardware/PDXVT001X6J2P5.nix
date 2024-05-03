@@ -44,6 +44,7 @@
   shanetrs.hardware = {
     enable = true;
     graphics = "intel";
+    drivers.g710.enable = true;
     firmware = "redist";
   };
   swapDevices = [{

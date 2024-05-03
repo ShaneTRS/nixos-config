@@ -1,22 +1,24 @@
 { config, lib, functions, pkgs, machine, ... }:
-let inherit (lib) mkForce mkIf mkOverride;
+let
+  inherit (lib) mkForce mkIf mkOverride;
+  mkStrongDefault = x: mkOverride 900 x;
 in {
   imports = map (file: "${./.}/${file}") (builtins.filter (x: x != "default.nix")
     (builtins.attrNames (builtins.readDir ./.))); # Import all modules in this directory (except self)
   boot = {
     initrd.availableKernelModules = [ "ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod" ];
     kernelModules = [ "v4l2loopback" ]; # Allow using cameras
-    kernelPackages = mkOverride 900 pkgs.linuxPackages_zen; # Enable zen kernel
+    kernelPackages = mkStrongDefault pkgs.linuxPackages_zen; # Enable zen kernel
     kernelParams = [ "quiet" "splash" ]; # Disable boot messages
     extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
-    tmp.useTmpfs = mkOverride 900 true; # Use RAM disk for /tmp
+    tmp.useTmpfs = mkStrongDefault true; # Use RAM disk for /tmp
   };
-  zramSwap = mkOverride 900 {
+  zramSwap = mkStrongDefault {
     enable = true;
     memoryPercent = 70;
   };
   environment.systemPackages = with pkgs; [ git ];
-  hardware = mkOverride 900 {
+  hardware = mkStrongDefault {
     pulseaudio.enable = false;
     opengl = {
       enable = true;
@@ -25,18 +27,25 @@ in {
     };
   };
   networking = {
-    firewall.enable = mkOverride 900 false;
-    networkmanager.enable = mkOverride 900 true;
+    firewall.enable = mkStrongDefault false;
+    networkmanager.enable = mkStrongDefault true;
     hostName = machine.hostname;
   };
   services = {
-    earlyoom.enable = mkOverride 900 true;
-    openssh.enable = mkOverride 900 true;
+    earlyoom.enable = mkStrongDefault true;
+    openssh = {
+      enable = mkStrongDefault true;
+      settings = {
+        TCPKeepAlive = mkStrongDefault "yes";
+        ClientAliveCountMax = mkStrongDefault 30;
+        ClientAliveInterval = mkStrongDefault 15;
+      };
+    };
     udev.extraRules = ''
       KERNEL=="cpu_dma_latency", GROUP="realtime"
     '';
   };
-  security.pam.loginLimits = mkOverride 900 [
+  security.pam.loginLimits = mkStrongDefault [
     {
       domain = "@realtime";
       item = "rtprio";
@@ -53,9 +62,9 @@ in {
       value = -20;
     }
   ];
-  time.timeZone = mkOverride 900 "America/Phoenix";
+  time.timeZone = mkStrongDefault "America/Phoenix";
   users = {
-    mutableUsers = mkOverride 900 false;
+    mutableUsers = mkStrongDefault false;
     groups.realtime.members = [ machine.user ];
     users.${machine.user} = {
       isNormalUser = true;
@@ -67,7 +76,7 @@ in {
     home = {
       file = {
         ".ssh" = let attempt = builtins.tryEval (functions.configs ".ssh");
-        in mkIf attempt.success (mkOverride 900 {
+        in mkIf attempt.success (mkStrongDefault {
           recursive = true;
           source = attempt.value;
         });
@@ -75,7 +84,7 @@ in {
       stateVersion = "23.11";
     };
     programs = {
-      git = mkOverride 900 {
+      git = mkStrongDefault {
         enable = true;
         userEmail = "${machine.user}@${machine.hostname}";
         userName = machine.user;
@@ -85,10 +94,12 @@ in {
         };
       };
       home-manager.enable = true;
-      ssh = mkOverride 900 {
+      ssh = mkStrongDefault {
         enable = true;
         controlMaster = "auto";
         controlPersist = "5m";
+        serverAliveCountMax = 30;
+        serverAliveInterval = 15;
       };
     };
   };
@@ -99,7 +110,7 @@ in {
     '';
   };
   system = {
-    autoUpgrade.dates = mkOverride 900 "Thu *-*-* 04:40:00"; # Once a week at Thursday, 4:40am
+    autoUpgrade.dates = mkStrongDefault "Thu *-*-* 04:40:00"; # Once a week at Thursday, 4:40am
     stateVersion = "23.11";
   };
 }
