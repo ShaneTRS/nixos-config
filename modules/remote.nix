@@ -1,7 +1,7 @@
 { config, lib, pkgs, functions, machine, ... }:
 let
-  inherit (lib) concatStringsSep mkEnableOption mkIf mkMerge mkOption types;
   cfg = config.shanetrs.remote;
+  inherit (lib) concatStringsSep mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.remote = {
     enable = mkEnableOption "Low-latency access to a remote machine";
@@ -144,7 +144,7 @@ in {
                   udevadm wait "$usb"
                   sleep 0.2s
                   doas usbip unbind -b"$bus" &>/dev/null
-                  doas usbip bind -b"$bus" &>/dev/null
+                  doas usbip bind -b"$bus"
                   sleep 0.2s
                   # shellcheck disable=SC2048 disable=SC2086
                   THAT=$(addr-sort ''${TARGET[*]})

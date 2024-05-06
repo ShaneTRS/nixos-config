@@ -29,7 +29,7 @@ in {
   networking = {
     firewall.enable = mkStrongDefault false;
     networkmanager.enable = mkStrongDefault true;
-    hostName = machine.hostname;
+    hostName = mkStrongDefault machine.hostname;
   };
   services = {
     earlyoom.enable = mkStrongDefault true;
@@ -37,7 +37,7 @@ in {
       enable = mkStrongDefault true;
       settings = {
         TCPKeepAlive = mkStrongDefault "yes";
-        ClientAliveCountMax = mkStrongDefault 30;
+        ClientAliveCountMax = mkStrongDefault 3000;
         ClientAliveInterval = mkStrongDefault 15;
       };
     };
@@ -45,7 +45,7 @@ in {
       KERNEL=="cpu_dma_latency", GROUP="realtime"
     '';
   };
-  security.pam.loginLimits = mkStrongDefault [
+  security.pam.loginLimits = [
     {
       domain = "@realtime";
       item = "rtprio";
@@ -93,18 +93,18 @@ in {
           credential.helper = "store";
         };
       };
-      home-manager.enable = true;
+      home-manager.enable = mkStrongDefault true;
       ssh = mkStrongDefault {
         enable = true;
         controlMaster = "auto";
         controlPersist = "5m";
-        serverAliveCountMax = 30;
+        serverAliveCountMax = 3000;
         serverAliveInterval = 15;
       };
     };
   };
   systemd.services = {
-    NetworkManager-wait-online.enable = false;
+    NetworkManager-wait-online.enable = mkStrongDefault false;
     nixos-upgrade.script = mkForce ''
       ${pkgs.doas}/bin/doas -u "${machine.user}" ${pkgs.bash}/bin/sh -c 'INTERACTIVE=false UPDATE=true "${functions.flake}/rebuild" switch'
     '';

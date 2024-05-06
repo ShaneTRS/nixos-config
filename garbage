@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
-CMD="nix-collect-garbage ${*:---delete-older-than ${TIME:-30d}}"
-
-echo "executing: $CMD" 1>&2
-$SUDO $CMD || exit; $CMD

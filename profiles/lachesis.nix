@@ -27,6 +27,10 @@
       zsh.enable = true;
       doas.enable = true;
     };
+    tundra = {
+      enable = true;
+      appStores = [ ];
+    };
   };
 
   user = {

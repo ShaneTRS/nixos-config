@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+SRC="${SRC:-$HOME/.config/nixos}"
+SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
+
+check() {(
+    cd "$SRC" || exit 1
+    git remote update &>/dev/null
+    git status -uno | grep -q 'Your branch is behind'
+)}
+
+# shellcheck disable=SC2120
+garbage() {(
+    CMD="nix-collect-garbage ${*:---delete-older-than ${TIME:-30d}}"
+    echo "executing: $CMD" 1>&2
+    # shellcheck disable=SC2086
+    $SUDO $CMD || exit; $CMD
+)}
+
+merge() {(
+    cd "$SRC" || exit 1
+    git remote update &>/dev/null
+    git add -A; git update-index --refresh >/dev/null
+    git commit -am "AUTO: Configuration updated"
+    git pull --rebase
+)}
+
+push() {(
+    cd "$SRC" || exit 1
+    git push
+)}
+
+help() {(
+    echo "Usage: $0 <command>"
+    echo "Commands:"
+    echo "  check       Return true if local branch is behind remote"
+    echo "  garbage     Run garbage collection on the Nix store"
+    echo "  merge       Get new changes from remote"
+    echo "  push        Submit local changes to the remote"
+    echo "  rebuild     Rebuild system with current configuration"
+    echo "  update      Get new changes and rebuild the system"
+)}
+
+rebuild() {(
+    cd "$SRC" || exit 1
+    ./rebuild "${@:-boot}"
+)}
+
+update() {(
+    cd "$SRC" || exit 1
+    merge && push
+    garbage
+    rebuild "$@"
+)}
+
+if [ -z "$*" ]; then help; else "$@"; fi

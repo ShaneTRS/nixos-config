@@ -32,10 +32,13 @@ in {
       };
     };
     firmware = mkOption {
-      type = types.nullOr (types.enum [ "redist" "all" ]);
+      type = types.enum [ "redist" "all" null ];
       default = null;
     };
-    graphics = mkOption { type = types.enum [ "intel" "nvidia" "virtualbox" ]; };
+    graphics = mkOption {
+      type = types.enum [ "intel" "nvidia" "virtualbox" null ];
+      default = null;
+    };
   };
 
   config = mkIf cfg.enable (mkMerge [

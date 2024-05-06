@@ -1,7 +1,7 @@
 { config, lib, pkgs, functions, ... }:
 let
-  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
   cfg = config.shanetrs.programs;
+  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.programs = {
     enable = mkEnableOption "Program configuration and integration";
