@@ -14,7 +14,7 @@ garbage() {(
     CMD="nix-collect-garbage ${*:---delete-older-than ${TIME:-30d}}"
     echo "executing: $CMD" 1>&2
     # shellcheck disable=SC2086
-    $SUDO $CMD || exit; $CMD
+    $SUDO $CMD || exit 1; $CMD
 )}
 
 merge() {(
@@ -46,11 +46,19 @@ rebuild() {(
     ./rebuild "${@:-boot}"
 )}
 
+# shellcheck disable=SC2120
 update() {(
     cd "$SRC" || exit 1
+    check || exit 0
     merge && push
-    garbage
+    ${GARBAGE:-true} && garbage
     rebuild "$@"
+)}
+
+notify() {(
+    eval "$(notify-send -i "$NOTIFY_ICON" -a "Tundra: System Updater" -u critical \
+    'System update available!' 'Select an option below to continue' \
+    -A "update"="Install update in background" -A "sleep ${NOTIFY_DELAY:-1200}; notify"="Ask me later" -A "exit"="Ignore")"
 )}
 
 if [ -z "$*" ]; then help; else "$@"; fi

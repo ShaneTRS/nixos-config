@@ -126,7 +126,7 @@ in {
         };
         usbip-bin = pkgs.writeShellApplication {
           name = "usbip.service";
-          runtimeInputs = with pkgs; [ coreutils local.addr-sort libnotify openssh systemd util-linux ];
+          runtimeInputs = with pkgs; [ coreutils doas local.addr-sort libnotify openssh systemd util-linux ];
           text = ''
             set +o errexit # disable exit on error
 

@@ -1,11 +1,10 @@
 # TODO:
 # - Add Nix software center
 # - Create update checker, with notifications, and daemon service
-# - Figure out push credentials and merging
 # - Figure out support for local secrets
 # - Create package that holds Tundra scripts and icons
 
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.tundra;
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
@@ -16,6 +15,10 @@ in {
       enable = mkOption {
         type = types.bool;
         default = true;
+      };
+      unattended = mkOption {
+        type = types.bool;
+        default = false;
       };
       checkInterval = mkOption {
         type = types.enum [ "daily" "weekly" "monthly" ];
@@ -47,6 +50,49 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     { environment.systemPackages = with pkgs; [ local.tundra ]; }
+
+    (mkIf cfg.updates.enable {
+      systemd.timers = {
+        tundra-updater = {
+          wantedBy = [ "timers.target" ];
+          timerConfig = {
+            OnCalendar = let
+              intervals = {
+                "daily" = "*-*-* 04:40:00";
+                "weekly" = "Thu *-*-* 04:40:00";
+                "monthly" = "Thu *-*-1..7 04:40:00";
+              };
+            in intervals.${cfg.updates.checkInterval};
+            Unit = if cfg.updates.unattended then "tundra-updater.service" else "tundra-notifier.service";
+          };
+        };
+      };
+      systemd.services = {
+        tundra-notifier = {
+          environment = {
+            INTERACTIVE = "false";
+            UPDATE = "true";
+            NOTIFY_ICON = "${pkgs.local.tundra}/share/icons/hicolor/scalable/apps/tundra-bordered.svg";
+          };
+          script = "${pkgs.local.tundra}/bin/tundra notify";
+          serviceConfig = {
+            Type = "oneshot";
+            User = "${machine.user}";
+          };
+        };
+        tundra-updater = {
+          environment = {
+            INTERACTIVE = "false";
+            UPDATE = "true";
+          };
+          script = "${pkgs.local.tundra}/bin/tundra update";
+          serviceConfig = {
+            Type = "oneshot";
+            User = "${machine.user}";
+          };
+        };
+      };
+    })
 
     (mkIf (builtins.elem "nix" cfg.appStores) {
       # TODO: Make this functional
