@@ -41,14 +41,20 @@
     options = [ "compress-force=zstd:6" ];
     neededForBoot = true;
   };
-  shanetrs.hardware = {
-    enable = true;
-    graphics = "intel";
-    drivers.g710 = {
+  shanetrs = {
+    hardware = {
       enable = true;
-      captureDelays = false;
+      graphics = "intel";
+      drivers.g710 = {
+        enable = true;
+        captureDelays = false;
+      };
+      firmware = "redist";
     };
-    firmware = "redist";
+    remote.usb = {
+      devices = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
+      ports = [ "2-2" "2-4" ];
+    };
   };
   swapDevices = [{
     device = "/var/lib/swapfile";

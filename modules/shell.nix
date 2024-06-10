@@ -36,7 +36,7 @@ in {
       enable = mkEnableOption "Customization and setup of doas for privilege escalation";
       noPassCmds = mkOption {
         type = types.listOf types.str;
-        default = [ "ionice" "nixos-rebuild" "nix-collect-garbage" ];
+        default = [ "ionice" "nixos-rebuild" "nix-collect-garbage" "true" ];
       };
       extraRules = mkOption {
         type = types.listOf types.attrs;

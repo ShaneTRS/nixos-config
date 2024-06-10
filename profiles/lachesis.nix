@@ -12,7 +12,6 @@
     remote = {
       enable = true;
       role = "client";
-      usb.ports = [ "2-2" "2-4" ];
     };
     programs = {
       discord.enable = true;
@@ -42,7 +41,6 @@
       local.spotify
       vlc
       (writeShellScriptBin "backlight-8b501" ''
-        #!/bin/sh
         export DISPLAY=:0
         mkdir -p /tmp/backlight
         processes=(`pgrep backlight-8b501`)

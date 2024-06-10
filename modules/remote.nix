@@ -28,6 +28,10 @@ in {
         type = types.bool;
         default = true;
       };
+      devices = mkOption {
+        type = types.str;
+        default = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
+      };
       ports = mkOption {
         type = if cfg.role == "client" then types.listOf types.str else null;
         example = [ "2-2" "2-4" ];
@@ -126,9 +130,13 @@ in {
         };
         usbip-bin = pkgs.writeShellApplication {
           name = "usbip.service";
-          runtimeInputs = with pkgs; [ coreutils doas local.addr-sort libnotify openssh systemd util-linux ];
+          runtimeInputs = with pkgs; [ coreutils gash-utils local.addr-sort libnotify openssh systemd util-linux ];
           text = ''
             set +o errexit # disable exit on error
+            if ! doas true; then
+              sleep 3
+              exit 1
+            fi
 
             notify () {
               notify-send -i network-"$1" -a usb-forwarding 'USB Port Forwarding' "''${1^}ed port $2 to remote computer" -t 1000
@@ -137,7 +145,7 @@ in {
             forward_port () {
               read -ra arr <<< "$@"
               for i in "''${arr[@]}"; do
-                usb=/sys/bus/pci/devices/0000:00:14.0/usb2/''${i%.*}
+                usb=$DEVICES''${i%.*}
                 [[ "$i" == *"."* ]] && usb+="/$i"
                 bus=''${usb//*\/}
                 while :; do
@@ -192,12 +200,13 @@ in {
                 in pkgs.writeScriptBin "loop-vncviewer" ''
                   #!/usr/bin/env sh
                   while true; do
-                    vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
-                      if attempt.success then ''-passwd="${attempt.value}"'' else ""
-                    } /home/${machine.user}/.vnc/loop.tigervnc \
-                    "$(${pkgs.local.addr-sort}/bin/addr-sort ${
+                    addr="$(${pkgs.local.addr-sort}/bin/addr-sort ${
                       lib.concatStringsSep " " config.shanetrs.remote.addresses.host
                     })"
+                    [ -n "$addr" ] &&
+                      vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
+                        if attempt.success then ''-passwd="${attempt.value}"'' else ""
+                      } /home/${machine.user}/.vnc/loop.tigervnc "$addr"
                     sleep .6
                   done
                 ''
@@ -223,6 +232,7 @@ in {
               Environment = [
                 "TARGET='${concatStringsSep " " cfg.addresses.host}'"
                 "PORTS='${concatStringsSep " " cfg.usb.ports}'"
+                "DEVICES=${cfg.usb.devices}"
               ];
               ExecStart = "${usbip-bin}/bin/usbip.service";
               Restart = "on-failure";
