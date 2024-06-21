@@ -17,6 +17,8 @@ done
     TARGET="$(realpath "$FILE")"
     FILE="${FILE#*/}" # Strip target user
     FILE="${FILE#*/}" # Strip target profile"
-    [ ! -L "$HOME/$FILE" ] &&
+    if [ ! -L "$HOME/$FILE" ]; then
+        mkdir -p "$HOME/$(dirname "$FILE")"
         ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
+    fi
 done < "$PWD/last"

@@ -189,7 +189,7 @@ in {
     })
 
     (mkIf cfg.vscode.enable {
-      environment.systemPackages = with pkgs; mkIf (builtins.elem "nix" cfg.vscode.features) [ nil nixfmt ];
+      environment.systemPackages = with pkgs; mkIf (builtins.elem "nix" cfg.vscode.features) [ nil nixfmt-classic ];
       user = {
         programs.vscode = {
           enable = true;

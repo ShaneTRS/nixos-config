@@ -4,10 +4,7 @@
   programs.dconf.enable = true; # Enable dconf for GTK apps
 
   shanetrs = {
-    browser = {
-      enable = true;
-      exec = "firefox";
-    };
+    browser.firefox.enable = true;
     desktop = {
       enable = true;
       session = "plasma";

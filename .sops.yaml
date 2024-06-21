@@ -1,0 +1,23 @@
+keys:
+  - &mo age1hxnkuwrrw6vnwc0qv3kta7f4lsmg44x0pevgmgrw2ysze585ldyqjlnke2
+  - &shane age18ha28zt2y5vjuvp0g0smt6kju4fd28yh8g4ntp9g20d425wa25gsqwtfxm
+  - &zack age1prkzt3v8mdkfeyr20sn98tmap0dll5d8h64tqkxrp38d07xdmqfqtksa6m
+creation_rules:
+  - path_regex: secrets/global.+$
+    key_groups:
+    - age:
+      - *mo
+      - *shane
+      - *zack
+  - path_regex: secrets/mo.+$
+    key_groups:
+    - age:
+      - *mo
+  - path_regex: secrets/shane.+$
+    key_groups:
+    - age:
+      - *shane
+  - path_regex: secrets/zack.+$
+    key_groups:
+    - age:
+      - *zack

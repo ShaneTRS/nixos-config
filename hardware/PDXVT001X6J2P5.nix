@@ -64,7 +64,7 @@
     settings.max-jobs = 0;
     distributedBuilds = true;
     buildMachines = [{
-      hostName = "192.168.1.11?ssh-key=/root/.ssh/shane_rsa";
+      hostName = "192.168.1.11?ssh-key=/root/.ssh/shane_ed25519";
       sshUser = "shane";
       systems = [ "x86_64-linux" ];
       supportedFeatures = [ "benchmark" "big-parallel" "kvm" ];

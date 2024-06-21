@@ -4,27 +4,32 @@
         {
             "label": "Configuration REPL",
             "type": "shell",
-            "command": "nix develop"
+            "command": "tundra nix develop .#repl"
+        },
+        {
+            "label": "SOPS Shell",
+            "type": "shell",
+            "command": "tundra nix develop .#sops"
         },
         {
             "label": "Collect garbage",
             "type": "shell",
-            "command": "./garbage"
+            "command": "tundra garbage"
         },
         {
             "label": "Update now",
             "type": "shell",
-            "command": "./rebuild switch"
+            "command": "tundra rebuild switch"
         },
         {
             "label": "Update on boot",
             "type": "shell",
-            "command": "./rebuild boot"
+            "command": "tundra rebuild boot"
         },
         {
             "label": "Update temporarily",
             "type": "shell",
-            "command": "./rebuild test",
+            "command": "tundra rebuild test",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

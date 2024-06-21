@@ -82,22 +82,7 @@ in {
       };
     })
 
-    (mkIf (cfg.graphics == "virtualbox") {
-      virtualisation.virtualbox.guest = {
-        enable = true;
-        x11 = true;
-      };
-      user.xsession = {
-        enable = true;
-        # This is a workaround for a NixOS option bug, I believe
-        profileExtra = ''
-          VBoxClient --clipboard
-          VBoxClient --draganddrop
-          VBoxClient --seamless
-          VBoxClient --vmsvga
-        '';
-      };
-    })
+    (mkIf (cfg.graphics == "virtualbox") { virtualisation.virtualbox.guest.enable = true; })
 
     (mkIf (cfg.graphics == "intel") { hardware.opengl.extraPackages = with pkgs; [ intel-media-driver ]; })
   ]);

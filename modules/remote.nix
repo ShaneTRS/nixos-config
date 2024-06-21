@@ -74,7 +74,7 @@ in {
       user = let
         roc-send-bin = pkgs.writeShellApplication {
           name = "roc-send.service";
-          runtimeInputs = with pkgs; [ local.addr-sort local.not-nice pulseaudio roc-toolkit ];
+          runtimeInputs = with pkgs; [ local.addr-sort gawk local.not-nice pulseaudio roc-toolkit ];
           text = ''
             set +o errexit
             if [ -z "''${THAT:-}" ]; then
@@ -82,6 +82,7 @@ in {
               THAT=$(addr-sort ''${CLIENT[*]})
             fi
             ssh "$THAT" -f 'systemctl --user restart roc-recv.service'
+            sink="$(pactl list sources short | awk '/output/ {print $1; exit}')"
             # shellcheck disable=SC2128
             roc-send -s"rtp+rs8m://$THAT:48820" -r"rs8m://$THAT:48821" \
               --rate=24500 --resampler-profile=low --resampler-backend speex \
@@ -94,7 +95,7 @@ in {
             Unit.Description = "Low-latency VNC display server";
             Service = {
               Environment = "DISPLAY=:0";
-              ExecStart = let attempt = builtins.tryEval (functions.configs "vnc-passwd");
+              ExecStart = let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
               in "${pkgs.local.not-nice}/bin/not-nice x0vncserver Geometry=2732x1536 ${
                 if attempt.success then ''-rfbauth "${attempt.value}"'' else ""
               } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
@@ -196,7 +197,7 @@ in {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";
             exec = "${
-                let attempt = builtins.tryEval (functions.configs "vnc-passwd");
+                let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
                 in pkgs.writeScriptBin "loop-vncviewer" ''
                   #!/usr/bin/env sh
                   while true; do

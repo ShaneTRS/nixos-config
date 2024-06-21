@@ -6,13 +6,18 @@
   description = "My system configuration";
 
   inputs = {
-    pkgs-stable.url = "nixpkgs/nixos-23.11";
+    pkgs-stable.url = "nixpkgs/nixos-24.05";
     pkgs-unstable.url = "nixpkgs/nixos-unstable";
     pkgs-pinned.url = "nixpkgs/79baff8812a0d68e24a836df0a364c678089e2c7"; # March 1st, 2024
 
+    sops = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "pkgs-stable";
+    };
+
     # This cannot be simplified because flake.nix is *not* a real nix file. Only `self.outputs` is.
     hm-stable = {
-      url = "github:nix-community/home-manager/release-23.11";
+      url = "github:nix-community/home-manager/release-24.05";
       inputs.nixpkgs.follows = "pkgs-stable";
     };
     hm-unstable = {
@@ -31,37 +36,67 @@
       in this // { profile = this.profile or this.hostname; };
       inherit (machine) base serial system;
       config.allowUnfree = true; # Needed for proprietary software
-      functions = let flake = self.outPath;
+      functions = let
+        flake = self.outPath;
+        secrets = self.outputs.nixosConfigurations.default.config.sops.secrets;
       in rec {
         findFirst = pred: list:
           if builtins.length list == 0 then
             throw "findFirst: list is empty"
-          else # Find first item to match predicate
+            # Find first item to match predicate
+          else
             let first = builtins.elemAt list 0; in if pred first then first else findFirst pred (builtins.tail list);
         configs = file:
           let # Import a config, with most personal taking precedence
-            attempt = builtins.tryEval (findFirst builtins.pathExists [
-              "${flake}/secrets/config/${machine.profile}/${file}"
-              "${flake}/secrets/config/all/${file}"
-              "${flake}/configs/${machine.user}/${machine.profile}/${file}"
-              "${flake}/configs/${machine.user}/all/${file}"
-              "${flake}/configs/global/${machine.profile}/${file}"
-              "${flake}/configs/global/all/${file}"
-            ]);
+            attempt = if secrets ? ${file} then {
+              success = true; # Use a SOPS secret if one is present
+              value = secrets.${file}.path;
+            } else
+              builtins.tryEval (findFirst builtins.pathExists [
+                "${flake}/configs/${machine.user}/${machine.profile}/${file}"
+                "${flake}/configs/${machine.user}/all/${file}"
+                "${flake}/configs/global/${machine.profile}/${file}"
+                "${flake}/configs/global/all/${file}"
+              ]);
           in if attempt.success then attempt.value else throw "configs: '${file}' not found";
-        inherit flake; # Returns the base directory of the flake
-        secrets = "${flake}/secrets"; # Returns the secrets directory
+        # Return the base directory of the flake; provide SOPS secrets
+        inherit flake secrets;
         importRepo = repo: import repo { inherit system config; }; # Pass system and config to repo
       };
       pkgs-base = functions.importRepo inputs."pkgs-${base}";
     in {
-      devShells.${system}.default =
-        pkgs-base.mkShell { shellHook = ''exec nix repl --expr "builtins.getFlake \"$PWD?submodules=1\""''; };
-      formatter.${system} = pkgs-base.nixfmt;
+      devShells.${system} = with pkgs-base; rec {
+        default = repl;
+        repl = mkShell { shellHook = ''exec nix repl --expr "builtins.getFlake \"$PWD?submodules=1\""''; };
+        sops = mkShell {
+          buildInputs = [ ssh-to-age ];
+          shellHook = ''
+            export SOPS_AGE_KEY=$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null);
+            [ -z "$SOPS_AGE_KEY" ] &&
+              echo 'warning: ssh key was not found; keys will need to be provided'
+            export NIX_SHELL_PACKAGES="sops";
+            exec nix shell
+          '';
+        };
+      };
+      formatter.${system} = pkgs-base.nixfmt-classic;
       packages.${system}.default = with pkgs-base;
         buildEnv {
           name = "flake-shell";
-          paths = [ bash coreutils gawk gnused git nil nixfmt nix-output-monitor nixVersions.nix_2_19 sudo ugrep ];
+          paths = [
+            bash
+            coreutils
+            gawk
+            gnused
+            git
+            nil
+            nixfmt-classic
+            nix-output-monitor
+            nixVersions.nix_2_19
+            sops
+            sudo
+            ugrep
+          ];
         };
       legacyPackages.${system} = self.nixosConfigurations.default.pkgs;
       nixosConfigurations.default = let inherit (inputs."pkgs-${base}") lib;
@@ -106,8 +141,12 @@
               };
             };
           }
+
           inputs."hm-${base}".nixosModules.home-manager
+          inputs.sops.nixosModules.sops
+
           (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" machine.user ])
+
           (./profiles + "/${machine.profile or machine.hostname}.nix")
           (if serial == "" then { } else "${./hardware}/${serial}.nix")
           ./modules

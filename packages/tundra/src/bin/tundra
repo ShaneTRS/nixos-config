@@ -4,7 +4,6 @@ SRC="${SRC:-$HOME/.config/nixos}"
 SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
 
 check() {(
-    cd "$SRC" || exit 1
     git remote update &>/dev/null
     git status -uno | grep -q 'Your branch is behind'
 )}
@@ -18,7 +17,6 @@ garbage() {(
 )}
 
 merge() {(
-    cd "$SRC" || exit 1
     git remote update &>/dev/null
     git add -A; git update-index --refresh >/dev/null
     git commit -am "AUTO: Configuration updated"
@@ -26,7 +24,6 @@ merge() {(
 )}
 
 push() {(
-    cd "$SRC" || exit 1
     git push
 )}
 
@@ -42,13 +39,11 @@ help() {(
 )}
 
 rebuild() {(
-    cd "$SRC" || exit 1
     ./rebuild "${@:-boot}"
 )}
 
 # shellcheck disable=SC2120
 update() {(
-    cd "$SRC" || exit 1
     check || exit 0
     merge && push
     ${GARBAGE:-true} && garbage
@@ -61,4 +56,6 @@ notify() {(
     -A "update"="Install update in background" -A "sleep ${NOTIFY_DELAY:-1200}; notify"="Ask me later" -A "exit"="Ignore")"
 )}
 
+export SRC MACHINE INTERACTIVE COMMIT UPDATE
+cd "$SRC" || exit 1
 if [ -z "$*" ]; then help; else "$@"; fi

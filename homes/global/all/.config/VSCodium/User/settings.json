@@ -12,8 +12,9 @@
         }
     },
     "editor.formatOnSave": true,
-    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
     "task.problemMatchers.neverPrompt": {
         "shell": true
     },
+    "editor.stickyScroll.enabled": false,
 }

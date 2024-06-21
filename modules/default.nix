@@ -1,6 +1,6 @@
 { config, lib, functions, pkgs, machine, ... }:
 let
-  inherit (lib) mkForce mkIf mkOverride;
+  inherit (lib) mkForce mkOverride;
   mkStrongDefault = x: mkOverride 900 x;
 in {
   imports = map (file: "${./.}/${file}") (builtins.filter (x: x != "default.nix")
@@ -67,22 +67,13 @@ in {
     mutableUsers = mkStrongDefault false;
     groups.realtime.members = [ machine.user ];
     users.${machine.user} = {
-      isNormalUser = true;
-      hashedPasswordFile = functions.configs "passwd";
+      isNormalUser = mkStrongDefault true;
+      hashedPasswordFile = mkStrongDefault (functions.configs "passwd");
       extraGroups = [ "networkmanager" "wheel" ];
     };
   };
   user = {
-    home = {
-      file = {
-        ".ssh" = let attempt = builtins.tryEval (functions.configs ".ssh");
-        in mkIf attempt.success (mkStrongDefault {
-          recursive = true;
-          source = attempt.value;
-        });
-      };
-      stateVersion = "23.11";
-    };
+    home.stateVersion = "23.11";
     programs = {
       git = mkStrongDefault {
         enable = true;

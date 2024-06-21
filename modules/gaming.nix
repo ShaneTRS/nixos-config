@@ -4,7 +4,18 @@ let
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.gaming = {
-    epic = { enable = mkEnableOption "Epic Games Launcher configuration and installation"; };
+    epic = {
+      enable = mkEnableOption "Epic Games Launcher configuration and installation";
+      package = mkOption {
+        type = types.package;
+        default = pkgs.heroic;
+      };
+      extraPackages = mkOption {
+        type = types.listOf types.package;
+        example = with pkgs; [ legendary-gl ];
+        default = [ ];
+      };
+    };
     minecraft = {
       enable = mkEnableOption "Minecraft configuration and installation";
       package = mkOption {
@@ -18,6 +29,7 @@ in {
       extraPackages = mkOption {
         type = types.listOf types.package;
         example = with pkgs; [ flite ];
+        default = [ ];
       };
     };
     steam = {
@@ -49,21 +61,21 @@ in {
   };
 
   config = mkMerge [
-    (mkIf cfg.epic.enable { user.home.packages = with pkgs; [ heroic ]; })
+    (mkIf cfg.epic.enable { user.home.packages = [ cfg.epic.package ] ++ cfg.epic.extraPackages; })
     (mkIf cfg.gamescope.enable {
       programs.gamescope = {
         enable = true;
-        args = cfg.args;
+        args = cfg.gamescope.args;
         capSysNice = true;
-        env = cfg.env;
-        package = cfg.package;
+        env = cfg.gamescope.env;
+        package = cfg.gamescope.package;
       };
     })
     (mkIf cfg.minecraft.enable {
       user = {
         programs.java = {
           enable = true;
-          package = cfg.java;
+          package = cfg.minecraft.java;
         };
         home.packages = [ cfg.minecraft.package ] ++ cfg.minecraft.extraPackages;
       };
@@ -74,7 +86,7 @@ in {
           enable = true;
           remotePlay.openFirewall = true;
           dedicatedServer.openFirewall = true;
-          extraCompatPackages = cfg.compatibilityTools;
+          extraCompatPackages = cfg.steam.compatibilityTools;
         };
       };
     })
