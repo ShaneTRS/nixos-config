@@ -53,10 +53,10 @@
               value = secrets.${file}.path;
             } else
               builtins.tryEval (findFirst builtins.pathExists [
-                "${flake}/configs/${machine.user}/${machine.profile}/${file}"
-                "${flake}/configs/${machine.user}/all/${file}"
-                "${flake}/configs/global/${machine.profile}/${file}"
-                "${flake}/configs/global/all/${file}"
+                "${flake}/user/configs/${machine.user}/${machine.profile}/${file}"
+                "${flake}/user/configs/${machine.user}/all/${file}"
+                "${flake}/user/configs/global/${machine.profile}/${file}"
+                "${flake}/user/configs/global/all/${file}"
               ]);
           in if attempt.success then attempt.value else throw "configs: '${file}' not found";
         # Return the base directory of the flake; provide SOPS secrets

@@ -27,7 +27,7 @@ push() {(
     git push
 )}
 
-help() {(
+help() {
     echo "Usage: $0 <command>"
     echo "Commands:"
     echo "  check       Return true if local branch is behind remote"
@@ -36,7 +36,7 @@ help() {(
     echo "  push        Submit local changes to the remote"
     echo "  rebuild     Rebuild system with current configuration"
     echo "  update      Get new changes and rebuild the system"
-)}
+}
 
 rebuild() {(
     ./rebuild "${@:-boot}"
@@ -58,4 +58,10 @@ notify() {(
 
 export SRC MACHINE INTERACTIVE COMMIT UPDATE
 cd "$SRC" || exit 1
-if [ -z "$*" ]; then help; else "$@"; fi
+
+[ -z "$*" ] && help
+if grep -q nix <<< "$@"; then
+    "${@//\#/git+file://$SRC?submodules=1#}"
+else
+    "$@"
+fi

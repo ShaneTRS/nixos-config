@@ -69,8 +69,8 @@ MACHINE_USER="$(machine user)"
 MACHINE_PROFILE="$(machine profile)"; [ -z "$MACHINE_PROFILE" ] &&
   MACHINE_PROFILE="$(machine hostname)"
 
-"$SRC/homes/symlink" \
+"$SRC/user/homes/symlink" \
   "$MACHINE_USER/$MACHINE_PROFILE" "$MACHINE_USER/all" \
   "global/$MACHINE_PROFILE" "global/all"
 
-exec true
+exit 0
