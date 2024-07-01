@@ -1,7 +1,7 @@
 { config, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.hardware;
-  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.hardware = {
     enable = mkEnableOption "Hardware driver installation and configuration";
@@ -51,7 +51,7 @@ in {
         ${if cfg.drivers.g710.workDir != null then ''workdir = "${cfg.drivers.g710.workDir}";'' else ""}
       '';
       systemd.services.sidewinderd = {
-        script = "${pkgs.local.sidewinderd}/bin/sidewinderd";
+        script = "${getExe pkgs.local.sidewinderd}";
         wantedBy = [ "multi-user.target" ];
       };
     })

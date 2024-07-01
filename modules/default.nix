@@ -1,6 +1,6 @@
 { config, lib, functions, pkgs, machine, ... }:
 let
-  inherit (lib) mkForce mkOverride;
+  inherit (lib) getExe mkForce mkOverride;
   mkStrongDefault = x: mkOverride 900 x;
 in {
   imports = map (file: "${./.}/${file}") (builtins.filter (x: x != "default.nix")
@@ -97,7 +97,9 @@ in {
   systemd.services = {
     NetworkManager-wait-online.enable = mkStrongDefault false;
     nixos-upgrade.script = mkForce ''
-      ${pkgs.doas}/bin/doas -u "${machine.user}" ${pkgs.bash}/bin/sh -c 'INTERACTIVE=false UPDATE=true "${functions.flake}/rebuild" switch'
+      ${getExe pkgs.doas} -u "${machine.user}" ${
+        getExe pkgs.bash
+      } -c 'INTERACTIVE=false UPDATE=true "${functions.flake}/rebuild" switch'
     '';
   };
   system = {

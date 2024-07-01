@@ -1,7 +1,7 @@
 { config, lib, pkgs, functions, machine, ... }:
 let
   cfg = config.shanetrs.remote;
-  inherit (lib) concatStringsSep mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) concatStringsSep getExe mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.remote = {
     enable = mkEnableOption "Low-latency access to a remote machine";
@@ -59,7 +59,7 @@ in {
       }];
       environment.systemPackages = [ cfg.package (mkIf cfg.usb.enable config.boot.kernelPackages.usbip) ];
       systemd.services.usbipd = mkIf cfg.usb.enable {
-        script = "${config.boot.kernelPackages.usbip}/bin/usbipd";
+        script = "${getExe config.boot.kernelPackages.usbip}";
         wantedBy = [ "default.target" ];
       };
       boot.kernelModules = mkIf cfg.usb.enable [ "usbip-core" "usbip-host" "vhci-hcd" ];
@@ -96,7 +96,7 @@ in {
             Service = {
               Environment = "DISPLAY=:0";
               ExecStart = let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
-              in "${pkgs.local.not-nice}/bin/not-nice x0vncserver Geometry=2732x1536 ${
+              in "${getExe pkgs.local.not-nice} x0vncserver Geometry=2732x1536 ${
                 if attempt.success then ''-rfbauth "${attempt.value}"'' else ""
               } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
               Restart = "on-failure";
@@ -108,7 +108,7 @@ in {
             Unit.Description = "Low-latency VNC display server";
             Service = {
               Environment = ''CLIENT="${concatStringsSep " " cfg.addresses.client}"'';
-              ExecStart = "${pkgs.local.not-nice}/bin/not-nice ${roc-send-bin}/bin/roc-send.service";
+              ExecStart = "${getExe pkgs.local.not-nice} ${getExe roc-send-bin}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
@@ -196,22 +196,19 @@ in {
           (pkgs.makeDesktopItem {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";
-            exec = "${
-                let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
-                in pkgs.writeScriptBin "loop-vncviewer" ''
-                  #!/usr/bin/env sh
-                  while true; do
-                    addr="$(${pkgs.local.addr-sort}/bin/addr-sort ${
-                      lib.concatStringsSep " " config.shanetrs.remote.addresses.host
-                    })"
-                    [ -n "$addr" ] &&
-                      vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
-                        if attempt.success then ''-passwd="${attempt.value}"'' else ""
-                      } /home/${machine.user}/.vnc/loop.tigervnc "$addr"
-                    sleep .6
-                  done
-                ''
-              }/bin/loop-vncviewer";
+            exec = let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
+            in getExe (pkgs.writeScriptBin "loop-vncviewer" ''
+              while true; do
+                addr="$(${getExe pkgs.local.addr-sort} ${
+                  lib.concatStringsSep " " config.shanetrs.remote.addresses.host
+                })"
+                [ -n "$addr" ] &&
+                  vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
+                    if attempt.success then ''-passwd="${attempt.value}"'' else ""
+                  } /home/${machine.user}/.vnc/loop.tigervnc "$addr"
+                sleep .6
+              done
+            '');
             terminal = false;
             type = "Application";
             icon = "krdc";
@@ -221,7 +218,7 @@ in {
           roc-recv = mkIf cfg.audio.enable {
             Unit.Description = "Low-latency remote audio receiver";
             Service = {
-              ExecStart = "${roc-recv-bin}/bin/roc-recv.service";
+              ExecStart = "${getExe roc-recv-bin}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
@@ -235,7 +232,7 @@ in {
                 "PORTS='${concatStringsSep " " cfg.usb.ports}'"
                 "DEVICES=${cfg.usb.devices}"
               ];
-              ExecStart = "${usbip-bin}/bin/usbip.service";
+              ExecStart = "${getExe usbip-bin}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
