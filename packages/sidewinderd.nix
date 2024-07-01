@@ -5,6 +5,7 @@ stdenv.mkDerivation rec {
   version = "638bc839d74dc9bc6dfd3375f00742662be2f8a4";
   nativeBuildInputs = [ cmake pkg-config ];
   buildInputs = [ libconfig systemdLibs tinyxml-2 ];
+  meta.mainProgram = pname;
   postPatch = ''
     sed -i "s:DESTINATION :DESTINATION $out/:g" src/CMakeLists.txt
   '';

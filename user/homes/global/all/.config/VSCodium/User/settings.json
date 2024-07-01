@@ -5,7 +5,9 @@
         "nil": {
             "formatting": {
                 "command": [
-                    "nixfmt",
+                    "nix",
+                    "fmt",
+                    "--",
                     "-w120"
                 ]
             }

@@ -41,5 +41,6 @@ pkgs.stdenvNoCC.mkDerivation {
     license = with licenses; [ gpl3Plus mit ];
     platforms = platforms.linux;
     maintainers = [ ];
+    mainProgram = pname;
   };
 }

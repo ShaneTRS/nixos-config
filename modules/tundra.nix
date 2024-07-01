@@ -7,7 +7,7 @@
 { config, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.tundra;
-  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.tundra = {
     enable = mkEnableOption "Tundra configuration";
@@ -74,7 +74,7 @@ in {
             UPDATE = "true";
             NOTIFY_ICON = "${pkgs.local.tundra}/share/icons/hicolor/scalable/apps/tundra-bordered.svg";
           };
-          script = "${pkgs.local.tundra}/bin/tundra notify";
+          script = "${getExe pkgs.local.tundra} notify";
           serviceConfig = {
             Type = "oneshot";
             User = "${machine.user}";
@@ -85,7 +85,7 @@ in {
             INTERACTIVE = "false";
             UPDATE = "true";
           };
-          script = "${pkgs.local.tundra}/bin/tundra update";
+          script = "${getExe pkgs.local.tundra} update";
           serviceConfig = {
             Type = "oneshot";
             User = "${machine.user}";
