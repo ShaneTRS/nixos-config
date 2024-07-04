@@ -1,10 +1,7 @@
 { pkgs, ... }: {
 
-  environment.systemPackages = with pkgs; [ vlc ];
-  services.flatpak.enable = true;
-  system.autoUpgrade.enable = true;
-
   shanetrs = {
+    enable = true;
     browser = {
       firefox.enable = true;
       chromium.enable = true;
@@ -27,12 +24,7 @@
       discord.enable = true;
       vscode.enable = true;
     };
-    shell = {
-      default = pkgs.zsh;
-      zsh.enable = true;
-      doas.enable = true;
-    };
   };
 
-  user = { home = { packages = with pkgs; [ flatpak gnome.gnome-software krita ]; }; };
+  user.home.packages = with pkgs; [ krita vlc ];
 }

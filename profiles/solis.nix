@@ -1,21 +1,16 @@
 { pkgs, ... }: {
 
-  environment.systemPackages = with pkgs; [ vlc libreoffice-still ];
-  services = {
-    flatpak.enable = true;
-    printing.enable = true;
-  };
-
+  services.printing.enable = true;
   shanetrs = {
+    enable = true;
     browser.chromium.enable = true;
     desktop = {
       enable = true;
       session = "plasma";
+      extraPackages = with pkgs; lib.mkOptionDefault [ libsForQt5.kcalc ];
     };
     programs.vscode.enable = true;
-    shell.doas.enable = true;
-    tundra.enable = true;
   };
 
-  user.home.packages = with pkgs; [ flatpak gnome.gnome-software ];
+  user.home.packages = with pkgs; [ flatpak gimp libreoffice-still vlc ];
 }

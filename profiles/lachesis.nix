@@ -4,6 +4,7 @@
   zramSwap.enable = false;
 
   shanetrs = {
+    enable = true;
     browser.firefox.enable = true;
     desktop = {
       enable = true;
@@ -21,15 +22,8 @@
         features = [ "nix" ];
       };
     };
-    shell = {
-      default = pkgs.zsh;
-      zsh.enable = true;
-      doas.enable = true;
-    };
-    tundra = {
-      enable = true;
-      appStores = [ ];
-    };
+    shell.zsh.enable = true;
+    tundra.appStores = [ ];
   };
 
   user = {
