@@ -30,7 +30,7 @@ in {
       };
       devices = mkOption {
         type = types.str;
-        default = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
+        example = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
       };
       ports = mkOption {
         type = if cfg.role == "client" then types.listOf types.str else null;
@@ -59,7 +59,7 @@ in {
       }];
       environment.systemPackages = [ cfg.package (mkIf cfg.usb.enable config.boot.kernelPackages.usbip) ];
       systemd.services.usbipd = mkIf cfg.usb.enable {
-        script = "${getExe config.boot.kernelPackages.usbip}";
+        script = "${config.boot.kernelPackages.usbip}/bin/usbipd";
         wantedBy = [ "default.target" ];
       };
       boot.kernelModules = mkIf cfg.usb.enable [ "usbip-core" "usbip-host" "vhci-hcd" ];
@@ -119,93 +119,39 @@ in {
     })
 
     (mkIf (cfg.role == "client") {
-      user = let
-        roc-recv-bin = pkgs.writeShellApplication {
-          name = "roc-recv.service";
-          runtimeInputs = with pkgs; [ local.not-nice roc-toolkit ];
-          text = ''
-            not-nice roc-recv -srtp+rs8m://0.0.0.0:48820 -rrs8m://0.0.0.0:48821 \
-              --rate=24500 --resampler-profile=low --resampler-backend speex \
-              --io-latency=20ms --frame-length 4ms -o"pulse://default"
-          '';
-        };
-        usbip-bin = pkgs.writeShellApplication {
-          name = "usbip.service";
-          runtimeInputs = with pkgs; [ coreutils gash-utils local.addr-sort libnotify openssh systemd util-linux ];
-          text = ''
-            set +o errexit # disable exit on error
-            if ! doas true; then
-              sleep 3
-              exit 1
-            fi
-
-            notify () {
-              notify-send -i network-"$1" -a usb-forwarding 'USB Port Forwarding' "''${1^}ed port $2 to remote computer" -t 1000
-            }
-
-            forward_port () {
-              read -ra arr <<< "$@"
-              for i in "''${arr[@]}"; do
-                usb=$DEVICES''${i%.*}
-                [[ "$i" == *"."* ]] && usb+="/$i"
-                bus=''${usb//*\/}
-                while :; do
-                  udevadm wait "$usb"
-                  sleep 0.2s
-                  doas usbip unbind -b"$bus" &>/dev/null
-                  doas usbip bind -b"$bus"
-                  sleep 0.2s
-                  # shellcheck disable=SC2048 disable=SC2086
-                  THAT=$(addr-sort ''${TARGET[*]})
-                  echo "TARGET: $THAT"
-                  # shellcheck disable=SC2016 disable=SC2288
-                  ssh "$THAT" doas usbip attach -r'' + "'" + ''
-                ''${SSH_CLIENT%% *}' -b"$bus"
-                    notify connect "$bus"
-                    udevadm wait "$usb" --removed
-                    notify disconnect "$bus"
-                  done&
-                  pids+=($!)
-                done
-                echo "''${pids[@]}"
-              }
-              detach_port () {
-                # shellcheck disable=SC2048 disable=SC2086
-                THAT=$(addr-sort ''${TARGET[*]})
-                echo "TARGET: $THAT"
-                read -ra arr <<< "$@"
-                for i in "''${arr[@]}"; do
-                  ssh "$THAT" doas usbip detach -p"$i"
-                done
-              }
-              while true; do
-                # shellcheck disable=SC2048 disable=SC2086
-                THAT=$(addr-sort ''${TARGET[*]})
-                [ -z "$THAT" ] || break
-                sleep 1
-              done
-              detach_port 7 6 5 4 3 2 1 0
-              sleep 1
-              # shellcheck disable=SC2048 disable=SC2086
-              forward_port ''${PORTS[*]}
-              wait
+      systemd.services = mkIf cfg.usb.enable {
+        usbip-resume = {
+          after = [ "suspend.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            User = machine.user;
+          };
+          script = "${getExe (pkgs.writeShellApplication {
+            name = "usbip-resume";
+            runtimeInputs = with pkgs; [ procps ];
+            text = ''
+              pkill usbip.service -USR1
+              pkill -f loop-vncviewer.child
             '';
+          })}";
+          wantedBy = [ "suspend.target" ];
         };
-      in {
+      };
+      user = {
         home.packages = [
           (pkgs.makeDesktopItem {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";
             exec = let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
-            in getExe (pkgs.writeScriptBin "loop-vncviewer" ''
+            in getExe (pkgs.writeShellScriptBin "loop-vncviewer" ''
               while true; do
                 addr="$(${getExe pkgs.local.addr-sort} ${
                   lib.concatStringsSep " " config.shanetrs.remote.addresses.host
                 })"
                 [ -n "$addr" ] &&
-                  vncviewer -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
+                  (exec -a "loop-vncviewer.child" "vncviewer" -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
                     if attempt.success then ''-passwd="${attempt.value}"'' else ""
-                  } /home/${machine.user}/.vnc/loop.tigervnc "$addr"
+                  } /home/${machine.user}/.vnc/loop.tigervnc "$addr")
                 sleep .6
               done
             '');
@@ -218,7 +164,15 @@ in {
           roc-recv = mkIf cfg.audio.enable {
             Unit.Description = "Low-latency remote audio receiver";
             Service = {
-              ExecStart = "${getExe roc-recv-bin}";
+              ExecStart = "${getExe (pkgs.writeShellApplication {
+                name = "roc-recv.service";
+                runtimeInputs = with pkgs; [ local.not-nice roc-toolkit ];
+                text = ''
+                  not-nice roc-recv -srtp+rs8m://0.0.0.0:48820 -rrs8m://0.0.0.0:48821 \
+                    --rate=24500 --resampler-profile=low --resampler-backend speex \
+                    --io-latency=20ms --frame-length 4ms -o"pulse://default"
+                '';
+              })}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
@@ -232,7 +186,81 @@ in {
                 "PORTS='${concatStringsSep " " cfg.usb.ports}'"
                 "DEVICES=${cfg.usb.devices}"
               ];
-              ExecStart = "${getExe usbip-bin}";
+              ExecStart = "${getExe (pkgs.writeShellApplication {
+                name = "usbip.service";
+                runtimeInputs = with pkgs; [
+                  coreutils
+                  gash-utils
+                  local.addr-sort
+                  libnotify
+                  openssh
+                  systemd
+                  util-linux
+                ];
+                text = ''
+                  set +o errexit # disable exit on error
+                  if ! doas true; then
+                    sleep 3
+                    exit 1
+                  fi
+
+                  notify () {
+                    notify-send -i network-"$1" -a usb-forwarding 'USB Port Forwarding' "''${1^}ed port $2 to remote computer" -t 1000
+                  }
+
+                  forward_port () {
+                    read -ra arr <<< "$@"
+                    for i in "''${arr[@]}"; do
+                      usb=$DEVICES''${i%.*}
+                      [[ "$i" == *"."* ]] && usb+="/$i"
+                      bus=''${usb//*\/}
+                      while :; do
+                        udevadm wait "$usb"
+                        sleep 0.2s
+                        doas usbip unbind -b"$bus" &>/dev/null
+                        doas usbip bind -b"$bus"
+                        sleep 0.2s
+                        # shellcheck disable=SC2048 disable=SC2086
+                        THAT=$(addr-sort ''${TARGET[*]})
+                        echo "TARGET: $THAT"
+                        # shellcheck disable=SC1083
+                        ssh "$THAT" doas usbip attach -r"\''${SSH_CLIENT%% *}" -b"$bus"
+                        notify connect "$bus"
+                        udevadm wait "$usb" --removed
+                        notify disconnect "$bus"
+                      done &
+                      pids+=($!)
+                    done
+                    echo "''${pids[@]}"
+                  }
+
+                  detach_port () {
+                    # shellcheck disable=SC2048 disable=SC2086
+                    THAT=$(addr-sort ''${TARGET[*]})
+                    echo "TARGET: $THAT"
+                    read -ra arr <<< "$@"
+                    for i in "''${arr[@]}"; do
+                      ssh "$THAT" doas usbip detach -p"$i"
+                    done
+                  }
+
+                  handle_trap () { exit 2; }
+                  trap handle_trap USR1
+
+                  while true; do
+                    # shellcheck disable=SC2048 disable=SC2086
+                    THAT=$(addr-sort ''${TARGET[*]})
+                    [ -z "$THAT" ] || break
+                    sleep 1
+                  done
+
+                  detach_port 7 6 5 4 3 2 1 0
+                  sleep 1
+                  # shellcheck disable=SC2048 disable=SC2086
+                  forward_port ''${PORTS[*]}
+                  wait
+                '';
+              })}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
