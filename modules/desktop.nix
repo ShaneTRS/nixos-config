@@ -2,10 +2,21 @@
 let
   cfg = config.shanetrs.desktop;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
+  extras = rec {
+    "default" = plasma5;
+    "plasma5" = {
+      libs = "libsForQt5";
+      desktop = "plasma5";
+    };
+    "plasma6" = {
+      libs = "kdePackages";
+      desktop = "plasma6";
+    };
+  };
 in {
   # TODO: Maybe rewrite this to match the new browser.nix implementation?
-  # shanetrs.desktop.plasma.enable = true; instead of
-  # shanetrs.desktop = { enable = true; exec = "plasma"; };
+  # This would allow for multiple desktops to be enabled at once,
+  # and would require minor separation of display manager configuration
   options.shanetrs.desktop = let
     sessions = {
       "gnome" = {
@@ -13,8 +24,8 @@ in {
         "pop".extraPackages = with pkgs.gnomeExtensions; [ pop-shell ];
       };
       "plasma" = {
-        presets = [ ];
-        "default".extraPackages = with pkgs.libsForQt5; [
+        presets = [ "plasma5" "plasma6" ];
+        "default".extraPackages = with pkgs.${extras.${cfg.preset}.libs}; [
           ark
           filelight
           kate
@@ -38,7 +49,7 @@ in {
       default = "x11";
     };
     preset = mkOption {
-      type = types.enum (sessions."${cfg.session}".presets ++ [ "default" ]);
+      type = types.enum (sessions.${cfg.session}.presets ++ [ "default" ]);
       default = "default";
     };
     audio = mkOption {
@@ -47,9 +58,8 @@ in {
     };
     extraPackages = mkOption {
       type = types.listOf types.package;
-      default =
-        (if (cfg.preset != "default") then sessions."${cfg.session}"."${cfg.preset}".extraPackages or [ ] else [ ])
-        ++ (sessions."${cfg.session}"."default".extraPackages or [ ]);
+      default = (sessions.${cfg.session}."default".extraPackages or [ ])
+        ++ (if cfg.preset != "default" then (sessions.${cfg.session}.${cfg.preset}.extraPackages or [ ]) else [ ]);
       example = with pkgs; [ flite ];
     };
   };
@@ -58,6 +68,7 @@ in {
     {
       security.rtkit.enable = true; # Interactive privilege escalation
       xdg.portal.enable = true;
+      user.home.packages = cfg.extraPackages;
     }
 
     (mkIf cfg.audio {
@@ -125,12 +136,11 @@ in {
       # Maybe try to use plasma-manager for some settings
       programs.partition-manager.enable = true;
       user = {
-        home.packages = cfg.extraPackages;
         programs = {
           firefox = {
             # Make compatible with browser module, by inheriting its setting and applying our own slightly stronger
             package = lib.mkOverride 95 ((config.shanetrs.browser.firefox.package or pkgs.firefox).override {
-              nativeMessagingHosts = [ pkgs.libsForQt5.plasma-browser-integration ];
+              nativeMessagingHosts = [ pkgs.${extras.${cfg.preset}.libs}.plasma-browser-integration ];
             });
             policies.ExtensionSettings."plasma-browser-integration@kde.org" = mkDefault {
               install_url = "https://addons.mozilla.org/firefox/downloads/latest/plasma-integration/latest.xpi";
@@ -150,7 +160,7 @@ in {
           sddm.wayland.enable = mkIf (cfg.type == "wayland") true;
           defaultSession = if cfg.type == "x11" then "plasma" else "plasmawayland";
         };
-        desktopManager.plasma5.enable = true;
+        desktopManager.${extras.${cfg.preset}.desktop}.enable = true;
       };
     })
 
@@ -160,11 +170,10 @@ in {
         displayManager.defaultSession = "xfce";
         desktopManager.xfce.enable = true;
       };
-      user.home.packages = cfg.extraPackages;
     })
 
-    (mkIf (cfg.session == "xfce" && cfg.preset == "win95") (let chicago95 = pkgs.local.chicago95;
-    in {
+    (let chicago95 = pkgs.local.chicago95;
+    in mkIf (cfg.session == "xfce" && cfg.preset == "win95") {
       fonts = {
         packages = [ chicago95 ];
         fontconfig.allowBitmaps = true;
@@ -203,6 +212,6 @@ in {
           '';
         };
       };
-    }))
+    })
   ]);
 }
