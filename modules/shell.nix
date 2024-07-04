@@ -5,14 +5,14 @@ let
     cat = mkIf (builtins.elem "bat" cfg.all_features) "bat";
     ccat = mkIf (builtins.elem "bat" cfg.all_features) "command cat";
     ccd = mkIf (builtins.elem "zoxide" cfg.all_features) "builtin cd";
-    eza = mkIf (builtins.elem "eza" cfg.all_features) (mkForce "eza --header -o");
+    eza = mkIf (builtins.elem "eza" cfg.all_features) (mkOverride 99 "eza --header -o");
     f = mkIf (builtins.elem "fuck" cfg.all_features) "fuck";
     grep = mkIf (builtins.elem "ugrep" cfg.all_features) "ugrep";
     ls = mkIf (builtins.elem "eza" cfg.all_features) "eza";
     tree = mkIf (builtins.elem "eza" cfg.all_features) "eza -T";
   };
-  inherit (lib) concatStringsSep mkEnableOption mkForce mkIf mkMerge mkOption types;
-  strIf = pred: str: (if pred then str else "");
+  inherit (lib) concatStringsSep mkEnableOption mkIf mkMerge mkOption mkOverride types;
+  inherit (lib.strings) optionalString;
 in {
   options.shanetrs.shell = let
     defaults = rec {
@@ -190,6 +190,7 @@ in {
     })
 
     (mkIf cfg.zsh.enable {
+      users.defaultUserShell = mkOverride 999 pkgs.zsh;
       programs.zsh = {
         enable = true;
         autosuggestions.enable = true;
@@ -197,12 +198,12 @@ in {
         promptInit = concatStringsSep "\n"
           (builtins.attrValues (builtins.mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds) ++ [
             (builtins.readFile (functions.configs ".zshrc"))
-            (strIf (builtins.elem "fuck" cfg.all_features) ''
-              eval $(thefuck --alias)
+            (optionalString (builtins.elem "fuck" cfg.all_features) ''
+              eval "$(thefuck --alias)"
               bindkey -s '\e\e' 'f\n'
               bindkey -s '^[f' 'f\n'
             '')
-            (strIf (builtins.elem "nix-index" cfg.all_features) ''
+            (optionalString (builtins.elem "nix-index" cfg.all_features) ''
               SGR () { for i in "$@"; do echo -ne "\e[$i"m; done; }
               nix-find() { nix-locate --no-group --top-level -r "$@"; }
               command_not_found_handler() {(
@@ -253,6 +254,7 @@ in {
     })
 
     (mkIf cfg.bash.enable {
+      users.defaultUserShell = mkOverride 999 pkgs.bash;
       user.programs = {
         bash = {
           enable = true;
@@ -267,8 +269,8 @@ in {
         promptInit = concatStringsSep "\n"
           (builtins.attrValues (builtins.mapAttrs (key: value: "bind '\"${key}\":\"${value}\"'") cfg.bash.binds) ++ [
             (builtins.readFile (functions.configs ".bashrc"))
-            (strIf (builtins.elem "fuck" cfg.all_features) "eval $(thefuck --alias)")
-            (strIf (builtins.elem "nix-index" cfg.all_features) ''
+            (optionalString (builtins.elem "fuck" cfg.all_features) ''eval "$(thefuck --alias)"'')
+            (optionalString (builtins.elem "nix-index" cfg.all_features) ''
               nix-find() { nix-locate --no-group --top-level -r "$@"; }
             '')
           ]) + cfg.bash.extraRc;

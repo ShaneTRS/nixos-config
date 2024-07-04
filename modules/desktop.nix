@@ -43,7 +43,10 @@ in {
     };
   in {
     enable = mkEnableOption "Desktop environment and display manager configuration";
-    session = mkOption { type = types.enum (builtins.attrNames sessions); };
+    session = mkOption {
+      type = types.nullOr (types.enum (builtins.attrNames sessions));
+      default = null;
+    };
     type = mkOption {
       type = types.enum [ "x11" "wayland" ];
       default = "x11";

@@ -4,7 +4,7 @@
 # - Figure out support for local secrets
 # - Create package that holds Tundra scripts and icons
 
-{ config, lib, pkgs, machine, ... }:
+{ config, lib, pkgs, ... }:
 let
   cfg = config.shanetrs.tundra;
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
@@ -52,43 +52,41 @@ in {
     { environment.systemPackages = with pkgs; [ local.tundra ]; }
 
     (mkIf cfg.updates.enable {
-      systemd.timers = {
-        tundra-updater = {
-          wantedBy = [ "timers.target" ];
-          timerConfig = {
-            OnCalendar = let
-              intervals = {
-                "daily" = "*-*-* 04:40:00";
-                "weekly" = "Thu *-*-* 04:40:00";
-                "monthly" = "Thu *-*-1..7 04:40:00";
+      systemd = {
+        user = {
+          services = {
+            tundra-notifier = {
+              environment = {
+                INTERACTIVE = "false";
+                UPDATE = "true";
+                DISPLAY = ":0";
               };
-            in intervals.${cfg.updates.checkInterval};
-            Unit = if cfg.updates.unattended then "tundra-updater.service" else "tundra-notifier.service";
+              script = "${getExe pkgs.local.tundra} notify"; # This is a filler
+              serviceConfig.Type = "oneshot";
+            };
+            tundra-updater = {
+              environment = {
+                INTERACTIVE = "false";
+                UPDATE = "true";
+              };
+              script = "${getExe pkgs.local.tundra} update";
+              serviceConfig.Type = "oneshot";
+            };
           };
-        };
-      };
-      systemd.services = {
-        tundra-notifier = {
-          environment = {
-            INTERACTIVE = "false";
-            UPDATE = "true";
-            NOTIFY_ICON = "${pkgs.local.tundra}/share/icons/hicolor/scalable/apps/tundra-bordered.svg";
-          };
-          script = "${getExe pkgs.local.tundra} notify";
-          serviceConfig = {
-            Type = "oneshot";
-            User = "${machine.user}";
-          };
-        };
-        tundra-updater = {
-          environment = {
-            INTERACTIVE = "false";
-            UPDATE = "true";
-          };
-          script = "${getExe pkgs.local.tundra} update";
-          serviceConfig = {
-            Type = "oneshot";
-            User = "${machine.user}";
+          timers = {
+            tundra-updater = {
+              wantedBy = [ "timers.target" ];
+              timerConfig = {
+                OnCalendar = let
+                  intervals = {
+                    "daily" = "*-*-* 04:40:00";
+                    "weekly" = "Thu *-*-* 04:40:00";
+                    "monthly" = "Thu *-*-1..7 04:40:00";
+                  };
+                in intervals.${cfg.updates.checkInterval};
+                Unit = if cfg.updates.unattended then "tundra-updater.service" else "tundra-notifier.service";
+              };
+            };
           };
         };
       };

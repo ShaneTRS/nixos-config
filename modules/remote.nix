@@ -205,7 +205,11 @@ in {
                   fi
 
                   notify () {
-                    notify-send -i network-"$1" -a usb-forwarding 'USB Port Forwarding' "''${1^}ed port $2 to remote computer" -t 1000
+                    [ "$1" == "disconnect" ] &&
+                      str="Disconnected port $2 from host at $3" ||
+                      str="Connected port $2 to host at $3";
+                    notify-send -i network-"$1" -a usb-forwarding \
+                      'USB Port Forwarding' "$str" -t 1000
                   }
 
                   forward_port () {
@@ -225,9 +229,9 @@ in {
                         echo "TARGET: $THAT"
                         # shellcheck disable=SC1083
                         ssh "$THAT" doas usbip attach -r"\''${SSH_CLIENT%% *}" -b"$bus"
-                        notify connect "$bus"
+                        notify connect "$bus" "$THAT"
                         udevadm wait "$usb" --removed
-                        notify disconnect "$bus"
+                        notify disconnect "$bus" "$THAT"
                       done &
                       pids+=($!)
                     done

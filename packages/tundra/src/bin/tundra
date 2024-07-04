@@ -31,12 +31,12 @@ help() {
 	cat <<-EOF
 	Usage: $0 <command>"
 	Commands:
-	  check	   Return true if local branch is behind remote
+	  check	   	 Return true if local branch is behind remote
 	  garbage	 Run garbage collection on the Nix store
-	  merge	   Get new changes from remote
-	  push		Submit local changes to the remote
+	  merge	     Get new changes from remote
+	  push		 Submit local changes to the remote
 	  rebuild	 Rebuild system with current configuration
-	  update	  Get new changes and rebuild the system
+	  update	 Get new changes and rebuild the system
 	EOF
 }
 
@@ -53,12 +53,14 @@ update() {(
 )}
 
 notify() {(
+	check || exit 0
+	(( NOTIFY_COUNT += 1 ))
 	eval "$(notify-send -i "$NOTIFY_ICON" -a "Tundra: System Updater" -u critical \
 	'System update available!' 'Select an option below to continue' \
-	-A "update"="Install update in background" -A "sleep ${NOTIFY_DELAY:-1200}; notify"="Ask me later" -A "exit"="Ignore")"
+	-A "update"="Install update in background" -A "sleep $((${NOTIFY_DELAY:-1200} * NOTIFY_COUNT)); notify"="Ask me later" -A "exit"="Ignore")"
 )}
 
-export SRC MACHINE INTERACTIVE COMMIT UPDATE
+export COMMIT INTERACTIVE MACHINE NOTIFY_DELAY NOTIFY_ICON SRC UPDATE TIME
 cd "$SRC" || exit 1
 
 [ -z "$*" ] && help

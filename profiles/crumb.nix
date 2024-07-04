@@ -1,9 +1,10 @@
-{ pkgs, lib, ... }: {
+{ pkgs, ... }: {
 
   environment.systemPackages = with pkgs; [ libsForQt5.xp-pen-deco-01-v2-driver ];
   services.zerotierone.enable = true;
 
   shanetrs = {
+    enable = true;
     browser = {
       firefox.enable = true;
       chromium.enable = true;
@@ -11,7 +12,7 @@
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = lib.mkOptionDefault (with pkgs; [ wacomtablet libsForQt5.kolourpaint ]);
+      extraPackages = with pkgs; lib.mkOptionDefault [ wacomtablet libsForQt5.kolourpaint ];
     };
     gaming = {
       epic.enable = true;
@@ -27,15 +28,11 @@
         features = [ "nix" ];
       };
     };
-    shell = {
-      default = pkgs.zsh;
-      zsh.enable = true;
-      doas.enable = true;
-    };
+    shell.zsh.enable = true;
   };
 
   user = {
-    programs = { obs-studio.enable = true; };
+    programs.obs-studio.enable = true;
     home = {
       packages = with pkgs; [
         audacity
