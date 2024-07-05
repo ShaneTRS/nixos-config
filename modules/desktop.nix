@@ -2,30 +2,13 @@
 let
   cfg = config.shanetrs.desktop;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
-  extras = rec {
-    "default" = plasma5;
-    "plasma5" = {
-      libs = "libsForQt5";
-      desktop = "plasma5";
-    };
-    "plasma6" = {
-      libs = "kdePackages";
-      desktop = "plasma6";
-    };
-  };
-in {
-  # TODO: Maybe rewrite this to match the new browser.nix implementation?
-  # This would allow for multiple desktops to be enabled at once,
-  # and would require minor separation of display manager configuration
-  options.shanetrs.desktop = let
-    sessions = {
-      "gnome" = {
-        presets = [ "pop" ];
-        "pop".extraPackages = with pkgs.gnomeExtensions; [ pop-shell ];
-      };
-      "plasma" = {
-        presets = [ "plasma5" "plasma6" ];
-        "default".extraPackages = with pkgs.${extras.${cfg.preset}.libs}; [
+  this = sessions.${cfg.session}.${cfg.preset} or { };
+  presets = builtins.attrNames sessions.${cfg.session};
+  sessions = {
+    plasma = rec {
+      default = {
+        desktop = "plasma5";
+        extraPackages = with pkgs.${this.libs}; [
           ark
           filelight
           kate
@@ -34,14 +17,22 @@ in {
           plasma-browser-integration
           sddm-kcm
         ];
+        libs = "libsForQt5";
       };
-      "xfce" = {
-        presets = [ "win95" ];
-        "default".extraPackages = with pkgs.xfce; [ xfce4-panel-profiles ];
-        "win95".extraPackages = with pkgs; [ palemoon-bin ];
+      plasma5 = default;
+      plasma6 = default // {
+        desktop = "plasma6";
+        libs = "kdePackages";
       };
     };
-  in {
+    gnome.pop.extraPackages = with pkgs.gnomeExtensions; [ pop-shell ];
+    "xfce" = rec {
+      default.extraPackages = with pkgs.xfce; [ xfce4-panel-profiles ];
+      win95 = { extraPackages = with pkgs; [ palemoon-bin ]; } // default;
+    };
+  };
+in {
+  options.shanetrs.desktop = {
     enable = mkEnableOption "Desktop environment and display manager configuration";
     session = mkOption {
       type = types.nullOr (types.enum (builtins.attrNames sessions));
@@ -52,7 +43,7 @@ in {
       default = "x11";
     };
     preset = mkOption {
-      type = types.enum (sessions.${cfg.session}.presets ++ [ "default" ]);
+      type = types.enum (presets ++ [ "default" ]);
       default = "default";
     };
     audio = mkOption {
@@ -61,8 +52,7 @@ in {
     };
     extraPackages = mkOption {
       type = types.listOf types.package;
-      default = (sessions.${cfg.session}."default".extraPackages or [ ])
-        ++ (if cfg.preset != "default" then (sessions.${cfg.session}.${cfg.preset}.extraPackages or [ ]) else [ ]);
+      default = this.extraPackages or [ ];
       example = with pkgs; [ flite ];
     };
   };
@@ -84,6 +74,7 @@ in {
         jack.enable = true;
       };
     })
+
     # Or Plasma, because SDDM requires the X Server
     (mkIf (cfg.type == "x11" || cfg.session == "plasma") {
       services.xserver = {
@@ -143,7 +134,7 @@ in {
           firefox = {
             # Make compatible with browser module, by inheriting its setting and applying our own slightly stronger
             package = lib.mkOverride 95 ((config.shanetrs.browser.firefox.package or pkgs.firefox).override {
-              nativeMessagingHosts = [ pkgs.${extras.${cfg.preset}.libs}.plasma-browser-integration ];
+              nativeMessagingHosts = [ pkgs.${this.libs}.plasma-browser-integration ];
             });
             policies.ExtensionSettings."plasma-browser-integration@kde.org" = mkDefault {
               install_url = "https://addons.mozilla.org/firefox/downloads/latest/plasma-integration/latest.xpi";
@@ -163,7 +154,7 @@ in {
           sddm.wayland.enable = mkIf (cfg.type == "wayland") true;
           defaultSession = if cfg.type == "x11" then "plasma" else "plasmawayland";
         };
-        desktopManager.${extras.${cfg.preset}.desktop}.enable = true;
+        desktopManager.${this.desktop or null}.enable = true;
       };
     })
 
