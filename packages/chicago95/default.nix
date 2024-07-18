@@ -1,11 +1,12 @@
-{ pkgs, ... }:
-pkgs.stdenvNoCC.mkDerivation {
+{ pkgs, lib, ... }:
+with pkgs;
+stdenvNoCC.mkDerivation {
   pname = "chicago95";
   version = "3.1.0";
 
-  buildInputs = with pkgs; [ gdk-pixbuf xfce.xfce4-panel-profiles ./import ];
+  buildInputs = [ gdk-pixbuf xfce.xfce4-panel-profiles ./import ];
 
-  src = pkgs.fetchFromGitHub {
+  src = fetchFromGitHub {
     owner = "grassmunk";
     repo = "Chicago95";
     rev = "a8bee4fd1f86c7953fecd5a0a1e96f5715c805c5";
@@ -35,7 +36,7 @@ pkgs.stdenvNoCC.mkDerivation {
     runHook postInstall
   '';
 
-  meta = with pkgs.lib; {
+  meta = with lib; {
     description = "A rendition of everyone's favorite 1995 Microsoft operating system for Linux.";
     homepage = "https://github.com/grassmunk/Chicago95";
     license = with licenses; [ gpl3Plus mit ];

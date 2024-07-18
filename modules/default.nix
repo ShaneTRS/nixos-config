@@ -1,15 +1,15 @@
 { config, lib, functions, pkgs, machine, ... }:
 let
   inherit (lib) getExe mkEnableOption mkIf mkOverride;
+  inherit (builtins) filter attrNames readDir;
   mkStrongDefault = x: mkOverride 900 x;
 in {
   options.shanetrs.enable = mkEnableOption "Set strong defaults, such as hostname and networking";
 
-  imports = map (file: "${./.}/${file}") (builtins.filter (x: x != "default.nix")
-    (builtins.attrNames (builtins.readDir ./.))); # Import all modules in this directory (except self)
+  imports = map (file: "${./.}/${file}")
+    (filter (x: x != "default.nix") (attrNames (readDir ./.))); # Import all modules in this directory (except self)
 
   config = mkIf config.shanetrs.enable {
-
     boot = {
       initrd.availableKernelModules = [ "ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod" ];
       kernelModules = [ "v4l2loopback" ]; # Allow using cameras

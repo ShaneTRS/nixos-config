@@ -1,8 +1,8 @@
 ## Reference Implementations
 - LibrePhoenix; [repo](https://github.com/librephoenix/nixos-config) [youtube](https://www.youtube.com/channel/UCeZyoDTk0J-UPhd7MUktexw) [domain](https://librephoenix.com/)
 - EmergentMind; [repo](https://github.com/EmergentMind/nix-config) [youtube](https://www.youtube.com/@Emergent_Mind) [domain](https://www.unmovedcentre.com/)
-- Zaney; [repo](https://gitlab.com/Zaney/zaneyos) [youtube](https://www.youtube.com/@ZaneyOG) [domain](https://zaney.org/)
-- NobbZ; [repo](https://github.com/NobbZ/nixos-config) 
+- Tyler Kelley; [repo](https://gitlab.com/Zaney/zaneyos) [youtube](https://www.youtube.com/@ZaneyOG) [domain](https://zaney.org/)
+- Norbert Melzer; [repo](https://github.com/NobbZ/nixos-config) 
 - Kiara Grouwstra; [repo](https://codeberg.org/kiara/cfg)
 
 ## Resources and Suggestions

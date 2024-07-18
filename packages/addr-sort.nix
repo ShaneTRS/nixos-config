@@ -1,7 +1,8 @@
 { pkgs, ... }:
-pkgs.writeShellApplication {
+with pkgs;
+writeShellApplication {
   name = "addr-sort";
-  runtimeInputs = with pkgs; [ coreutils inetutils ];
+  runtimeInputs = [ coreutils inetutils ];
   text = ''
     set +o errexit
     (read -ra arr <<< "$@"

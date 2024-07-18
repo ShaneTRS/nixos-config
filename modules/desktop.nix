@@ -1,9 +1,10 @@
 { config, functions, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.desktop;
-  inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption mkOptionDefault types;
+  inherit (builtins) attrNames;
   this = sessions.${cfg.session}.${cfg.preset} or { };
-  presets = builtins.attrNames sessions.${cfg.session};
+  presets = attrNames sessions.${cfg.session};
   sessions = {
     plasma = rec {
       default = {
@@ -35,7 +36,7 @@ in {
   options.shanetrs.desktop = {
     enable = mkEnableOption "Desktop environment and display manager configuration";
     session = mkOption {
-      type = types.nullOr (types.enum (builtins.attrNames sessions));
+      type = types.nullOr (types.enum (attrNames sessions));
       default = null;
     };
     type = mkOption {
@@ -93,8 +94,8 @@ in {
             XCOMPOSECACHE="$HOME/.cache/XCompose"
           '';
         };
-        xdg.configFile."XCompose" = let attempt = builtins.tryEval (functions.configs ".XCompose");
-        in mkIf attempt.success { source = attempt.value; };
+        xdg.configFile."XCompose" = let attempt = functions.configs ".XCompose";
+        in mkIf (attempt != null) { source = attempt; };
       };
     })
 
@@ -129,24 +130,16 @@ in {
       xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-kde ];
       # Maybe try to use plasma-manager for some settings
       programs.partition-manager.enable = true;
-      user = {
-        programs = {
-          firefox = {
-            # Make compatible with browser module, by inheriting its setting and applying our own slightly stronger
-            package = lib.mkOverride 95 ((config.shanetrs.browser.firefox.package or pkgs.firefox).override {
-              nativeMessagingHosts = [ pkgs.${this.libs}.plasma-browser-integration ];
-            });
-            policies.ExtensionSettings."plasma-browser-integration@kde.org" = mkDefault {
-              install_url = "https://addons.mozilla.org/firefox/downloads/latest/plasma-integration/latest.xpi";
-              installation_mode = "force_installed"; # Prevents uninstalling without config
-            };
-          };
-          chromium.extensions = [{ id = "cimiefiiaegbelhefglklhhakcgmhkai"; }]; # Plasma Integration
+      shanetrs.browser = {
+        firefox = {
+          extensions = mkOptionDefault [ "plasma-browser-integration@kde.org:plasma-integration/latest" ];
+          _.nativeMessagingHosts = mkOptionDefault [ pkgs.${this.libs}.plasma-browser-integration ];
         };
-        services.kdeconnect = {
-          enable = true;
-          indicator = true;
-        };
+        chromium.extensions = mkOptionDefault [ "cimiefiiaegbelhefglklhhakcgmhkai" ]; # Plasma Integration
+      };
+      user.services.kdeconnect = {
+        enable = true;
+        indicator = true;
       };
       services.xserver = {
         displayManager = {
@@ -173,6 +166,10 @@ in {
         fontconfig.allowBitmaps = true;
       };
       environment.systemPackages = with pkgs.xfce; [ xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin ];
+      systemd.user.services.chicago95 = {
+        serviceConfig.ExecStart = "${chicago95}/import/install.sh";
+        wantedBy = [ "default.target" ];
+      };
       user = {
         xdg.configFile = {
           "gtk-3.0" = {
@@ -193,11 +190,6 @@ in {
             };
           };
           packages = [ chicago95 ];
-        };
-        systemd.user.services.chicago95 = {
-          Unit.Description = "Install Chicago95";
-          Service.ExecStart = "${chicago95}/import/install.sh";
-          Install.WantedBy = [ "default.target" ];
         };
         xsession = {
           enable = true;

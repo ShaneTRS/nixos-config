@@ -2,6 +2,7 @@
 let
   cfg = config.shanetrs.programs;
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
+  inherit (builtins) elem toJSON;
 in {
   options.shanetrs.programs = {
     enable = mkEnableOption "Program configuration and integration";
@@ -172,7 +173,7 @@ in {
         xdg.configFile = let vcfg = cfg.discord.vencord;
         in {
           "Vencord/settings/quickCss.css".text = mkIf (vcfg.enable == true) vcfg.quickCss;
-          "Vencord/settings/settings.json".text = mkIf (vcfg.enable == true) (builtins.toJSON vcfg.settings);
+          "Vencord/settings/settings.json".text = mkIf (vcfg.enable == true) (toJSON vcfg.settings);
         };
       };
     })
@@ -189,7 +190,7 @@ in {
     })
 
     (mkIf cfg.vscode.enable {
-      environment.systemPackages = with pkgs; mkIf (builtins.elem "nix" cfg.vscode.features) [ nil nixfmt-classic ];
+      environment.systemPackages = with pkgs; mkIf (elem "nix" cfg.vscode.features) [ unstable.nixd nixfmt-classic ];
       user = {
         programs.vscode = {
           enable = true;
@@ -197,11 +198,11 @@ in {
           extensions = with pkgs.vscode-extensions;
             [
               # (mkIf (builtins.elem "nix" cfg.vscode.features) kamadorueda.alejandra)
-              (mkIf (builtins.elem "nix" cfg.vscode.features) jnoortheen.nix-ide)
-              (mkIf (builtins.elem "nix" cfg.vscode.features) timonwong.shellcheck)
-              (mkIf (builtins.elem "rust" cfg.vscode.features) rust-lang.rust-analyzer)
-              (mkIf (builtins.elem "rust" cfg.vscode.features) serayuzgur.crates)
-            ] ++ (if (builtins.elem "rust" cfg.vscode.features) then
+              (mkIf (elem "nix" cfg.vscode.features) jnoortheen.nix-ide)
+              (mkIf (elem "nix" cfg.vscode.features) timonwong.shellcheck)
+              (mkIf (elem "rust" cfg.vscode.features) rust-lang.rust-analyzer)
+              (mkIf (elem "rust" cfg.vscode.features) serayuzgur.crates)
+            ] ++ (if (elem "rust" cfg.vscode.features) then
               pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
                 name = "rust-syntax";
                 publisher = "dustypomerleau";

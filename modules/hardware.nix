@@ -1,7 +1,7 @@
 { config, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.hardware;
-  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption optionalString types;
 in {
   options.shanetrs.hardware = {
     enable = mkEnableOption "Hardware driver installation and configuration";
@@ -48,7 +48,7 @@ in {
         capture_delays = ${if cfg.drivers.g710.captureDelays then "true" else "false"};
         pid-file = "${cfg.drivers.g710.pidFile}";
         encrypted_workdir = ${if cfg.drivers.g710.encryptedWorkDir then "true" else "false"};
-        ${if cfg.drivers.g710.workDir != null then ''workdir = "${cfg.drivers.g710.workDir}";'' else ""}
+        ${optionalString (cfg.drivers.g710.workDir != null) ''workdir = "${cfg.drivers.g710.workDir}";''}
       '';
       systemd.services.sidewinderd = {
         script = "${getExe pkgs.local.sidewinderd}";

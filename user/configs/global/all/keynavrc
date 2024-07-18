@@ -1,0 +1,29 @@
+ctrl+semicolon start,warp
+Escape end
+
+Left cut-left,warp
+Right cut-right,warp
+Up cut-up,warp
+Down cut-down,warp
+
+shift+Left move-left,warp
+shift+Right move-right,warp
+shift+Up move-up,warp
+shift+Down move-down,warp
+
+ctrl+Left move-left,warp
+ctrl+Right move-right,warp
+ctrl+Up move-up,warp
+ctrl+Down move-down,warp
+
+ctrl+shift+Left move-left,warp
+ctrl+shift+Right move-right,warp
+ctrl+shift+Up move-up,warp
+ctrl+shift+Down move-down,warp
+
+Return warp,click 1,end
+shift+Return warp,click 3,end
+semicolon warp,end
+
+t windowzoom
+c cursorzoom 300 300

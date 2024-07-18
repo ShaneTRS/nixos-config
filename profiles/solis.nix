@@ -1,5 +1,6 @@
-{ pkgs, ... }: {
-
+{ pkgs, lib, ... }:
+let inherit (lib) mkOptionDefault;
+in {
   services.printing.enable = true;
   shanetrs = {
     enable = true;
@@ -7,7 +8,7 @@
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; lib.mkOptionDefault [ libsForQt5.kcalc ];
+      extraPackages = with pkgs; mkOptionDefault [ libsForQt5.kcalc ];
     };
     programs.vscode.enable = true;
   };

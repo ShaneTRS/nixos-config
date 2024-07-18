@@ -1,6 +1,6 @@
 {
     "nix.enableLanguageServer": true,
-    "nix.serverPath": "nil",
+    "nix.serverPath": "nixd",
     "nix.serverSettings": {
         "nil": {
             "formatting": {
@@ -10,6 +10,29 @@
                     "--",
                     "-w120"
                 ]
+            }
+        },
+        "nixd": {
+            "diagnostic": {
+                "suppress": [
+                    "sema-escaping-with"
+                ]
+            },
+            "formatting": {
+                "command": [
+                    "nix",
+                    "fmt",
+                    "--",
+                    "-w120"
+                ]
+            },
+            "nixpkgs": {
+                "expr": "(builtins.getFlake \"${builtins.getEnv \"HOME\"}/.config/nixos?submodules=1\").nixosConfigurations.default.pkgs"
+            },
+            "options": {
+                "nixos": {
+                    "expr": "(builtins.getFlake \"${builtins.getEnv \"HOME\"}/.config/nixos?submodules=1\").nixosConfigurations.default.options"
+                }
             }
         }
     },
