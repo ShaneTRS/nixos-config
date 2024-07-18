@@ -1,25 +1,26 @@
 { config, lib, functions, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.shell // { all_features = cfg.bash.features ++ cfg.zsh.features; };
-  feature-aliases = {
-    cat = mkIf (builtins.elem "bat" cfg.all_features) "bat";
-    ccat = mkIf (builtins.elem "bat" cfg.all_features) "command cat";
-    ccd = mkIf (builtins.elem "zoxide" cfg.all_features) "builtin cd";
-    eza = mkIf (builtins.elem "eza" cfg.all_features) (mkOverride 99 "eza --header -o");
-    f = mkIf (builtins.elem "fuck" cfg.all_features) "fuck";
-    grep = mkIf (builtins.elem "ugrep" cfg.all_features) "ugrep";
-    ls = mkIf (builtins.elem "eza" cfg.all_features) "eza";
-    tree = mkIf (builtins.elem "eza" cfg.all_features) "eza -T";
-  };
-  inherit (lib) concatStringsSep mkEnableOption mkIf mkMerge mkOption mkOverride types;
+  inherit (lib) concatLines mkEnableOption mkIf mkMerge mkOption mkOverride types;
   inherit (lib.strings) optionalString;
+  inherit (builtins) attrValues elem fromJSON mapAttrs readFile;
+  feature-aliases = {
+    cat = mkIf (elem "bat" cfg.all_features) "bat";
+    ccat = mkIf (elem "bat" cfg.all_features) "command cat";
+    ccd = mkIf (elem "zoxide" cfg.all_features) "builtin cd";
+    eza = mkIf (elem "eza" cfg.all_features) (mkOverride 99 "eza --header -o");
+    f = mkIf (elem "fuck" cfg.all_features) "fuck";
+    grep = mkIf (elem "ugrep" cfg.all_features) "ugrep";
+    ls = mkIf (elem "eza" cfg.all_features) "eza";
+    tree = mkIf (elem "eza" cfg.all_features) "eza -T";
+  };
 in {
   options.shanetrs.shell = let
     defaults = rec {
       "bash" = {
         aliases = {
           less = "less -R --use-color";
-          history-search = if (builtins.elem "fzf" cfg.bash.features) then
+          history-search = if (elem "fzf" cfg.bash.features) then
             ''eval "$(fzf --tac < "$HISTFILE")"''
           else
             ''tac "$HISTFILE" | less'';
@@ -138,35 +139,36 @@ in {
     {
       users.defaultUserShell = mkIf (cfg.default != null) cfg.default;
       environment.systemPackages = with pkgs;
-        [
-          (mkIf (builtins.elem "nix-index" cfg.all_features) nix-index)
-          (mkIf (builtins.elem "fuck" cfg.all_features) thefuck)
-        ] ++ cfg.extraPackages;
-      fonts.packages =
-        mkIf (builtins.elem "fastfetch" cfg.all_features) [ (pkgs.nerdfonts.override { fonts = [ "Hack" ]; }) ];
+        [ (mkIf (elem "nix-index" cfg.all_features) nix-index) (mkIf (elem "fuck" cfg.all_features) thefuck) ]
+        ++ cfg.extraPackages;
+      fonts.packages = mkIf (elem "fastfetch" cfg.all_features) [ (pkgs.nerdfonts.override { fonts = [ "Hack" ]; }) ];
       user = {
         home = {
-          packages = with pkgs; [ (mkIf (builtins.elem "ugrep" cfg.all_features) ugrep) ];
-          sessionVariables = { FZF_COMPLETION_TRIGGER = mkIf (builtins.elem "zoxide" cfg.all_features) "#"; };
+          packages = with pkgs; [ (mkIf (elem "ugrep" cfg.all_features) ugrep) ];
+          sessionVariables = { FZF_COMPLETION_TRIGGER = mkIf (elem "zoxide" cfg.all_features) "#"; };
         };
         programs = {
-          bat.enable = mkIf (builtins.elem "bat" cfg.all_features) true;
-          eza.enable = mkIf (builtins.elem "eza" cfg.all_features) true;
-          fastfetch = mkIf (builtins.elem "fastfetch" cfg.all_features) {
+          bat.enable = mkIf (elem "bat" cfg.all_features) true;
+          eza.enable = mkIf (elem "eza" cfg.all_features) true;
+          fastfetch = mkIf (elem "fastfetch" cfg.all_features) {
             enable = true;
             package = pkgs.fastfetch.overrideAttrs
-              (old: { cmakeFlags = (old.cmakeFlags or [ ]) ++ [ "-DENABLE_IMAGEMAGICK7=true" ]; });
+              (old: { cmakeFlags = [ "-DENABLE_IMAGEMAGICK7=true" ] ++ old.cmakeFlags or [ ]; });
+            settings = let attempt = functions.configs "fastfetch.jsonc";
+            in mkIf (attempt != null) (lib.recursiveUpdate (fromJSON (readFile attempt)) {
+              logo.source = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            });
           };
-          fd = mkIf (builtins.elem "fd" cfg.all_features) {
+          fd = mkIf (elem "fd" cfg.all_features) {
             enable = true;
             hidden = true;
           };
-          fzf.enable = mkIf (builtins.elem "fzf" cfg.all_features || builtins.elem "zoxide" cfg.all_features) true;
-          tealdeer = mkIf (builtins.elem "tldr" cfg.all_features) {
+          fzf.enable = mkIf (elem "fzf" cfg.all_features || elem "zoxide" cfg.all_features) true;
+          tealdeer = mkIf (elem "tldr" cfg.all_features) {
             enable = true;
             settings.updates.auto_update = true;
           };
-          zoxide = mkIf (builtins.elem "zoxide" cfg.all_features) {
+          zoxide = mkIf (elem "zoxide" cfg.all_features) {
             enable = true;
             options = [ "--cmd cd" ];
           };
@@ -195,39 +197,38 @@ in {
         enable = true;
         autosuggestions.enable = true;
         histSize = 10000; # home-manager default
-        promptInit = concatStringsSep "\n"
-          (builtins.attrValues (builtins.mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds) ++ [
-            (builtins.readFile (functions.configs ".zshrc"))
-            (optionalString (builtins.elem "fuck" cfg.all_features) ''
-              eval "$(thefuck --alias)"
-              bindkey -s '\e\e' 'f\n'
-              bindkey -s '^[f' 'f\n'
-            '')
-            (optionalString (builtins.elem "nix-index" cfg.all_features) ''
-              SGR () { for i in "$@"; do echo -ne "\e[$i"m; done; }
-              nix-find() { nix-locate --no-group --top-level -r "$@"; }
-              command_not_found_handler() {(
-                CMD="$1"; IFS=$'\n'
-                if [ "$NIX_MISSING" = "never" ]; then
-                  echo "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! You can use $(SGR 1)nix-find -wtx /$CMD$(SGR 0) to find it" >&2
-                  exit 127
-                fi
-                PACKAGES=($(nix-locate --minimal --no-group --type x --type s --top-level --whole-name --at-root "/bin/$CMD"))
-                case "''${#PACKAGES}" in
-                  0) echo "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! Are you sure you've typed the command correctly?" >&2 ;;
-                  1) [ "$NIX_MISSING" = "auto" ] &&
-                      exec nix-shell "''${PACKAGES[1]}" --command "$@";
-                    echo -n "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! Would you like to bring $(SGR 1)''${PACKAGES[1]%.*}$(SGR 0) into scope? " >&2; read
-                    exec nix-shell "''${PACKAGES[1]}" --command "$@" ;;
-                  *) [ "$NIX_MISSING" = "always" ] &&
-                      exec nix-shell "''${PACKAGES[1]}" --command "$@";
-                    echo "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! Would you like to bring one of the following packages into scope?" >&2
-                    PS3=""; select PKG in ''${PACKAGES[@]%.*}; do exec nix-shell "$PKG" --command "$@"; done ;;
-                esac
+        promptInit = concatLines (attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds) ++ [
+          (readFile (functions.configs ".zshrc"))
+          (optionalString (elem "fuck" cfg.all_features) ''
+            eval "$(thefuck --alias)"
+            bindkey -s '\e\e' 'f\n'
+            bindkey -s '^[f' 'f\n'
+          '')
+          (optionalString (elem "nix-index" cfg.all_features) ''
+            SGR () { for i in "$@"; do echo -ne "\e[$i"m; done; }
+            nix-find() { nix-locate --no-group --top-level -r "$@"; }
+            command_not_found_handler() {(
+              CMD="$1"; IFS=$'\n'
+              if [ "$NIX_MISSING" = "never" ]; then
+                echo "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! You can use $(SGR 1)nix-find -wtx /$CMD$(SGR 0) to find it" >&2
                 exit 127
-              )}
-            '')
-          ]) + cfg.zsh.extraRc;
+              fi
+              PACKAGES=($(nix-locate --minimal --no-group --type x --type s --top-level --whole-name --at-root "/bin/$CMD"))
+              case "''${#PACKAGES}" in
+                0) echo "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! Are you sure you've typed the command correctly?" >&2 ;;
+                1) [ "$NIX_MISSING" = "auto" ] &&
+                    exec nix-shell "''${PACKAGES[1]}" --command "$@";
+                  echo -n "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! Would you like to bring $(SGR 1)''${PACKAGES[1]%.*}$(SGR 0) into scope? " >&2; read
+                  exec nix-shell "''${PACKAGES[1]}" --command "$@" ;;
+                *) [ "$NIX_MISSING" = "always" ] &&
+                    exec nix-shell "''${PACKAGES[1]}" --command "$@";
+                  echo "$(SGR 1 34)❭❭ $(SGR 0 1)$CMD$(SGR 0) not found! Would you like to bring one of the following packages into scope?" >&2
+                  PS3=""; select PKG in ''${PACKAGES[@]%.*}; do exec nix-shell "$PKG" --command "$@"; done ;;
+              esac
+              exit 127
+            )}
+          '')
+        ]) + cfg.zsh.extraRc;
       };
       user = { config, ... }: {
         home.packages = with pkgs; [ zsh-completions ];
@@ -244,7 +245,7 @@ in {
               ignorePatterns = [ "exit" ];
             };
             shellAliases = feature-aliases // cfg.zsh.aliases;
-            syntaxHighlighting = mkIf (builtins.elem "highlight" cfg.zsh.features) {
+            syntaxHighlighting = mkIf (elem "highlight" cfg.zsh.features) {
               enable = true;
               highlighters = [ "brackets" ];
             };
@@ -266,11 +267,11 @@ in {
       };
       programs.bash = {
         enableCompletion = true;
-        promptInit = concatStringsSep "\n"
-          (builtins.attrValues (builtins.mapAttrs (key: value: "bind '\"${key}\":\"${value}\"'") cfg.bash.binds) ++ [
-            (builtins.readFile (functions.configs ".bashrc"))
-            (optionalString (builtins.elem "fuck" cfg.all_features) ''eval "$(thefuck --alias)"'')
-            (optionalString (builtins.elem "nix-index" cfg.all_features) ''
+        promptInit = concatLines (attrValues (mapAttrs (key: value: "bind '\"${key}\":\"${value}\"'") cfg.bash.binds)
+          ++ [
+            (readFile (functions.configs ".bashrc"))
+            (optionalString (elem "fuck" cfg.all_features) ''eval "$(thefuck --alias)"'')
+            (optionalString (elem "nix-index" cfg.all_features) ''
               nix-find() { nix-locate --no-group --top-level -r "$@"; }
             '')
           ]) + cfg.bash.extraRc;

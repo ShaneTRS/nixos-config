@@ -1,5 +1,7 @@
 # VirtualBox (1.2)
-{ machine, pkgs, ... }: {
+{ machine, pkgs, lib, ... }:
+let inherit (lib) mkForce;
+in {
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
@@ -31,5 +33,6 @@
     enable = true;
     graphics = "virtualbox";
   };
+  virtualisation.containers.cdi.dynamic.nvidia.enable = mkForce false;
   # user.home.packages = with pkgs; [ local.nix-software-center gtk3 ];
 }

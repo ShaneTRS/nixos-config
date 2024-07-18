@@ -1,5 +1,4 @@
 { pkgs, ... }: {
-
   services.earlyoom.enable = false;
   zramSwap.enable = false;
 

@@ -1,5 +1,6 @@
-{ pkgs, ... }: {
-
+{ pkgs, lib, ... }:
+let inherit (lib) mkOptionDefault;
+in {
   environment.systemPackages = with pkgs; [ libsForQt5.xp-pen-deco-01-v2-driver ];
   services.zerotierone.enable = true;
 
@@ -12,7 +13,7 @@
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; lib.mkOptionDefault [ wacomtablet libsForQt5.kolourpaint ];
+      extraPackages = with pkgs; mkOptionDefault [ wacomtablet libsForQt5.kolourpaint ];
     };
     gaming = {
       epic.enable = true;

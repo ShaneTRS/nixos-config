@@ -1,5 +1,4 @@
-#!/usr/bin/env nix
-#!nix shell --extra-experimental-features ``nix-command flakes`` --command bash
+#! /usr/bin/env -S nix shell --extra-experimental-features "nix-command flakes" --command bash
 
 SRC="${SRC:-$HOME/.config/nixos}"
 MACHINE="${MACHINE:-machine.toml}"
@@ -71,6 +70,6 @@ MACHINE_PROFILE="$(machine profile)"; [ -z "$MACHINE_PROFILE" ] &&
 
 "$SRC/user/homes/symlink" \
   "$MACHINE_USER/$MACHINE_PROFILE" "$MACHINE_USER/all" \
-  "global/$MACHINE_PROFILE" "global/all"
+  "global/$MACHINE_PROFILE" "global/all" 2> /dev/null
 
 exit 0

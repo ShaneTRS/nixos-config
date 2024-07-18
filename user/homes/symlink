@@ -9,6 +9,7 @@ cd "$(dirname "$0")" || exit
 done < "$PWD/last"
 echo -n > "$PWD/last" # Wipe list
 
+printf "Recursively linking the following directories:\n  %s\n" "$*"
 for i in "$@"; do
     find "$i" -type f >> last
 done

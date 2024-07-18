@@ -1,5 +1,4 @@
 { pkgs, ... }: {
-
   shanetrs = {
     enable = true;
     browser = {

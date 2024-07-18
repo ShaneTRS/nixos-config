@@ -1,7 +1,8 @@
 { config, lib, pkgs, functions, machine, ... }:
 let
   cfg = config.shanetrs.remote;
-  inherit (lib) concatStringsSep getExe mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) concatStringsSep getExe mkEnableOption mkIf mkMerge mkOption optionalString types;
+  inherit (pkgs) makeDesktopItem writeShellApplication writeShellScriptBin;
 in {
   options.shanetrs.remote = {
     enable = mkEnableOption "Low-latency access to a remote machine";
@@ -71,49 +72,47 @@ in {
         load-module module-null-sink sink_name=roc-output sink_properties=device.description='${cfg.audio.sinkName}'
       '';
 
-      user = let
-        roc-send-bin = pkgs.writeShellApplication {
-          name = "roc-send.service";
-          runtimeInputs = with pkgs; [ local.addr-sort gawk local.not-nice pulseaudio roc-toolkit ];
-          text = ''
-            set +o errexit
-            if [ -z "''${THAT:-}" ]; then
-              # shellcheck disable=SC2048 disable=SC2086
-              THAT=$(addr-sort ''${CLIENT[*]})
-            fi
-            ssh "$THAT" -f 'systemctl --user restart roc-recv.service'
-            sink="$(pactl list sources short | awk '/output/ {print $1; exit}')"
-            # shellcheck disable=SC2128
-            roc-send -s"rtp+rs8m://$THAT:48820" -r"rs8m://$THAT:48821" \
-              --rate=24500 --resampler-profile=low --resampler-backend speex \
-              --io-latency=20ms --frame-length 4ms -i"pulse://$sink"
-          '';
+      user.systemd.user.services = {
+        x0vncserver = {
+          Unit.Description = "Low-latency VNC display server";
+          Service = {
+            Environment = "DISPLAY=:0";
+            ExecStart = let attempt = functions.configs ".vnc/passwd";
+            in "${getExe pkgs.local.not-nice} x0vncserver Geometry=2732x1536 ${
+              optionalString (attempt != null) ''-rfbauth "${attempt}"''
+            } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+            Restart = "on-failure";
+            StartLimitBurst = 32;
+          };
+          Install.WantedBy = [ "graphical-session.target" ];
         };
-      in {
-        systemd.user.services = {
-          x0vncserver = {
-            Unit.Description = "Low-latency VNC display server";
-            Service = {
-              Environment = "DISPLAY=:0";
-              ExecStart = let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
-              in "${getExe pkgs.local.not-nice} x0vncserver Geometry=2732x1536 ${
-                if attempt.success then ''-rfbauth "${attempt.value}"'' else ""
-              } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
-              Restart = "on-failure";
-              StartLimitBurst = 32;
-            };
-            Install.WantedBy = [ "graphical-session.target" ];
+        roc-send = {
+          Unit.Description = "Low-latency VNC display server";
+          Service = {
+            Environment = ''CLIENT="${concatStringsSep " " cfg.addresses.client}"'';
+            ExecStart = "${getExe pkgs.local.not-nice} ${
+                getExe (writeShellApplication {
+                  name = "roc-send.service";
+                  runtimeInputs = with pkgs; [ local.addr-sort gawk local.not-nice pulseaudio roc-toolkit ];
+                  text = ''
+                    set +o errexit
+                    if [ -z "''${THAT:-}" ]; then
+                      # shellcheck disable=SC2048 disable=SC2086
+                      THAT=$(addr-sort ''${CLIENT[*]})
+                    fi
+                    ssh "$THAT" -f 'systemctl --user restart roc-recv.service'
+                    sink="$(pactl list sources short | awk '/output/ {print $1; exit}')"
+                    # shellcheck disable=SC2128
+                    roc-send -s"rtp+rs8m://$THAT:48820" -r"rs8m://$THAT:48821" \
+                      --rate=24500 --resampler-profile=low --resampler-backend speex \
+                      --io-latency=20ms --frame-length 4ms -i"pulse://$sink"
+                  '';
+                })
+              }";
+            Restart = "on-failure";
+            StartLimitBurst = 32;
           };
-          roc-send = {
-            Unit.Description = "Low-latency VNC display server";
-            Service = {
-              Environment = ''CLIENT="${concatStringsSep " " cfg.addresses.client}"'';
-              ExecStart = "${getExe pkgs.local.not-nice} ${getExe roc-send-bin}";
-              Restart = "on-failure";
-              StartLimitBurst = 32;
-            };
-            Install.WantedBy = [ "graphical-session.target" ];
-          };
+          Install.WantedBy = [ "graphical-session.target" ];
         };
       };
     })
@@ -126,7 +125,7 @@ in {
             Type = "oneshot";
             User = machine.user;
           };
-          script = "${getExe (pkgs.writeShellApplication {
+          script = "${getExe (writeShellApplication {
             name = "usbip-resume";
             runtimeInputs = with pkgs; [ procps ];
             text = ''
@@ -139,18 +138,16 @@ in {
       };
       user = {
         home.packages = [
-          (pkgs.makeDesktopItem {
+          (makeDesktopItem {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";
-            exec = let attempt = builtins.tryEval (functions.configs ".vnc/passwd");
-            in getExe (pkgs.writeShellScriptBin "loop-vncviewer" ''
+            exec = let attempt = functions.configs ".vnc/passwd";
+            in getExe (writeShellScriptBin "loop-vncviewer" ''
               while true; do
-                addr="$(${getExe pkgs.local.addr-sort} ${
-                  lib.concatStringsSep " " config.shanetrs.remote.addresses.host
-                })"
+                addr="$(${getExe pkgs.local.addr-sort} ${concatStringsSep " " config.shanetrs.remote.addresses.host})"
                 [ -n "$addr" ] &&
                   (exec -a "loop-vncviewer.child" "vncviewer" -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
-                    if attempt.success then ''-passwd="${attempt.value}"'' else ""
+                    optionalString (attempt != null) ''-passwd="${attempt}"''
                   } /home/${machine.user}/.vnc/loop.tigervnc "$addr")
                 sleep .6
               done
@@ -164,7 +161,7 @@ in {
           roc-recv = mkIf cfg.audio.enable {
             Unit.Description = "Low-latency remote audio receiver";
             Service = {
-              ExecStart = "${getExe (pkgs.writeShellApplication {
+              ExecStart = "${getExe (writeShellApplication {
                 name = "roc-recv.service";
                 runtimeInputs = with pkgs; [ local.not-nice roc-toolkit ];
                 text = ''
@@ -186,7 +183,7 @@ in {
                 "PORTS='${concatStringsSep " " cfg.usb.ports}'"
                 "DEVICES=${cfg.usb.devices}"
               ];
-              ExecStart = "${getExe (pkgs.writeShellApplication {
+              ExecStart = "${getExe (writeShellApplication {
                 name = "usbip.service";
                 runtimeInputs = with pkgs; [
                   coreutils
@@ -198,7 +195,7 @@ in {
                   util-linux
                 ];
                 text = ''
-                  set +o errexit # disable exit on error
+                  set +o errexit
                   if ! doas true; then
                     sleep 3
                     exit 1

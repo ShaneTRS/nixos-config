@@ -2,6 +2,7 @@
 let
   cfg = config.shanetrs.browser;
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
+  inherit (builtins) elemAt listToAttrs;
 in {
   options.shanetrs.browser = {
     firefox = {
@@ -10,20 +11,21 @@ in {
         type = types.package;
         default = pkgs.firefox;
       };
-      settings = mkOption {
-        type = types.attrs;
-        default = {
-          "widget.use-xdg-desktop-portal.file-picker" = 1;
-          "general.autoScroll" = 1;
-        };
-      };
       extensions = mkOption {
-        type = types.attrsOf types.str;
-        default = {
-          "uBlock0@raymondhill.net" = "ublock-origin/latest";
-          "addon@darkreader.org" = "darkreader/latest";
-          "faststream@andrews" = "faststream/latest";
-          "{446900e4-71c2-419f-a6a7-df9c091e268b}" = "bitwarden-password-manager/latest";
+        type = types.listOf types.str;
+        default = [
+          "uBlock0@raymondhill.net:ublock-origin/latest"
+          "addon@darkreader.org:darkreader/latest"
+          "faststream@andrews:faststream/latest"
+          "{446900e4-71c2-419f-a6a7-df9c091e268b}:bitwarden-password-manager/latest"
+          (mkIf cfg.firefox.pwa.enable "firefoxpwa@filips.si:pwas-for-firefox/latest")
+        ];
+      };
+      pwa = {
+        enable = mkEnableOption "Allow installation of 'Progressive Web Apps'";
+        package = mkOption {
+          type = types.package;
+          default = pkgs.firefoxpwa;
         };
       };
       search = {
@@ -87,6 +89,19 @@ in {
           };
         };
       };
+      settings = mkOption {
+        type = types.attrs;
+        default = {
+          "widget.use-xdg-desktop-portal.file-picker" = 1;
+          "general.autoScroll" = 1;
+        };
+      };
+      _ = {
+        nativeMessagingHosts = mkOption {
+          type = types.listOf types.package;
+          default = [ (mkIf cfg.firefox.pwa.enable cfg.firefox.pwa.package) ];
+        };
+      };
     };
     chromium = {
       enable = mkEnableOption "Chromium configuration and integration";
@@ -108,9 +123,10 @@ in {
 
   config = mkMerge [
     (mkIf cfg.firefox.enable {
+      environment.systemPackages = mkIf cfg.firefox.pwa.enable [ cfg.firefox.pwa.package ];
       user.programs.firefox = {
         enable = true;
-        package = cfg.firefox.package;
+        package = cfg.firefox.package.override { inherit (cfg.firefox._) nativeMessagingHosts; };
         profiles.default = {
           search = {
             force = true;
@@ -119,10 +135,15 @@ in {
           };
           settings = cfg.firefox.settings;
         };
-        policies.ExtensionSettings = builtins.mapAttrs (key: value: {
-          install_url = "https://addons.mozilla.org/firefox/downloads/latest/${value}.xpi";
-          installation_mode = "force_installed"; # Prevents uninstalling without config
-        }) cfg.firefox.extensions;
+        policies.ExtensionSettings = listToAttrs (map (addon:
+          let split = lib.splitString ":" addon;
+          in {
+            name = elemAt split 0;
+            value = {
+              install_url = "https://addons.mozilla.org/firefox/downloads/latest/${elemAt split 1}.xpi";
+              installation_mode = "force_installed"; # Prevents uninstalling without config
+            };
+          }) cfg.firefox.extensions);
       };
     })
 

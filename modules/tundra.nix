@@ -3,7 +3,6 @@
 # - Create update checker, with notifications, and daemon service
 # - Figure out support for local secrets
 # - Create package that holds Tundra scripts and icons
-
 { config, lib, pkgs, ... }:
 let
   cfg = config.shanetrs.tundra;
