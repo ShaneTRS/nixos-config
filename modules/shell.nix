@@ -1,9 +1,10 @@
 { config, lib, functions, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.shell // { all_features = cfg.bash.features ++ cfg.zsh.features; };
+  inherit (builtins) attrValues elem fromJSON mapAttrs readFile;
+  inherit (functions) configs;
   inherit (lib) concatLines mkEnableOption mkIf mkMerge mkOption mkOverride types;
   inherit (lib.strings) optionalString;
-  inherit (builtins) attrValues elem fromJSON mapAttrs readFile;
   feature-aliases = {
     cat = mkIf (elem "bat" cfg.all_features) "bat";
     ccat = mkIf (elem "bat" cfg.all_features) "command cat";
@@ -154,7 +155,7 @@ in {
             enable = true;
             package = pkgs.fastfetch.overrideAttrs
               (old: { cmakeFlags = [ "-DENABLE_IMAGEMAGICK7=true" ] ++ old.cmakeFlags or [ ]; });
-            settings = let attempt = functions.configs "fastfetch.jsonc";
+            settings = let attempt = configs "fastfetch.jsonc";
             in mkIf (attempt != null) (lib.recursiveUpdate (fromJSON (readFile attempt)) {
               logo.source = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
             });
@@ -198,7 +199,7 @@ in {
         autosuggestions.enable = true;
         histSize = 10000; # home-manager default
         promptInit = concatLines (attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds) ++ [
-          (readFile (functions.configs ".zshrc"))
+          (readFile (configs ".zshrc"))
           (optionalString (elem "fuck" cfg.all_features) ''
             eval "$(thefuck --alias)"
             bindkey -s '\e\e' 'f\n'
@@ -269,7 +270,7 @@ in {
         enableCompletion = true;
         promptInit = concatLines (attrValues (mapAttrs (key: value: "bind '\"${key}\":\"${value}\"'") cfg.bash.binds)
           ++ [
-            (readFile (functions.configs ".bashrc"))
+            (readFile (configs ".bashrc"))
             (optionalString (elem "fuck" cfg.all_features) ''eval "$(thefuck --alias)"'')
             (optionalString (elem "nix-index" cfg.all_features) ''
               nix-find() { nix-locate --no-group --top-level -r "$@"; }

@@ -1,7 +1,8 @@
 { config, lib, functions, pkgs, machine, ... }:
 let
-  inherit (lib) getExe mkEnableOption mkIf mkOverride;
   inherit (builtins) filter attrNames readDir;
+  inherit (functions) configs flake;
+  inherit (lib) getExe mkEnableOption mkIf mkOverride;
   mkStrongDefault = x: mkOverride 900 x;
 in {
   options.shanetrs.enable = mkEnableOption "Set strong defaults, such as hostname and networking";
@@ -19,7 +20,7 @@ in {
       tmp.useTmpfs = mkStrongDefault true; # Use RAM disk for /tmp
     };
 
-    environment.systemPackages = with pkgs; [ git ];
+    environment.systemPackages = with pkgs; [ git local.nix-shebang ];
 
     hardware = mkStrongDefault {
       pulseaudio.enable = false;
@@ -79,7 +80,7 @@ in {
       nixos-upgrade.script = mkOverride 50 ''
         ${getExe pkgs.doas} -u "${machine.user}" ${
           getExe pkgs.bash
-        } -c 'INTERACTIVE=false UPDATE=true "${functions.flake}/rebuild" switch'
+        } -c 'INTERACTIVE=false UPDATE=true "${flake}/rebuild" switch'
       '';
     };
 
@@ -95,7 +96,7 @@ in {
       groups.realtime.members = [ machine.user ];
       users.${machine.user} = {
         isNormalUser = mkStrongDefault true;
-        hashedPasswordFile = mkStrongDefault (functions.configs "passwd");
+        hashedPasswordFile = mkStrongDefault (configs "passwd");
         extraGroups = [ "networkmanager" "wheel" ];
       };
     };

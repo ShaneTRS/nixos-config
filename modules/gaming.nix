@@ -1,8 +1,9 @@
 { config, lib, pkgs, functions, ... }:
 let
   cfg = config.shanetrs.gaming;
-  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
+  inherit (builtins) elem;
   inherit (functions) resolveList;
+  inherit (lib) mkEnableOption mkIf mkMerge mkOption optionals types;
 in {
   options.shanetrs.gaming = {
     emulation = {
@@ -55,6 +56,10 @@ in {
             type = types.package;
             default = pkgs.ryujinx;
           };
+          extraPackages = mkOption {
+            type = types.listOf types.package;
+            default = with pkgs; [ local.ryusak ];
+          };
         };
         wii = {
           enable = mkOption {
@@ -74,6 +79,10 @@ in {
           package = mkOption {
             type = types.package;
             default = pkgs.cemu;
+          };
+          extraPackages = mkOption {
+            type = types.listOf types.package;
+            default = with pkgs; [ unstable.evdevhook2 ];
           };
         };
       };
@@ -157,13 +166,13 @@ in {
     };
     vr = {
       enable = mkEnableOption "VR configuration and drivers";
-      headset = mkOption {
+      headsets = mkOption {
         type = types.listOf (types.enum [ "quest2" ]);
-        default = [ "quest2" ];
+        default = [ ];
       };
       features = mkOption {
-        type = types.listOf (types.enum [ "wlxoverlay" "sst" "camera-fbt" ]);
-        default = [ ];
+        type = types.listOf (types.enum [ "wlx-overlay" "sst" "camera-fbt" "sidequest" ]);
+        default = [ "wlx-overlay" "sst" ];
       };
       extraPackages = mkOption {
         type = types.listOf types.package;
@@ -175,9 +184,11 @@ in {
   config = mkMerge [
     (mkIf cfg.emulation.enable {
       user.home.packages = let
-        n = cfg.emulation.nintendo;
-        r = cfg.emulation.retroarch;
-      in [
+        e = cfg.emulation;
+        n = e.nintendo;
+        r = e.retroarch;
+      in e.extraPackages ++ optionals n.wii-u.enable n.wii-u.extraPackages
+      ++ optionals n.switch.enable n.switch.extraPackages ++ [
         (mkIf r.enable (r.package.override {
           cores = r.cores ++ resolveList [
             (mkIf n.ds.enable n.ds.package)
@@ -187,10 +198,10 @@ in {
         }))
         (mkIf n.wii-u.enable n.wii-u.package)
         (mkIf n.switch.enable n.switch.package)
-      ] ++ cfg.emulation.extraPackages;
+      ];
     })
 
-    (mkIf cfg.epic.enable { user.home.packages = [ cfg.epic.package ] ++ cfg.epic.extraPackages; })
+    (mkIf cfg.epic.enable { user.home.packages = cfg.epic.extraPackages ++ [ cfg.epic.package ]; })
 
     (mkIf cfg.gamescope.enable {
       programs.gamescope = {
@@ -212,8 +223,8 @@ in {
     })
 
     (mkIf cfg.minecraft.enable {
-      user.home.packages = [ (cfg.minecraft.package.override { jdks = cfg.minecraft.java; }) ]
-        ++ cfg.minecraft.extraPackages;
+      user.home.packages = cfg.minecraft.extraPackages
+        ++ [ (cfg.minecraft.package.override { jdks = cfg.minecraft.java; }) ];
     })
 
     (mkIf cfg.steam.enable {
@@ -226,6 +237,15 @@ in {
       };
     })
 
-    (mkIf cfg.vr.enable { warnings = [ "shanetrs.gaming.vr does nothing yet!" ]; })
+    (mkIf cfg.vr.enable {
+      user.home.packages = with pkgs;
+        cfg.vr.extraPackages ++ [
+          # (mkIf (elem "camera-fbt" cfg.vr.features) local.camera-fbt)
+          (mkIf (elem "sidequest" cfg.vr.features) sidequest)
+          # (mkIf (elem "sst" cfg.vr.features) local.shanetrs-sst)
+          (mkIf (elem "wlx-overlay" cfg.vr.features) local.wlx-overlay-s)
+        ];
+      programs.alvr.enable = mkIf (cfg.vr.headsets == "oculus") true; # TODO: declarative configuration
+    })
   ];
 }

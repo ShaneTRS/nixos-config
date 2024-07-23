@@ -1,8 +1,9 @@
 { config, functions, lib, pkgs, machine, ... }:
 let
   cfg = config.shanetrs.desktop;
-  inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption mkOptionDefault types;
   inherit (builtins) attrNames;
+  inherit (functions) configs;
+  inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption mkOptionDefault types;
   this = sessions.${cfg.session}.${cfg.preset} or { };
   presets = attrNames sessions.${cfg.session};
   sessions = {
@@ -27,7 +28,7 @@ let
       };
     };
     gnome.pop.extraPackages = with pkgs.gnomeExtensions; [ pop-shell ];
-    "xfce" = rec {
+    xfce = rec {
       default.extraPackages = with pkgs.xfce; [ xfce4-panel-profiles ];
       win95 = { extraPackages = with pkgs; [ palemoon-bin ]; } // default;
     };
@@ -94,8 +95,7 @@ in {
             XCOMPOSECACHE="$HOME/.cache/XCompose"
           '';
         };
-        xdg.configFile."XCompose" = let attempt = functions.configs ".XCompose";
-        in mkIf (attempt != null) { source = attempt; };
+        xdg.configFile."XCompose" = let attempt = configs ".XCompose"; in mkIf (attempt != null) { source = attempt; };
       };
     })
 

@@ -1,8 +1,9 @@
 { config, lib, pkgs, functions, ... }:
 let
   cfg = config.shanetrs.programs;
-  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
   inherit (builtins) elem toJSON;
+  inherit (functions) configs;
+  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
 in {
   options.shanetrs.programs = {
     enable = mkEnableOption "Program configuration and integration";
@@ -184,7 +185,7 @@ in {
         home.packages = [ cfg.easyeffects.package ];
         xdg.configFile."easyeffects" = {
           recursive = true;
-          source = functions.configs "easyeffects";
+          source = configs "easyeffects";
         };
       };
     })
