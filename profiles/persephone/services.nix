@@ -1,26 +1,37 @@
 { config, functions, machine, pkgs, lib, ... }:
 let
-  inherit (lib) getExe;
+  inherit (functions) configs;
+  inherit (lib) getExe mkIf optionalString;
   inherit (pkgs) writeShellApplication;
+  jfa-go-conf = configs "jfa-go.ini";
 in {
-  sops.templates.ddclient.content = let
-    cfg = config.services.ddclient;
-    boolYN = bool: if bool then "YES" else "NO";
-  in ''
-    cache=/var/lib/ddclient/ddclient.cache
-    foreground=YES
-    use=${cfg.use}
-    protocol=${cfg.protocol}
-    server=${cfg.server}
-    ssl=${boolYN cfg.ssl}
-    wildcard=YES
-    quiet=${boolYN cfg.quiet}
-    verbose=${boolYN cfg.verbose}
+  sops.templates = {
+    jfa-go = {
+      content = mkIf (jfa-go-conf != null) (builtins.replaceStrings [ "$PASSWORD" "$PUBLIC_SERVER" ] [
+        config.sops.placeholder."jellyfin/jfa-go/password"
+        config.sops.placeholder."jellyfin/jfa-go/public_server"
+      ] (builtins.readFile (configs "jfa-go.ini")));
+      owner = machine.user;
+    };
+    ddclient.content = let
+      cfg = config.services.ddclient;
+      boolYN = bool: if bool then "YES" else "NO";
+    in ''
+      cache=/var/lib/ddclient/ddclient.cache
+      foreground=YES
+      use=${cfg.use}
+      protocol=${cfg.protocol}
+      server=${cfg.server}
+      ssl=${boolYN cfg.ssl}
+      wildcard=YES
+      quiet=${boolYN cfg.quiet}
+      verbose=${boolYN cfg.verbose}
 
-    login=${config.sops.placeholder."noip/user"}
-    password=${config.sops.placeholder."noip/pass"}
-    ${config.sops.placeholder."noip/domains"}
-  '';
+      login=${config.sops.placeholder."noip/user"}
+      password=${config.sops.placeholder."noip/pass"}
+      ${config.sops.placeholder."noip/domains"}
+    '';
+  };
 
   services.ddclient = {
     use = "web, web=ifconfig.so/";
@@ -31,7 +42,7 @@ in {
   };
   systemd.services = {
     zerotierone.preStart = ''
-      for netId in $(cat ${functions.configs "zerotier"}); do
+      for netId in $(cat ${configs "zerotier"}); do
         touch "/var/lib/zerotier-one/networks.d/$netId.conf"
       done
     '';
@@ -80,8 +91,17 @@ in {
     };
   };
 
-  systemd.user.services.keynav = {
-    serviceConfig.ExecStart = "${getExe pkgs.keynav}";
-    wantedBy = [ "graphical-session.target" ];
+  systemd.user.services = {
+    keynav = {
+      serviceConfig.ExecStart = "${getExe pkgs.keynav}";
+      wantedBy = [ "graphical-session.target" ];
+    };
+    jfa-go = {
+      script = ''
+        sleep 15
+        ${getExe pkgs.local.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.sops.templates.jfa-go.path}'"}
+      '';
+      wantedBy = [ "graphical-session.target" ];
+    };
   };
 }

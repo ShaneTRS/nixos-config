@@ -1,5 +1,7 @@
 { functions, machine, pkgs, lib, ... }:
-let inherit (lib) mkIf mkOptionDefault;
+let
+  inherit (functions) configs;
+  inherit (lib) mkIf mkOptionDefault;
 in {
   imports = [ ./services.nix ];
 
@@ -15,7 +17,10 @@ in {
     ddclient.enable = true;
     zerotierone.enable = true;
   };
-  systemd.user.services = { keynav.enable = true; };
+  systemd.user.services = {
+    keynav.enable = true;
+    jfa-go.enable = true;
+  };
 
   shanetrs = {
     enable = true;
@@ -38,7 +43,10 @@ in {
       };
       steam.enable = true;
       gamescope.enable = true;
-      vr.enable = true;
+      vr = {
+        enable = true;
+        headsets = [ "quest2" ];
+      };
     };
     remote = {
       enable = true;
@@ -103,8 +111,11 @@ in {
 
       qbittorrent-qt5 # download client
       tor-browser # private web browser
+
+      local.wlx-overlay-s # vr desktops
+      local.jfa-go # jellyfin temp. accounts
     ];
-    xdg.configFile."keynav/keynavrc" = let attempt = functions.configs "keynavrc";
+    xdg.configFile."keynav/keynavrc" = let attempt = configs "keynavrc";
     in mkIf (attempt != null) { source = attempt; };
   };
 

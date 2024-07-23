@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-with pkgs;
+{ writeShellScriptBin, ... }:
 writeShellScriptBin "not-nice" ''
   export PATH="$PATH:/run/current-system/sw/bin/"
   chrt -pf 99 $$

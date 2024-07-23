@@ -34,11 +34,9 @@ in stdenvNoCC.mkDerivation rec {
 
   sourceRoot = ".";
   installPhase = ''
-    runHook preInstall
     cp --no-preserve=all -r ${_tarball}/. $out
-    chmod +x "$out" -R
+    chmod +x $out -R
     ln -s $out/alchemy $out/bin/${meta.mainProgram}
-    runHook postInstall
   '';
 
   src = fetchurl {

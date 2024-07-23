@@ -1,6 +1,7 @@
 { config, lib, pkgs, functions, machine, ... }:
 let
   cfg = config.shanetrs.remote;
+  inherit (functions) configs;
   inherit (lib) concatStringsSep getExe mkEnableOption mkIf mkMerge mkOption optionalString types;
   inherit (pkgs) makeDesktopItem writeShellApplication writeShellScriptBin;
 in {
@@ -77,7 +78,7 @@ in {
           Unit.Description = "Low-latency VNC display server";
           Service = {
             Environment = "DISPLAY=:0";
-            ExecStart = let attempt = functions.configs ".vnc/passwd";
+            ExecStart = let attempt = configs ".vnc/passwd";
             in "${getExe pkgs.local.not-nice} x0vncserver Geometry=2732x1536 ${
               optionalString (attempt != null) ''-rfbauth "${attempt}"''
             } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
@@ -141,7 +142,7 @@ in {
           (makeDesktopItem {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";
-            exec = let attempt = functions.configs ".vnc/passwd";
+            exec = let attempt = configs ".vnc/passwd";
             in getExe (writeShellScriptBin "loop-vncviewer" ''
               while true; do
                 addr="$(${getExe pkgs.local.addr-sort} ${concatStringsSep " " config.shanetrs.remote.addresses.host})"

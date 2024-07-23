@@ -77,7 +77,8 @@
       packages.${system}.default = with pkgs-self;
         buildEnv {
           name = "flake-shell";
-          paths = [ bash coreutils gawk gnused git lix unstable.nixd nix-output-monitor sops sudo ugrep ];
+          paths =
+            [ bash coreutils gawk gnused git lix local.nix-shebang unstable.nixd nix-output-monitor sops sudo ugrep ];
         };
       legacyPackages.${system} = pkgs-self;
       nixosConfigurations.default = let inherit (inputs."pkgs-${base}") lib;
