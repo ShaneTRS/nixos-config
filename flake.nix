@@ -10,7 +10,7 @@
       url = "github:Mic92/sops-nix";
       inputs = {
         nixpkgs-stable.follows = "pkgs-stable";
-        nixpkgs.follows = "pkgs-stable";
+        nixpkgs.follows = "pkgs-unstable";
       };
     };
 
@@ -104,7 +104,10 @@
                     pinned = importRepo pkgs-pinned;
                     local = listToAttrs (map (file: {
                       name = replaceStrings [ ".nix" ] [ "" ] file;
-                      value = pkgs.callPackage "${./packages}/${file}" { inherit functions machine pkgs; };
+                      value = pkgs.callPackage "${./packages}/${file}" {
+                        pkgs = pkgs-self;
+                        inherit functions machine;
+                      };
                     }) (attrNames (readDir ./packages)));
                   })
                 ];

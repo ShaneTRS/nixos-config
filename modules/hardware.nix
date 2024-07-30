@@ -84,6 +84,8 @@ in {
 
     (mkIf (cfg.graphics == "virtualbox") { virtualisation.virtualbox.guest.enable = true; })
 
-    (mkIf (cfg.graphics == "intel") { hardware.opengl.extraPackages = with pkgs; [ intel-media-driver ]; })
+    (mkIf (cfg.graphics == "intel") {
+      hardware.opengl.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver ];
+    })
   ]);
 }

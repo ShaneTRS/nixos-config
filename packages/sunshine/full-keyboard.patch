@@ -1,0 +1,36 @@
+diff --git a/third-party/inputtino/src/uinput/keyboard.hpp b/third-party/inputtino/src/uinput/keyboard.hpp
+index 6cf92d1..437b6af 100644
+--- a/third-party/inputtino/src/uinput/keyboard.hpp
++++ b/third-party/inputtino/src/uinput/keyboard.hpp
+@@ -14,6 +14,31 @@ constexpr auto UNKNOWN = 0;
+  * A map of [Moonlight keyboard code] -> {linux_code, scan_code}
+  */
+ static const std::map<short, KEY_MAP> key_mappings = {
++    {0x7C, {KEY_F13, UNKNOWN}},         {0x7D, {KEY_F14, UNKNOWN}},
++    {0x7E, {KEY_F15, UNKNOWN}},         {0x7F, {KEY_F16, UNKNOWN}},
++    {0x80, {KEY_F17, UNKNOWN}},         {0x81, {KEY_F18, UNKNOWN}},
++    {0x82, {KEY_F19, UNKNOWN}},         {0x83, {KEY_F20, UNKNOWN}},
++    {0x84, {KEY_F21, UNKNOWN}},         {0x85, {KEY_F22, UNKNOWN}},
++    {0x86, {KEY_F23, UNKNOWN}},         {0x87, {KEY_F24, UNKNOWN}},
++
++    {0xA6, {KEY_BACK, UNKNOWN}},       {0xA7, {KEY_FORWARD, UNKNOWN}},
++    {0xA8, {KEY_REFRESH, UNKNOWN}},    {0xA9, {KEY_STOP, UNKNOWN}},
++    {0xAA, {KEY_SEARCH, UNKNOWN}},     {0xAB, {KEY_BOOKMARKS, UNKNOWN}},
++    {0xAC, {KEY_HOMEPAGE, UNKNOWN}},   {0xAD, {KEY_MUTE, UNKNOWN}},
++    {0xAE, {KEY_VOLUMEDOWN, UNKNOWN}}, {0xAF, {KEY_VOLUMEUP, UNKNOWN}},
++    {0xB0, {KEY_NEXTSONG, UNKNOWN}},   {0xB1, {KEY_PREVIOUSSONG, UNKNOWN}},
++    {0xB2, {KEY_STOPCD, UNKNOWN}},     {0xB3, {KEY_PLAYPAUSE, UNKNOWN}},
++    {0xB4, {KEY_EMAIL, UNKNOWN}},      {0xB5, {KEY_MEDIA, UNKNOWN}},
++    {0xB6, {KEY_PROG1, UNKNOWN}},      {0xB7, {KEY_PROG2, UNKNOWN}},
++    {0x5D, {KEY_COMPOSE, UNKNOWN}},
++
++    {0x18, {KEY_MUHENKAN, UNKNOWN}},   {0x1A, {KEY_HENKAN, UNKNOWN}},
++    {0x1C, {KEY_HIRAGANA, UNKNOWN}},   {0x1D, {KEY_ZENKAKUHANKAKU, UNKNOWN}},
++    {0x1E, {KEY_RO, UNKNOWN}},         {0x1F, {KEY_YEN, UNKNOWN}},
++    
++    {0x97, {KEY_BRIGHTNESSDOWN, UNKNOWN}},
++    {0x98, {KEY_BRIGHTNESSUP, UNKNOWN}},
++    
+     {0x08, {KEY_BACKSPACE, 0x7002A}},  {0x09, {KEY_TAB, 0x7002B}},
+     {0x0C, {KEY_CLEAR, UNKNOWN}},      {0x0D, {KEY_ENTER, 0x70028}},
+     {0x10, {KEY_LEFTSHIFT, 0x700E1}},  {0x11, {KEY_LEFTCTRL, 0x700E0}},

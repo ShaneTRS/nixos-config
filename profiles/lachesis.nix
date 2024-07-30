@@ -1,4 +1,6 @@
-{ pkgs, ... }: {
+{ config, pkgs, lib, ... }:
+let inherit (lib) concatStringsSep;
+in {
   services.earlyoom.enable = false;
   zramSwap.enable = false;
 
@@ -30,9 +32,25 @@
     home.packages = with pkgs; [
       helvum
       jellyfin-media-player
-      # moonlight-qt
+      local.moonlight-qt
       local.spotify
       vlc
+      (writeShellApplication {
+        name = "moonlight-8b501";
+        runtimeInputs = [ coreutils local.addr-sort xorg.xdpyinfo ];
+        text = ''
+          RESOLUTION="''${RESOLUTION:-$(xdpyinfo | awk '/dimensions/{print $2}')}"
+          TARGET="''${TARGET:-$(addr-sort ${concatStringsSep " " config.shanetrs.remote.addresses.host})}"
+          PORT="''${PORT:-46989}"
+          BITRATE="''${BITRATE:-19000}"
+          FPS="''${FPS:-62}"
+          echo "Connecting to $TARGET at $RESOLUTION!"
+          moonlight stream "$TARGET:$PORT" desktop --resolution "$RESOLUTION" --no-vsync --fps "$FPS" \
+          	--bitrate "$BITRATE" --multi-controller --quit-after --game-optimization --audio-on-host \
+          	--no-frame-pacing --background-gamepad --capture-system-keys fullscreen \
+          	--video-codec H.264 --video-decoder hardware
+        '';
+      })
       (writeShellScriptBin "backlight-8b501" ''
         export DISPLAY=:0
         mkdir -p /tmp/backlight

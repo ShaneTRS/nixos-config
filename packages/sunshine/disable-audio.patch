@@ -1,0 +1,17 @@
+diff --git a/src/platform/linux/audio.cpp b/src/platform/linux/audio.cpp
+index f742accb..f67fb126 100644
+--- a/src/platform/linux/audio.cpp
++++ b/src/platform/linux/audio.cpp
+@@ -356,6 +356,12 @@ namespace platf {
+         auto sink_name = get_default_sink_name();
+         sink.host = sink_name;
+ 
++        if (config::audio.sink == "disabled") {
++          BOOST_LOG(warning) << "Audio was explicitly disabled, skipping null sinks"sv;
++          return std::nullopt;
++        } else {
++          BOOST_LOG(info) << "Audio wasn't disabled! Using sink: "sv << sink_name;
++        }
+         if (index.stereo == PA_INVALID_INDEX) {
+           index.stereo = load_null(stereo, speaker::map_stereo, sizeof(speaker::map_stereo));
+           if (index.stereo == PA_INVALID_INDEX) {

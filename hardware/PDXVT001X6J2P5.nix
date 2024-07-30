@@ -1,6 +1,7 @@
 # HP EliteBook 840 G1 (A3009CD10002)
-{
+{ pkgs, ... }: {
   boot = {
+    kernelPackages = pkgs.linuxPackages_5_15;
     kernelParams = [ "intel_iommu=off" "acpi_backlight=native" "acpi_sleep=nonvs" ];
     loader.grub = {
       enable = true;
@@ -41,25 +42,7 @@
     options = [ "compress-force=zstd:6" ];
     neededForBoot = true;
   };
-  shanetrs = {
-    hardware = {
-      enable = true;
-      graphics = "intel";
-      drivers.g710 = {
-        enable = true;
-        captureDelays = false;
-      };
-      firmware = "redist";
-    };
-    remote.usb = {
-      devices = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
-      ports = [ "2-2" "2-4" ];
-    };
-  };
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 8192;
-  }];
+  hardware.cpu.intel.updateMicrocode = true;
   nix = {
     settings.max-jobs = 0;
     distributedBuilds = true;
@@ -72,4 +55,23 @@
       speedFactor = 5;
     }];
   };
+  shanetrs = {
+    hardware = {
+      enable = true;
+      graphics = "intel";
+      drivers.g710 = {
+        enable = true;
+        captureDelays = false;
+      };
+      firmware = "redist";
+    };
+    remote.usb = {
+      devices = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
+      ports = [ "2-2" "2-4" "1-2" "1-4" ];
+    };
+  };
+  swapDevices = [{
+    device = "/var/lib/swapfile";
+    size = 8192;
+  }];
 }
