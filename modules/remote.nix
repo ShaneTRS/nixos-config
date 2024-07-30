@@ -167,8 +167,8 @@ in {
                 runtimeInputs = with pkgs; [ local.not-nice roc-toolkit ];
                 text = ''
                   not-nice roc-recv -srtp+rs8m://0.0.0.0:48820 -rrs8m://0.0.0.0:48821 \
-                    --rate=24500 --resampler-profile=low --resampler-backend speex \
-                    --io-latency=20ms --frame-length 4ms -o"pulse://default"
+                    --rate=24500 --resampler-profile=low --resampler-backend speex --frame-len=4ms \
+                    --io-latency=1ms --latency-profile=responsive -o"pulse://default"
                 '';
               })}";
               Restart = "on-failure";

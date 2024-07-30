@@ -9,7 +9,7 @@ let
   sessions = {
     plasma = rec {
       default = {
-        desktop = "plasma5";
+        desktop = "plasma6";
         extraPackages = with pkgs.${this.libs}; [
           ark
           filelight
@@ -19,13 +19,13 @@ let
           plasma-browser-integration
           sddm-kcm
         ];
-        libs = "libsForQt5";
-      };
-      plasma5 = default;
-      plasma6 = default // {
-        desktop = "plasma6";
         libs = "kdePackages";
       };
+      plasma5 = default // {
+        desktop = "plasma5";
+        libs = "libsForQt5";
+      };
+      plasma6 = default;
     };
     gnome.pop.extraPackages = with pkgs.gnomeExtensions; [ pop-shell ];
     xfce = rec {
@@ -67,7 +67,6 @@ in {
     }
 
     (mkIf cfg.audio {
-      sound.enable = true;
       services.pipewire = {
         enable = true;
         alsa.enable = true;
