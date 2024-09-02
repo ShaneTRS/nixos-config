@@ -66,8 +66,9 @@ in {
             NoCanaryMessageLinks.enabled = true;
             PlatformIndicators = {
               enabled = true;
-              list = false;
               badges = true;
+              list = false;
+              messages = false;
             };
             GameActivityToggle.enabled = true;
             UserVoiceShow.enabled = true;

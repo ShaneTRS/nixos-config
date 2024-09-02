@@ -3,6 +3,7 @@ let inherit (lib) concatStringsSep;
 in {
   services.earlyoom.enable = false;
   zramSwap.enable = false;
+  programs.noisetorch.enable = true;
 
   shanetrs = {
     enable = true;
@@ -30,6 +31,7 @@ in {
   user = {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
+      gimp-with-plugins
       helvum
       jellyfin-media-player
       local.moonlight-qt
@@ -39,16 +41,37 @@ in {
         name = "moonlight-8b501";
         runtimeInputs = [ coreutils local.addr-sort xorg.xdpyinfo ];
         text = ''
-          RESOLUTION="''${RESOLUTION:-$(xdpyinfo | awk '/dimensions/{print $2}')}"
-          TARGET="''${TARGET:-$(addr-sort ${concatStringsSep " " config.shanetrs.remote.addresses.host})}"
+          ml_res () { xdpyinfo | awk '/dimensions/{print $2}'; }
+          ml_target () { addr-sort ${concatStringsSep " " config.shanetrs.remote.addresses.host}; }
+          ml_bitrate () {
+            [ "$1" == "10.42.0.1" ] && exec echo 65000
+            echo 19000
+          }
+          ml_args () {
+            cat <<EOF
+              "$APPLICATION" --resolution "$RESOLUTION" --fps "$FPS" --bitrate "$BITRATE" \
+              --audio-on-host --quit-after --game-optimization --multi-controller \
+              --background-gamepad --capture-system-keys fullscreen \
+              --video-codec H.264 --video-decoder hardware --no-vsync --frame-pacing
+          EOF
+          }
+
+          RESOLUTION="''${RESOLUTION:-$(ml_res)}"
+          TARGET="''${TARGET:-$(ml_target)}"
           PORT="''${PORT:-46989}"
-          BITRATE="''${BITRATE:-19000}"
+          BITRATE="''${BITRATE:-$(ml_bitrate "$TARGET")}"
           FPS="''${FPS:-62}"
+          APPLICATION="''${APPLICATION:-desktop}"
+
+          ARGS="''${ARGS:-$(ml_args)}"
+          COMMAND="moonlight stream "$TARGET:$PORT" ''${ARGS[*]} $*"
+
           echo "Connecting to $TARGET at $RESOLUTION!"
-          moonlight stream "$TARGET:$PORT" desktop --resolution "$RESOLUTION" --no-vsync --fps "$FPS" \
-          	--bitrate "$BITRATE" --multi-controller --quit-after --game-optimization --audio-on-host \
-          	--no-frame-pacing --background-gamepad --capture-system-keys fullscreen \
-          	--video-codec H.264 --video-decoder hardware
+          if [ "''${DEBUG:-}" ]; then
+            echo "$COMMAND"
+            read -rt2
+          fi
+          eval "$COMMAND"
         '';
       })
       (writeShellScriptBin "backlight-8b501" ''

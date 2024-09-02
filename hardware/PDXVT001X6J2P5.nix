@@ -44,7 +44,7 @@
   };
   hardware.cpu.intel.updateMicrocode = true;
   nix = {
-    settings.max-jobs = 0;
+    settings.max-jobs = 1;
     distributedBuilds = true;
     buildMachines = [{
       hostName = "192.168.1.11?ssh-key=/root/.ssh/shane_ed25519";
@@ -66,7 +66,7 @@
       firmware = "redist";
     };
     remote.usb = {
-      devices = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
+      devices = "/sys/bus/pci/devices/0000:00:14.0/usb";
       ports = [ "2-2" "2-4" "1-2" "1-4" ];
     };
   };

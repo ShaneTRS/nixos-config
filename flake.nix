@@ -4,7 +4,7 @@
   inputs = {
     pkgs-stable.url = "nixpkgs/nixos-24.05";
     pkgs-unstable.url = "nixpkgs/nixos-unstable";
-    pkgs-pinned.url = "nixpkgs/79baff8812a0d68e24a836df0a364c678089e2c7"; # March 1st, 2024
+    pkgs-pinned.url = "nixpkgs/b73c2221a46c13557b1b3be9c2070cc42cf01eb3"; # July 26th, 2024
 
     sops = {
       url = "github:Mic92/sops-nix";
@@ -24,7 +24,7 @@
       inputs.nixpkgs.follows = "pkgs-unstable";
     };
     hm-pinned = {
-      url = "github:nix-community/home-manager/652fda4ca6dafeb090943422c34ae9145787af37"; # March 1st, 2024
+      url = "github:nix-community/home-manager/d0240a064db3987eb4d5204cf2400bc4452d9922"; # July 26th, 2024
       inputs.nixpkgs.follows = "pkgs-pinned";
     };
   };

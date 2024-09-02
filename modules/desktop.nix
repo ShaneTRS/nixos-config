@@ -61,6 +61,7 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     {
+      hardware.bluetooth.enable = true;
       security.rtkit.enable = true; # Interactive privilege escalation
       xdg.portal.enable = true;
       user.home.packages = cfg.extraPackages;
@@ -78,13 +79,15 @@ in {
 
     # Or Plasma, because SDDM requires the X Server
     (mkIf (cfg.type == "x11" || cfg.session == "plasma") {
-      services.xserver = {
-        enable = true;
+      services = {
         displayManager.autoLogin = {
           enable = mkDefault true;
           user = machine.user;
         };
-        xkb.options = "compose:menu";
+        xserver = {
+          enable = true;
+          xkb.options = "compose:menu";
+        };
       };
       user = {
         xsession = {
@@ -140,7 +143,7 @@ in {
         enable = true;
         indicator = true;
       };
-      services.xserver = {
+      services = {
         displayManager = {
           sddm.enable = true;
           sddm.wayland.enable = mkIf (cfg.type == "wayland") true;

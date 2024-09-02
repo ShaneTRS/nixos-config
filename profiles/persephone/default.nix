@@ -8,7 +8,7 @@ in {
   environment.systemPackages = with pkgs; [ local.not-nice ];
   programs = {
     dconf.enable = true; # Enable dconf for GTK apps
-    noisetorch.enable = true; # Possibly needed for setcap
+    noisetorch.enable = true;
     adb.enable = true; # Adds udev rules, adb, and creates group
   };
   users.users.${machine.user}.extraGroups = [ "adbusers" ];
