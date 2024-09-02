@@ -23,3 +23,4 @@ done
         ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
     fi
 done < "$PWD/last"
+echo This should be replaced via systematic home-manager symlinks

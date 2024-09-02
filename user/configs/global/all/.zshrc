@@ -1,10 +1,15 @@
 ## Prompt Building
+setopt prompt_subst
+PS1_SHORTEN() { [ $((COLUMNS - ${#PS1})) -lt 5 ]; }
 
 # nix-shell packages
 [ -n "$NIX_SHELL_PACKAGES" ] && 
   PS1_NIX_SHELL="%F{5}$NIX_SHELL_PACKAGES "
 
-PS1="%B%(!:%F{1}#:%F{2}$)%b $PS1_NIX_SHELL%F{8}[%f%m %~%F{8}]%f ";
+PS1_ROOT='%B%(!:%F{1}#:%F{2}$)%b'
+PS1_MULTILINE() { PS1_SHORTEN && echo "\n$PS1_ROOT%f "; }
+
+PS1="$PS1_ROOT $PS1_NIX_SHELL%F{8}[%f%m %~%F{8}]%f \$(PS1_MULTILINE)";
 
 preexec() { RPS1_TIME_START="$(date +%s%3N)"; }
 precmd() {

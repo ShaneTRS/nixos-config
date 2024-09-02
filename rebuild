@@ -1,4 +1,4 @@
-#! /usr/bin/env -S nix shell --extra-experimental-features "nix-command flakes" --command bash
+#! /usr/bin/env -S nix shell '.?submodules=1' --extra-experimental-features "nix-command flakes" --command bash
 
 SRC="${SRC:-$HOME/.config/nixos}"
 MACHINE="${MACHINE:-machine.toml}"

@@ -23,11 +23,11 @@ in {
     environment.systemPackages = with pkgs; [ git local.nix-shebang ];
 
     hardware = mkStrongDefault {
-      pulseaudio.enable = false;
-      opengl = {
+      graphics = {
         enable = true;
-        driSupport32Bit = true;
+        enable32Bit = true;
       };
+      pulseaudio.enable = false;
     };
 
     networking = {

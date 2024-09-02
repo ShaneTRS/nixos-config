@@ -213,7 +213,7 @@ in {
                   forward_port () {
                     read -ra arr <<< "$@"
                     for i in "''${arr[@]}"; do
-                      usb=$DEVICES''${i%.*}
+                      usb=$DEVICES''${i%-*}/''${i%.*}
                       [[ "$i" == *"."* ]] && usb+="/$i"
                       bus=''${usb//*\/}
                       while :; do
