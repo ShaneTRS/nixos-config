@@ -13,7 +13,7 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [ wacomtablet libsForQt5.kolourpaint ];
+      extraPackages = with pkgs; mkOptionDefault [ wacomtablet kdePackages.kolourpaint ];
     };
     gaming = {
       epic.enable = true;
