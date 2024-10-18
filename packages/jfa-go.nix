@@ -1,12 +1,11 @@
 { pkgs, ... }:
 with pkgs;
-let inherit (lib) getExe;
-in stdenvNoCC.mkDerivation rec {
+stdenvNoCC.mkDerivation rec {
   pname = "jfa-go";
   version = "0.5.1";
   buildInputs = [ unzip ];
   meta.mainProgram = pname;
-  unpackPhase = "${getExe unzip} $src";
+  unpackPhase = "unzip $src";
   installPhase = ''
     mkdir -p $out/bin
     cp --no-preserve=all -r ${pname} $out/bin

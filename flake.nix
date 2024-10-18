@@ -6,26 +6,16 @@
     pkgs-unstable.url = "nixpkgs/nixos-unstable";
     pkgs-pinned.url = "nixpkgs/b73c2221a46c13557b1b3be9c2070cc42cf01eb3"; # July 26th, 2024
 
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "pkgs-unstable";
+    };
     sops = {
       url = "github:Mic92/sops-nix";
       inputs = {
         nixpkgs-stable.follows = "pkgs-stable";
         nixpkgs.follows = "pkgs-unstable";
       };
-    };
-
-    # This cannot be simplified because flake.nix is *not* a real nix file. Only `self.outputs` is.
-    hm-stable = {
-      url = "github:nix-community/home-manager/release-24.05";
-      inputs.nixpkgs.follows = "pkgs-stable";
-    };
-    hm-unstable = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "pkgs-unstable";
-    };
-    hm-pinned = {
-      url = "github:nix-community/home-manager/d0240a064db3987eb4d5204cf2400bc4452d9922"; # July 26th, 2024
-      inputs.nixpkgs.follows = "pkgs-pinned";
     };
   };
 
@@ -34,10 +24,10 @@
       inherit (builtins) fromTOML readFile pathExists;
 
       machine = let this = fromTOML (readFile ./machine.toml); in this // { profile = this.profile or this.hostname; };
-      inherit (machine) base serial system;
+      inherit (machine) serial system;
 
       config.allowUnfree = true;
-      pkgs = functions.importRepo inputs."pkgs-${base}";
+      pkgs = functions.importRepo inputs.pkgs-stable;
       pkgs-self = self.outputs.nixosConfigurations.default.pkgs;
 
       functions = let inherit (pkgs.lib) findFirst;
@@ -81,7 +71,7 @@
             [ bash coreutils gawk gnused git lix local.nix-shebang unstable.nixd nix-output-monitor sops sudo ugrep ];
         };
       legacyPackages.${system} = pkgs-self;
-      nixosConfigurations.default = let inherit (inputs."pkgs-${base}") lib;
+      nixosConfigurations.default = let inherit (inputs.pkgs-unstable) lib;
       in lib.nixosSystem {
         modules = let
           inherit (builtins) attrNames listToAttrs readDir replaceStrings;
@@ -126,7 +116,7 @@
             };
           }
 
-          inputs."hm-${base}".nixosModules.home-manager
+          inputs.home-manager.nixosModules.home-manager
           inputs.sops.nixosModules.sops
 
           (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" machine.user ])
