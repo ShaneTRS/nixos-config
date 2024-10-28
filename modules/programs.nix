@@ -3,7 +3,8 @@ let
   cfg = config.shanetrs.programs;
   inherit (builtins) elem toJSON;
   inherit (functions) configs;
-  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
+  inherit (pkgs) makeDesktopItem writeShellApplication;
 in {
   options.shanetrs.programs = {
     enable = mkEnableOption "Program configuration and integration";
@@ -169,9 +170,32 @@ in {
   config = mkMerge [
     (mkIf cfg.discord.enable {
       user = {
-        # TODO: Add a custom binary for running this, that automatically
-        # runs it without OpenASAR for the first time
-        home.packages = [ cfg.discord.package ];
+        home.packages = [
+          (makeDesktopItem {
+            name = "discord";
+            desktopName = "Discord";
+            exec = getExe (writeShellApplication {
+              name = "discord";
+              text = ''
+                set +o errexit
+                pre_exec="$(date +%s)"
+                "${getExe cfg.discord.package}"
+                [ "$pre_exec" -eq "$(date +%s)" ] && exec "${
+                  getExe (cfg.discord.package.override {
+                    withOpenASAR = false;
+                    withVencord = false;
+                  })
+                }"
+              '';
+            });
+            terminal = false;
+            type = "Application";
+            icon = let branch = cfg.discord.branch;
+            in "${cfg.discord.package}/share/icons/hicolor/256x256/apps/discord${
+              if branch == "stable" then "" else "-${branch}"
+            }.png";
+          })
+        ];
         xdg.configFile = let vcfg = cfg.discord.vencord;
         in {
           "Vencord/settings/quickCss.css".text = mkIf (vcfg.enable == true) vcfg.quickCss;

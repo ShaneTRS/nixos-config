@@ -131,7 +131,10 @@ in {
     (mkIf (cfg.session == "plasma") {
       xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-kde ];
       # Maybe try to use plasma-manager for some settings
-      programs.partition-manager.enable = true;
+      programs = {
+        kdeconnect.enable = true;
+        partition-manager.enable = true;
+      };
       shanetrs.browser = {
         firefox = {
           extensions = mkOptionDefault [ "plasma-browser-integration@kde.org:plasma-integration/latest" ];
@@ -139,15 +142,13 @@ in {
         };
         chromium.extensions = mkOptionDefault [ "cimiefiiaegbelhefglklhhakcgmhkai" ]; # Plasma Integration
       };
-      user.services.kdeconnect = {
-        enable = true;
-        indicator = true;
-      };
       services = {
         displayManager = {
-          sddm.enable = true;
-          sddm.wayland.enable = mkIf (cfg.type == "wayland") true;
-          defaultSession = if cfg.type == "x11" then "plasma" else "plasmawayland";
+          sddm = {
+            enable = true;
+            wayland.enable = mkIf (cfg.type == "wayland") true;
+          };
+          defaultSession = if cfg.type == "x11" then "plasmax11" else "plasma";
         };
         desktopManager.${this.desktop or null}.enable = true;
       };
