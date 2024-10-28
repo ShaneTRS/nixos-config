@@ -25,7 +25,6 @@ in {
       };
     };
     shell.zsh.enable = true;
-    tundra.appStores = [ ];
   };
 
   user = {
