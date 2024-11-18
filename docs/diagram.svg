@@ -7,7 +7,7 @@
    viewBox="0 0 2048 1792"
    version="1.1"
    id="svg1"
-   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
    sodipodi:docname="diagram.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -27,11 +27,11 @@
      labelstyle="default"
      shape-rendering="auto"
      inkscape:clip-to-page="false"
-     inkscape:zoom="1.7113563"
-     inkscape:cx="546.64244"
-     inkscape:cy="491.42308"
-     inkscape:window-width="1920"
-     inkscape:window-height="1052"
+     inkscape:zoom="1.0450586"
+     inkscape:cx="576.04425"
+     inkscape:cy="486.09714"
+     inkscape:window-width="1366"
+     inkscape:window-height="740"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -56,6 +56,23 @@
   </sodipodi:namedview>
   <defs
      id="defs1">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,4.1402524,0,1 @ F,0,0,1,0,4.1402524,0,1 @ F,0,0,1,0,0.13743212,0,1 @ F,0,0,1,0,4.1402524,0,1"
+       radius="4.1402524"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
     <inkscape:path-effect
        effect="fillet_chamfer"
        id="path-effect86"
@@ -231,28 +248,28 @@
       <rect
          style="display:inline;fill:#191919;fill-opacity:1;stroke:#fefefe;stroke-width:1.47749;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
          id="rect2-6-5-9-7"
-         width="83.999931"
-         height="102.93884"
-         x="447.99857"
-         y="109.26534"
+         width="95.999992"
+         height="152"
+         x="447.99847"
+         y="109.26525"
          ry="13.251014"
          inkscape:label="nix" />
       <text
          xml:space="preserve"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-         x="491.02191"
-         y="227.18091"
+         x="496.03656"
+         y="275.18091"
          id="text2-1-5-3-4-4"
          inkscape:label="header"><tspan
            sodipodi:role="line"
            id="tspan2-5-7-7-5-1"
-           x="491.02191"
-           y="227.18091"
+           x="496.03656"
+           y="275.18091"
            style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">profiles</tspan></text>
       <g
          id="g5-05-7-5-1-0"
          inkscape:label="..."
-         transform="matrix(0.55555593,0,0,0.55555593,383.46144,97.449157)">
+         transform="matrix(0.55555593,0,0,0.55555593,383.46144,150.77256)">
         <rect
            style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.37406;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
            id="rect2-6-6-0-2-9-9-0-2"
@@ -278,7 +295,7 @@
       <g
          id="g5-05-7-5-1-9"
          inkscape:label="saturn"
-         transform="matrix(0.55555593,0,0,0.55555593,383.46144,82.332188)">
+         transform="matrix(0.55555593,0,0,0.55555593,383.46144,135.65559)">
         <rect
            style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.37406;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
            id="rect2-6-6-0-2-9-9-0-0"
@@ -302,44 +319,116 @@
              style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">saturn</tspan></text>
       </g>
       <g
-         id="g5-05-7-1-0-8"
+         id="g5-05-7-5-1-2-19"
          inkscape:label="persephone"
-         transform="matrix(0.55555593,0,0,0.55555593,383.51358,67.628781)">
-        <rect
-           style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.37406;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-           id="rect2-6-6-0-2-9-5-9-5"
-           width="99.658897"
-           height="55.893364"
-           x="144.18867"
-           y="122.59112"
-           ry="7.4524493"
-           inkscape:label="nix" />
+         transform="matrix(0.55555593,0,0,0.55555593,378.39441,83.860628)"
+         style="display:inline;stroke-width:1.359;stroke-dasharray:none">
+        <path
+           id="rect2-6-6-0-2-9-9-0-4-4"
+           style="display:inline;fill:#191919;stroke:#b3d9ff;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke;font-variation-settings:normal;opacity:1;vector-effect:none;fill-opacity:1;stroke-width:1.37406;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;-inkscape-stroke:none;stop-color:#000000;stop-opacity:1"
+           inkscape:label="folder"
+           d="m 153.26575,114.80049 99.65889,9.35999 h 14.10105 c 8.77535,0 15.83999,7.06463 15.83999,15.83999 v 88.91993 c 0,8.77536 -7.06477,15.88724 -15.83999,15.84 l -97.91995,-0.52721 c -8.77523,-0.0473 -15.83999,-7.06464 -15.83999,-15.84 z"
+           sodipodi:nodetypes="ccssssscc" />
         <text
            xml:space="preserve"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-           x="193.80664"
-           y="168.36835"
-           id="text2-1-2-6-4-7-8"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;display:inline;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+           x="217.59065"
+           y="139.8401"
+           id="text2-1-2-6-8-8-7-7"
            inkscape:label="header"><tspan
              sodipodi:role="line"
-             id="tspan2-5-9-0-9-5-4"
+             id="tspan2-5-9-0-53-6-7-8"
+             x="217.59065"
+             y="139.8401"
+             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">persephone</tspan></text>
+        <g
+           id="g18-4"
+           inkscape:label="..."
+           transform="translate(24.047591,51.496955)"
+           style="display:inline;stroke-width:1.359;stroke-dasharray:none">
+          <rect
+             style="display:inline;fill:#191919;fill-opacity:1;stroke:#ffffff;stroke-width:1.38396;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+             id="rect17-5"
+             width="100.97295"
+             height="55.964287"
+             x="143.53165"
+             y="122.62192"
+             ry="7.4619055"
+             inkscape:label="file" />
+          <text
+             xml:space="preserve"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
              x="193.80664"
              y="168.36835"
-             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">persephone</tspan></text>
+             id="text17-0"
+             inkscape:label="header"><tspan
+               sodipodi:role="line"
+               id="tspan17-36"
+               x="193.80664"
+               y="168.36835"
+               style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">...</tspan></text>
+        </g>
+        <g
+           id="g5-05-7-9-3-6-5-1"
+           inkscape:label="services.nix"
+           transform="translate(24.04759,26.296973)">
+          <rect
+             style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.38395999;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke;font-variation-settings:normal;opacity:1;vector-effect:none;stroke-miterlimit:4;-inkscape-stroke:none;stop-color:#000000;stop-opacity:1"
+             id="rect2-6-6-0-2-9-7-7-6-7-0"
+             width="100.97295"
+             height="55.964287"
+             x="143.53165"
+             y="122.58537"
+             ry="7.4619055"
+             inkscape:label="file" />
+          <text
+             xml:space="preserve"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+             x="193.80664"
+             y="168.36835"
+             id="text2-1-2-6-8-1-2-8-6"
+             inkscape:label="header"><tspan
+               sodipodi:role="line"
+               id="tspan2-5-9-0-53-3-1-5-3"
+               x="193.80664"
+               y="168.36835"
+               style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">services.nix</tspan></text>
+        </g>
+        <g
+           id="g4-9-4-3-8-9-9-2"
+           inkscape:label="default.nix"
+           transform="translate(22.047683,26.296973)">
+          <rect
+             style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.38396;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+             id="rect2-6-6-3-19-1-8-0-6-2-0"
+             width="100.97293"
+             height="29.444616"
+             x="145.53157"
+             y="122.58537"
+             ry="7.4619055"
+             inkscape:label="nix" />
+          <text
+             xml:space="preserve"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+             x="195.79492"
+             y="140.53783"
+             id="text2-1-5-62-0-3-9-4-7-6"
+             inkscape:label="header"><tspan
+               sodipodi:role="line"
+               id="tspan2-5-7-5-4-7-7-8-3-1"
+               x="195.79492"
+               y="140.53783"
+               style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">default.nix</tspan></text>
+        </g>
       </g>
       <g
          id="g5-05-7-9-3"
          inkscape:label="lachesis"
          transform="matrix(0.55555593,0,0,0.55555593,383.51358,53.62879)">
-        <rect
-           style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.37406;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+        <path
            id="rect2-6-6-0-2-9-7-7"
-           width="99.658897"
-           height="55.893364"
-           x="144.18867"
-           y="122.63911"
-           ry="7.4524493"
-           inkscape:label="nix" />
+           d="m 151.64114,122.63911 h 84.1 a 8.1064331,8.1064331 45 0 1 8.10643,8.10643 v 47.6495 a 0.13743212,0.13743212 135 0 1 -0.13743,0.13743 h -95.38121 a 4.1402524,4.1402524 45 0 1 -4.14026,-4.14025 v -44.30065 a 7.4524664,7.4524664 135 0 1 7.45247,-7.45246 z"
+           style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.37406;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke" />
         <text
            xml:space="preserve"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
@@ -383,7 +472,7 @@
     <g
        id="g15-9-8-1"
        inkscape:label="hardware"
-       transform="translate(360.01497,320.26857)">
+       transform="translate(364.71233,320.26857)">
       <rect
          style="display:inline;fill:#191919;fill-opacity:1;stroke:#fefefe;stroke-width:1.44957;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
          id="rect2-6-5-9-7-7"
@@ -1065,7 +1154,7 @@
       <g
          id="g7"
          inkscape:label="inputs"
-         transform="matrix(0.77123628,0,0,0.77123628,35.410471,63.004425)">
+         transform="matrix(0.77123628,0,0,0.77123628,35.410471,107.00442)">
         <text
            xml:space="preserve"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.21676px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0331708;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
@@ -1080,96 +1169,40 @@
              y="95.750137"
              style="text-align:center;text-anchor:middle;stroke-width:0.0331708">inputs</tspan></text>
         <g
-           id="g8-8"
-           inkscape:label="home-manager"
-           transform="matrix(0.99999752,0,0,1,-21.962998,110.83781)">
-          <g
-             id="g6-9"
-             inkscape:label="hm-pinned"
-             transform="translate(5.0001834,-20.499867)">
-            <use
-               x="0"
-               y="0"
-               xlink:href="#rect2-6-6"
-               id="use3-1-6-3"
-               transform="translate(598.00012,-90.926819)"
-               inkscape:label="input"
-               style="stroke-width:0.999694;stroke-dasharray:none" />
-            <text
-               xml:space="preserve"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-               x="193.80664"
-               y="194.36835"
-               id="text2-1-3-6"
-               inkscape:label="header"><tspan
-                 sodipodi:role="line"
-                 id="tspan2-5-1-8"
-                 x="193.80664"
-                 y="194.36835"
-                 style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">hm-pinned</tspan></text>
-          </g>
-          <g
-             id="g5-0"
-             inkscape:label="hm-unstable"
-             transform="translate(5.0001834,-20.499867)">
-            <use
-               x="0"
-               y="0"
-               xlink:href="#rect2-6-6"
-               id="use3-1-2"
-               transform="translate(598.00012,-117.46341)"
-               inkscape:label="input"
-               style="display:inline" />
-            <text
-               xml:space="preserve"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+           id="g5-0"
+           inkscape:label="sops-nix"
+           transform="matrix(0.99999752,0,0,1,-16.962827,46.25288)">
+          <use
+             x="0"
+             y="0"
+             xlink:href="#rect2-6-6"
+             id="use3-1-2"
+             transform="translate(598.00012,-117.46341)"
+             inkscape:label="input"
+             style="display:inline" />
+          <text
+             xml:space="preserve"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+             x="193.80664"
+             y="168.36835"
+             id="text2-1-1"
+             inkscape:label="header"><tspan
+               sodipodi:role="line"
+               id="tspan2-5-0"
                x="193.80664"
                y="168.36835"
-               id="text2-1-1"
-               inkscape:label="header"><tspan
-                 sodipodi:role="line"
-                 id="tspan2-5-0"
-                 x="193.80664"
-                 y="168.36835"
-                 style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">hm-unstable</tspan></text>
-          </g>
-          <g
-             id="g4-5"
-             inkscape:label="hm-stable"
-             transform="translate(3.0003055,-20.499867)">
-            <rect
-               style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.50927;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-               id="rect2-6-6-3-1"
-               width="120"
-               height="29.463409"
-               x="136"
-               y="122.53659"
-               ry="7.4666677"
-               inkscape:label="input" />
-            <text
-               xml:space="preserve"
-               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-               x="195.79492"
-               y="141.74193"
-               id="text2-1-5-1"
-               inkscape:label="header"><tspan
-                 sodipodi:role="line"
-                 id="tspan2-5-7-0"
-                 x="195.79492"
-                 y="141.74193"
-                 style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">hm-stable</tspan></text>
-          </g>
+               style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">sops-nix</tspan></text>
         </g>
         <g
-           id="g4-8"
-           inkscape:label="sops"
-           transform="translate(-18.999473,44.631424)">
+           id="g4-5"
+           inkscape:label="home-manager"
+           transform="matrix(0.99999752,0,0,1,-18.9627,46.25288)">
           <rect
-             style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.34567;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-             id="rect2-6-6-3-9"
-             width="95.40036"
+             style="display:inline;fill:#191919;fill-opacity:1;stroke:#b3d9ff;stroke-width:1.50927;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+             id="rect2-6-6-3-1"
+             width="120"
              height="29.463409"
-             x="148.29982"
+             x="136"
              y="122.53659"
              ry="7.4666677"
              inkscape:label="input" />
@@ -1177,14 +1210,14 @@
              xml:space="preserve"
              style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
              x="195.79492"
-             y="140.57884"
-             id="text2-1-5-6"
+             y="141.74193"
+             id="text2-1-5-1"
              inkscape:label="header"><tspan
                sodipodi:role="line"
-               id="tspan2-5-7-4"
+               id="tspan2-5-7-0"
                x="195.79492"
-               y="140.57884"
-               style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">sops-nix</tspan></text>
+               y="141.74193"
+               style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">home-manager</tspan></text>
         </g>
         <g
            id="g8"
@@ -1574,36 +1607,9 @@
              style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">user</tspan></text>
       </g>
       <g
-         id="g5-05-7-5-8-5-3-1"
-         inkscape:label="serial"
-         transform="matrix(0.55555593,0,0,0.55555593,374.94828,74.39749)"
-         style="display:inline">
-        <rect
-           style="display:inline;fill:#191919;fill-opacity:1;stroke:#ffffff;stroke-width:1.16904;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-           id="rect2-6-6-0-2-9-9-7-6-2-3"
-           width="71.999992"
-           height="56.000004"
-           x="158.00011"
-           y="122.53659"
-           ry="7.4666677"
-           inkscape:label="option" />
-        <text
-           xml:space="preserve"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:Hack;-inkscape-font-specification:Hack;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.0457043;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-           x="193.80664"
-           y="168.36835"
-           id="text2-1-2-6-3-6-5-8-6"
-           inkscape:label="header"><tspan
-             sodipodi:role="line"
-             id="tspan2-5-9-0-5-3-9-0-4"
-             x="193.80664"
-             y="168.36835"
-             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">serial</tspan></text>
-      </g>
-      <g
          id="g5-05-7-5-8-0-0"
-         inkscape:label="system"
-         transform="matrix(0.55555593,0,0,0.55555593,374.94827,58.841925)">
+         inkscape:label="serial"
+         transform="matrix(0.55555593,0,0,0.55555593,374.94827,66.619705)">
         <rect
            style="display:inline;fill:#191919;fill-opacity:1;stroke:#ffffff;stroke-width:1.16904;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
            id="rect2-6-6-0-2-9-9-7-3-3"
@@ -1624,12 +1630,12 @@
              id="tspan2-5-9-0-5-3-0-8"
              x="193.80664"
              y="168.36835"
-             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">system</tspan></text>
+             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">serial</tspan></text>
       </g>
       <g
          id="g4-9-4-7-5-0-50"
-         inkscape:label="base"
-         transform="matrix(0.55555593,0,0,0.55555593,373.83721,58.841925)">
+         inkscape:label="system"
+         transform="matrix(0.55555593,0,0,0.55555593,373.83721,66.619705)">
         <rect
            style="display:inline;fill:#191919;fill-opacity:1;stroke:#ffffff;stroke-width:1.16904;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
            id="rect2-6-6-3-19-1-0-0-3-9"
@@ -1650,7 +1656,7 @@
              id="tspan2-5-7-5-4-1-0-9-8"
              x="195.79492"
              y="140.53783"
-             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">base</tspan></text>
+             style="font-size:12px;text-align:center;text-anchor:middle;stroke-width:0.0457043">system</tspan></text>
       </g>
     </g>
     <g
@@ -2760,7 +2766,7 @@
       <path
          id="path77"
          style="font-variation-settings:normal;opacity:1;fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:0.914;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-         d="m 505.77486,563.61717 h -5.21654 m 5.21654,-15.53117 -5.21654,-0.0439 v 31 h 4.97227 M 442.54836,333.3616 h 9.5766 v 21.46439 20 h -9.5766 M 442.4234,355.00022 460,354.99998 459,548.086 l 41.55832,-0.0439 m 5.21654,51.54381 L 444.147,600 V 516.1987 H 299.6059"
+         d="m 505.77486,563.61717 h -5.21654 m 5.21654,-15.53117 -5.21654,-0.0439 v 31 h 4.97227 M 442.54836,377.3616 h 9.5766 v 21.46439 l 4e-5,20 h -9.57664 M 442.4234,399.00022 460,398.99998 459,548.086 l 41.55832,-0.0439 m 5.21654,51.54381 L 444.147,600 V 516.1987 H 299.6059"
          inkscape:label="nixpkgs"
          sodipodi:nodetypes="ccccccccccccccccccc"
          transform="translate(-224.32638,-206.25201)" />
@@ -2776,8 +2782,8 @@
       <path
          id="path37-8-4"
          style="font-variation-settings:normal;fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:0.75;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-         d="m 218.22198,238.5427 h 9.5766 v 21.46439 20 h -9.5766"
-         sodipodi:nodetypes="ccccc"
+         d="m 218.22175,248.54261 h 9.57687 v 21.4639 h -9.57687"
+         sodipodi:nodetypes="cccc"
          inkscape:label="hm inputs" />
       <rect
          style="font-variation-settings:normal;opacity:1;fill:#191919;fill-opacity:1;stroke:none;stroke-width:1.2333;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:9.86638, 1.2333;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
@@ -2791,9 +2797,9 @@
       <path
          id="path1"
          style="font-variation-settings:normal;fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-         d="m 300.18494,268.84361 -4.51127,4e-4 -5e-5,-17.482 h 4.51132 m -91.47713,-49.61402 h 18.96581 l 0.12496,36.79472 m -9.5766,21.46391 77.45167,0.0958"
+         d="m 300.18494,268.84361 -4.51127,4e-4 -5e-5,-17.482 h 4.51132 m -4.51129,8.74041 -67.87503,-0.0958"
          inkscape:label="inputs modules"
-         sodipodi:nodetypes="ccccccccc" />
+         sodipodi:nodetypes="cccccc" />
       <rect
          style="font-variation-settings:normal;opacity:1;fill:#191919;fill-opacity:1;stroke:none;stroke-width:1.2333;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:9.86638, 1.2333;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
          id="rect59"
@@ -2824,7 +2830,7 @@
       <path
          id="path63"
          style="font-variation-settings:normal;opacity:1;fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:0.871;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-         d="M 682.83776,466.74892 H 768 m 44.20588,-81.30195 V 408 H 768 v 162.06237 h 50 m 5.62001,-14.64615 h -5.70211 m 5.62992,43.91965 h -5.70211 l 0.0722,-58.61694 5.70211,-0.0538 m -0.0722,29.39724 h -5.70211 m 5.70211,14.15979 h -5.70211"
+         d="M 682.83776,466.74892 H 768 m 44.20588,-81.30195 V 408 H 768 v 162.06237 h 50 m 5.62001,-14.64615 h -5.70211 m 5.62992,96.1854 h -5.70211 l 0.0722,-110.88269 5.70211,-0.0538 m -0.0722,59.39724 h -5.70211 m 5.70211,36.42554 h -5.70211"
          inkscape:label="profile module"
          sodipodi:nodetypes="ccccccccccccccccc"
          transform="translate(-224.32638,-206.25201)" />
@@ -2867,7 +2873,7 @@
       <path
          id="path58"
          style="font-variation-settings:normal;opacity:1;fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:0.871;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
-         d="M 682.79168,449.26731 738,449 m 80.70209,16.00861 h -5.70211 m 5.70211,15.24349 h -5.70211 v -30.70966 l 5.70211,-0.0538 M 743.34851,377.31259 H 738 V 449 l 74.99998,0.54244"
+         d="M 682.79168,449.26731 738,449 m 80.70209,16.00861 h -5.70211 m 5.70211,15.24349 h -5.70211 v -30.70966 l 5.70211,-0.0538 m -5.70211,0.0538 L 738,449 v -65 h 24 l -0.007,-6.39272"
          inkscape:label="hardware module"
          sodipodi:nodetypes="cccccccccccc"
          transform="translate(-224.32638,-206.25201)" />
@@ -3011,7 +3017,7 @@
            y="0"
            xlink:href="#path12"
            id="use55"
-           transform="matrix(0.7712363,0,0,0.7712363,784.32742,-35.63074)"
+           transform="matrix(0.7712363,0,0,0.7712363,802.97149,-35.336062)"
            style="display:inline"
            inkscape:label="machine serial" />
         <use
@@ -3035,7 +3041,7 @@
            y="0"
            xlink:href="#path12"
            id="use61"
-           transform="matrix(0.7712363,0,0,0.7712363,864.52672,157.11903)"
+           transform="matrix(0.7712363,0,0,0.7712363,864.59938,187.11903)"
            style="display:inline"
            inkscape:label="persephone profile" />
         <use
@@ -3043,7 +3049,7 @@
            y="0"
            xlink:href="#path12"
            id="use62"
-           transform="matrix(0.7712363,0,0,0.7712363,864.52672,171.27882)"
+           transform="matrix(0.7712363,0,0,0.7712363,864.59938,223.54457)"
            style="display:inline"
            inkscape:label="saturn profile" />
         <use
@@ -3051,7 +3057,7 @@
            y="0"
            xlink:href="#path12"
            id="use63"
-           transform="matrix(0.7712363,0,0,0.7712363,864.52672,186.39253)"
+           transform="matrix(0.7712363,0,0,0.7712363,864.59938,238.65828)"
            style="display:inline"
            inkscape:label="... profile" />
         <use
@@ -3099,7 +3105,7 @@
            y="0"
            xlink:href="#path12"
            id="use12-4-8"
-           transform="matrix(0.77123628,0,0,0.77123628,483.58366,-38.06566)"
+           transform="matrix(0.77123628,0,0,0.77123628,483.58366,5.93434)"
            style="display:inline"
            inkscape:label="pkgs-pinned" />
         <use
@@ -3107,7 +3113,7 @@
            y="0"
            xlink:href="#path12"
            id="use12-4"
-           transform="matrix(0.77123628,0,0,0.77123628,483.58366,-58.1178)"
+           transform="matrix(0.77123628,0,0,0.77123628,483.58366,-14.1178)"
            style="display:inline"
            inkscape:label="pkgs-unstable" />
         <use
@@ -3115,31 +3121,15 @@
            y="0"
            xlink:href="#path12"
            id="use12"
-           transform="matrix(0.77123628,0,0,0.77123628,483.58367,-79.58171)"
+           transform="matrix(0.77123628,0,0,0.77123628,483.58367,-35.58171)"
            style="display:inline"
            inkscape:label="pkgs-stable" />
         <use
            x="0"
            y="0"
            xlink:href="#path12"
-           id="use12-4-8-4"
-           transform="matrix(0.77123628,0,0,0.77123628,473.9789,-4.94333)"
-           style="display:inline"
-           inkscape:label="sops" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path12"
-           id="use12-4-8-9"
-           transform="matrix(0.77123437,0,0,0.77123628,483.58278,73.36734)"
-           style="display:inline"
-           inkscape:label="hm-pinned" />
-        <use
-           x="0"
-           y="0"
-           xlink:href="#path12"
            id="use12-4-9"
-           transform="matrix(0.77123437,0,0,0.77123628,483.58278,53.31519)"
+           transform="matrix(0.77123437,0,0,0.77123628,483.52637,63.31519)"
            style="display:inline"
            inkscape:label="hm-unstable" />
         <use
@@ -3147,7 +3137,7 @@
            y="0"
            xlink:href="#path12"
            id="use12-6"
-           transform="matrix(0.77123437,0,0,0.77123628,483.58278,31.85129)"
+           transform="matrix(0.77123437,0,0,0.77123628,483.52637,41.851291)"
            style="display:inline"
            inkscape:label="hm-stable" />
         <use

@@ -1,7 +1,6 @@
 { pkgs, lib, ... }:
 let inherit (lib) mkOptionDefault;
 in {
-  environment.systemPackages = with pkgs; [ libsForQt5.xp-pen-deco-01-v2-driver ];
   services.zerotierone.enable = true;
 
   shanetrs = {

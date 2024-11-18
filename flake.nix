@@ -96,7 +96,7 @@
                       name = replaceStrings [ ".nix" ] [ "" ] file;
                       value = pkgs.callPackage "${./packages}/${file}" {
                         pkgs = pkgs-self;
-                        inherit functions machine;
+                        inherit functions machine self;
                       };
                     }) (attrNames (readDir ./packages)));
                   })

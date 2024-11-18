@@ -142,6 +142,10 @@ in {
         };
         chromium.extensions = mkOptionDefault [ "cimiefiiaegbelhefglklhhakcgmhkai" ]; # Plasma Integration
       };
+      user.services.kdeconnect = {
+        enable = true;
+        indicator = true;
+      };
       services = {
         displayManager = {
           sddm = {
@@ -156,9 +160,9 @@ in {
 
     (mkIf (cfg.session == "xfce") {
       xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
-      services.xserver = {
+      services = {
         displayManager.defaultSession = "xfce";
-        desktopManager.xfce.enable = true;
+        xserver.desktopManager.xfce.enable = true;
       };
     })
 

@@ -42,4 +42,5 @@
         "shell": true
     },
     "editor.stickyScroll.enabled": false,
+    "diffEditor.ignoreTrimWhitespace": false,
 }
