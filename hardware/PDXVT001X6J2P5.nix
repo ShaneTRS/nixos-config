@@ -43,18 +43,6 @@
     neededForBoot = true;
   };
   hardware.cpu.intel.updateMicrocode = true;
-  nix = {
-    settings.max-jobs = 1;
-    distributedBuilds = true;
-    buildMachines = [{
-      hostName = "192.168.1.11?ssh-key=/root/.ssh/shane_ed25519";
-      sshUser = "shane";
-      systems = [ "x86_64-linux" ];
-      supportedFeatures = [ "benchmark" "big-parallel" "kvm" ];
-      maxJobs = 6;
-      speedFactor = 5;
-    }];
-  };
   shanetrs = {
     hardware = {
       enable = true;
@@ -67,7 +55,7 @@
     };
     remote.usb = {
       devices = "/sys/bus/pci/devices/0000:00:14.0/usb";
-      ports = [ "2-2" "2-4" "1-2" "1-4" ];
+      ports = [ "2-7" ];
     };
   };
   swapDevices = [{

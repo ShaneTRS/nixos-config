@@ -142,7 +142,7 @@ in {
       environment.systemPackages = with pkgs;
         [ (mkIf (elem "nix-index" cfg.all_features) nix-index) (mkIf (elem "fuck" cfg.all_features) thefuck) ]
         ++ cfg.extraPackages;
-      fonts.packages = mkIf (elem "fastfetch" cfg.all_features) [ (pkgs.nerdfonts.override { fonts = [ "Hack" ]; }) ];
+      fonts.packages = mkIf (elem "fastfetch" cfg.all_features) [ pkgs.nerd-fonts.hack ];
       user = {
         home = {
           packages = with pkgs; [ (mkIf (elem "ugrep" cfg.all_features) ugrep) ];

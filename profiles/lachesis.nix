@@ -12,6 +12,7 @@
     };
     remote = {
       enable = true;
+      usb.enable = true;
       role = "client";
     };
     programs = {

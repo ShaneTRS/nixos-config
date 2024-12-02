@@ -1,7 +1,6 @@
 { config, lib, pkgs, functions, machine, ... }:
 let
   cfg = config.shanetrs.remote;
-  inherit (builtins) elemAt;
   inherit (functions) configs;
   inherit (lib) concatStringsSep getExe mkEnableOption mkIf mkMerge mkOption optionalString types;
   inherit (pkgs) makeDesktopItem writeShellApplication writeShellScriptBin;
@@ -17,20 +16,17 @@ in {
       default = pkgs.local.tigervnc;
     };
     addresses = {
-      host = mkOption {
-        type = types.listOf types.str;
-        default = [ "10.42.0.1" "192.168.1.11" ];
-      };
       client = mkOption {
-        type = types.listOf types.str;
-        default = [ "10.42.0.2" "192.168.1.12" ];
+        type = types.str;
+        default = "192.168.1.12";
+      };
+      host = mkOption {
+        type = types.str;
+        default = "192.168.1.11";
       };
     };
     usb = {
-      enable = mkOption {
-        type = types.bool;
-        default = true;
-      };
+      enable = mkEnableOption "Forward specific USB ports over the network";
       devices = mkOption {
         type = types.str;
         example = "/sys/bus/pci/devices/0000:00:14.0/usb2/";
@@ -70,84 +66,41 @@ in {
         wantedBy = [ "default.target" ];
       };
       boot.kernelModules = mkIf cfg.usb.enable [ "usbip-core" "usbip-host" "vhci-hcd" ];
+      networking.extraHosts = ''
+        ${cfg.addresses.client} shanetrs.remote.client
+        ${cfg.addresses.host} shanetrs.remote.host
+      '';
     }
 
-    (mkIf (cfg.role == "host") {
-      services = {
-        pipewire.extraConfig.pipewire = {
-          "60-shanetrs.remote"."context.modules" = mkIf cfg.audio.enable [
-            {
-              name = "libpipewire-module-roc-sink";
-              args = {
-                "fec.code" = "rs8m";
-                "remote.ip" = elemAt cfg.addresses.client 1; # This isn't dynamic
-                "remote.source.port" = 48820;
-                "remote.repair.port" = 48821;
-                "remote.control.port" = 48822;
-                "sink.name" = cfg.audio.sinkName;
-                "sink.props" = {
-                  "node.name" = "shanetrs.remote-sink";
-                  "node.description" = cfg.audio.sinkName;
-                };
-              };
-            }
-            {
-              name = "libpipewire-module-roc-source";
-              args = {
-                "fec.code" = "rs8m";
-                "local.ip" = "0.0.0.0";
-                "local.source.port" = 49820;
-                "local.repair.port" = 49821;
-                "local.control.port" = 49822;
-                "resampler.profile" = "low";
-                "sess.latency.msec" = 60;
-                "source.name" = cfg.audio.sourceName;
-                "source.props" = {
-                  "node.name" = "shanetrs.remote-source";
-                  "node.description" = cfg.audio.sourceName;
-                  "media.class" = "Audio/Source";
-                };
-              };
-            }
-          ];
-        };
-        xserver.enable = true;
-      };
-
-      user.systemd.user.services = {
-        x0vncserver = {
-          Unit.Description = "Low-latency VNC display server";
-          Service = {
-            Environment = "DISPLAY=:0";
-            ExecStart = let attempt = configs ".vnc/passwd";
-            in "${getExe pkgs.local.not-nice} x0vncserver Geometry=2732x1536 ${
-              optionalString (attempt != null) ''-rfbauth "${attempt}"''
-            } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
-            Restart = "on-failure";
-            StartLimitBurst = 32;
-          };
-          Install.WantedBy = [ "graphical-session.target" ];
-        };
-      };
-    })
-
     (mkIf (cfg.role == "client") {
-      # services.pipewire.extraConfig.pipewire = {
-      #   "60-shanetrs.remote"."context.modules" = mkIf cfg.audio.enable [{
-      #     name = "libpipewire-module-roc-source";
-      #     args = {
-      #       "fec.code" = "rs8m";
-      #       "local.ip" = "0.0.0.0";
-      #       "local.source.port" = 48820;
-      #       "local.repair.port" = 48821;
-      #       "local.control.port" = 48822;
-      #       "resampler.profile" = "low";
-      #       "sess.latency.msec" = 60;
-      #       "source.name" = cfg.audio.sinkName;
-      #       "source.props" = { "node.name" = "shanetrs.remote-sink"; };
-      #     };
-      #   }];
-      # };
+      services.pipewire.extraConfig.pipewire = {
+        "60-shanetrs-remote"."context.modules" = mkIf cfg.audio.enable [
+          {
+            name = "libpipewire-module-rtp-source";
+            args = {
+              "audio.channels" = 1;
+              "audio.position" = [ "MONO" ];
+              "sess.latency.msec" = 80;
+              "sess.ignore-ssrc" = true;
+              "sess.media" = "opus";
+              "source.ip" = "0.0.0.0";
+              "source.port" = 46601;
+              "stream.props" = { "node.name" = "shanetrs.remote.client"; };
+            };
+          }
+          {
+            name = "libpipewire-module-rtp-sink";
+            args = {
+              "audio.channels" = 1;
+              "audio.position" = [ "MONO" ];
+              "sess.media" = "opus";
+              "destination.ip" = "shanetrs.remote.host";
+              "destination.port" = 46602;
+              "stream.props" = { "node.name" = "shanetrs.remote.client-mic"; };
+            };
+          }
+        ];
+      };
       systemd.services = mkIf cfg.usb.enable {
         usbip-resume = {
           after = [ "suspend.target" ];
@@ -173,12 +126,12 @@ in {
             desktopName = "loop-vncviewer";
             exec = let attempt = configs ".vnc/passwd";
             in getExe (writeShellScriptBin "loop-vncviewer" ''
+              TARGET="''${TARGET:-shanetrs.remote.host}"
               while true; do
-                addr="$(${getExe pkgs.local.addr-sort} ${concatStringsSep " " config.shanetrs.remote.addresses.host})"
-                [ -n "$addr" ] &&
+                ping "$TARGET" -c1 &&
                   (exec -a "loop-vncviewer.child" "vncviewer" -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
                     optionalString (attempt != null) ''-passwd="${attempt}"''
-                  } /home/${machine.user}/.vnc/loop.tigervnc "$addr")
+                  } /home/${machine.user}/.vnc/loop.tigervnc "$TARGET")
                 sleep .6
               done
             '');
@@ -188,49 +141,11 @@ in {
           })
         ];
         systemd.user.services = {
-          roc-recv = mkIf cfg.audio.enable {
-            Unit.Description = "Low-latency remote audio receiver";
-            Service = {
-              ExecStart = "${getExe (writeShellApplication {
-                name = "roc-recv.service";
-                runtimeInputs = with pkgs; [ local.not-nice roc-toolkit ];
-                text = ''
-                  not-nice roc-recv -srtp+rs8m://0.0.0.0:48820 -rrs8m://0.0.0.0:48821 \
-                    --rate=24500 --resampler-profile=low --resampler-backend speex --frame-len=4ms \
-                    --io-latency=1ms --latency-profile=responsive -o"pulse://default"
-                '';
-              })}";
-              Restart = "on-failure";
-              StartLimitBurst = 32;
-            };
-            Install.WantedBy = [ "graphical-session.target" ];
-          };
-          roc-send = mkIf cfg.audio.enable {
-            Unit.Description = "Low-latency remote audio forwarding";
-            Service = {
-              Environment = [ "TARGET='${concatStringsSep " " cfg.addresses.host}'" ];
-              ExecStart = "${getExe (writeShellApplication {
-                name = "roc-send.service";
-                runtimeInputs = with pkgs; [ local.addr-sort local.not-nice roc-toolkit ];
-                text = ''
-                  # shellcheck disable=SC2048 disable=SC2086
-                  THAT=$(addr-sort ''${TARGET[*]})
-                  # This needs to be a loop, or detect errors
-                  not-nice roc-send -s"rtp+rs8m://$THAT:49820" -r"rs8m://$THAT:49821" -c"rtcp://$THAT:49822" \
-                    --reuseaddr --resampler-profile=low --resampler-backend speex --frame-len=4ms \
-                    --target-latency=30ms --latency-profile=responsive -i"pulse://''${DEVICE:-default}"
-                '';
-              })}";
-              Restart = "on-failure";
-              StartLimitBurst = 32;
-            };
-            Install.WantedBy = [ "graphical-session.target" ];
-          };
           usbip = mkIf cfg.usb.enable {
             Unit.Description = "Low-latency USB devices over ethernet";
             Service = {
               Environment = [
-                "TARGET='${concatStringsSep " " cfg.addresses.host}'"
+                "TARGET=shanetrs.remote.host"
                 "PORTS='${concatStringsSep " " cfg.usb.ports}'"
                 "DEVICES=${cfg.usb.devices}"
               ];
@@ -272,14 +187,11 @@ in {
                         doas usbip unbind -b"$bus" &>/dev/null
                         doas usbip bind -b"$bus"
                         sleep 0.2s
-                        # shellcheck disable=SC2048 disable=SC2086
-                        THAT=$(addr-sort ''${TARGET[*]})
-                        echo "TARGET: $THAT"
                         # shellcheck disable=SC1083
-                        ssh "$THAT" doas usbip attach -r"\''${SSH_CLIENT%% *}" -b"$bus"
-                        notify connect "$bus" "$THAT"
+                        ssh "$TARGET" doas usbip attach -r"\''${SSH_CLIENT%% *}" -b"$bus"
+                        notify connect "$bus" "$TARGET"
                         udevadm wait "$usb" --removed
-                        notify disconnect "$bus" "$THAT"
+                        notify disconnect "$bus" "$TARGET"
                       done &
                       pids+=($!)
                     done
@@ -287,12 +199,9 @@ in {
                   }
 
                   detach_port () {
-                    # shellcheck disable=SC2048 disable=SC2086
-                    THAT=$(addr-sort ''${TARGET[*]})
-                    echo "TARGET: $THAT"
                     read -ra arr <<< "$@"
                     for i in "''${arr[@]}"; do
-                      ssh "$THAT" doas usbip detach -p"$i"
+                      ssh "$TARGET" doas usbip detach -p"$i"
                     done
                   }
 
@@ -300,9 +209,7 @@ in {
                   trap handle_trap USR1
 
                   while true; do
-                    # shellcheck disable=SC2048 disable=SC2086
-                    THAT=$(addr-sort ''${TARGET[*]})
-                    [ -z "$THAT" ] || break
+                    ping "$TARGET" -c1 && break
                     sleep 1
                   done
 
@@ -318,6 +225,64 @@ in {
             };
             Install.WantedBy = [ "graphical-session.target" ];
           };
+        };
+      };
+    })
+
+    (mkIf (cfg.role == "host") {
+      services = {
+        pipewire.extraConfig.pipewire = {
+          "60-shanetrs-remote"."context.modules" = mkIf cfg.audio.enable [
+            {
+              name = "libpipewire-module-rtp-sink";
+              args = {
+                "audio.channels" = 1;
+                "audio.position" = [ "MONO" ];
+                "sess.media" = "opus";
+                "destination.ip" = "shanetrs.remote.client";
+                "destination.port" = 46601;
+                "stream.props" = {
+                  "media.class" = "Audio/Sink";
+                  "node.description" = cfg.audio.sinkName;
+                  "node.name" = "shanetrs.remote.host";
+                };
+              };
+            }
+            {
+              name = "libpipewire-module-rtp-source";
+              args = {
+                "audio.channels" = 1;
+                "audio.position" = [ "MONO" ];
+                "sess.latency.msec" = 0;
+                "sess.ignore-ssrc" = true;
+                "sess.media" = "opus";
+                "source.ip" = "0.0.0.0";
+                "source.port" = 46602;
+                "stream.props" = {
+                  "media.class" = "Audio/Source";
+                  "node.description" = cfg.audio.sourceName;
+                  "node.name" = "shanetrs.remote.client-mic";
+                };
+              };
+            }
+          ];
+        };
+        xserver.enable = true;
+      };
+
+      user.systemd.user.services = {
+        x0vncserver = {
+          Unit.Description = "Low-latency VNC display server";
+          Service = {
+            Environment = "DISPLAY=:0";
+            ExecStart = let attempt = configs ".vnc/passwd";
+            in "${getExe pkgs.local.not-nice} x0vncserver Geometry=2732x1536 ${
+              optionalString (attempt != null) ''-rfbauth "${attempt}"''
+            } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+            Restart = "on-failure";
+            StartLimitBurst = 32;
+          };
+          Install.WantedBy = [ "graphical-session.target" ];
         };
       };
     })
