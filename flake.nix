@@ -2,7 +2,7 @@
   description = "My system configuration";
 
   inputs = {
-    pkgs-stable.url = "nixpkgs/nixos-24.05";
+    pkgs-stable.url = "nixpkgs/nixos-24.11";
     pkgs-unstable.url = "nixpkgs/nixos-unstable";
     pkgs-pinned.url = "nixpkgs/b73c2221a46c13557b1b3be9c2070cc42cf01eb3"; # July 26th, 2024
 
@@ -12,10 +12,7 @@
     };
     sops = {
       url = "github:Mic92/sops-nix";
-      inputs = {
-        nixpkgs-stable.follows = "pkgs-stable";
-        nixpkgs.follows = "pkgs-unstable";
-      };
+      inputs.nixpkgs.follows = "pkgs-unstable";
     };
   };
 
@@ -24,7 +21,7 @@
       inherit (builtins) fromTOML readFile pathExists;
 
       machine = let this = fromTOML (readFile ./machine.toml); in this // { profile = this.profile or this.hostname; };
-      inherit (machine) serial system;
+      system = "x86_64-linux";
 
       config.allowUnfree = true;
       pkgs = functions.importRepo inputs.pkgs-stable;
@@ -122,7 +119,7 @@
           (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" machine.user ])
 
           (nixFolder "profiles/${machine.profile}")
-          (if serial == "" then { } else nixFolder "hardware/${serial}")
+          (if machine.serial == "" then { } else nixFolder "hardware/${machine.serial}")
           ./modules
         ];
         specialArgs = { inherit functions machine; };

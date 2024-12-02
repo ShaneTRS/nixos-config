@@ -101,7 +101,7 @@ in {
     (mkIf (builtins.elem "flatpak" cfg.appStores) {
       services.flatpak.enable = true;
       environment.systemPackages = with pkgs;
-        [ (if config.shanetrs.desktop.session == "plasma" then libsForQt5.discover else gnome.gnome-software) ];
+        [ (if config.shanetrs.desktop.session == "plasma" then kdePackages.discover else gnome.gnome-software) ];
     })
   ]);
 }
