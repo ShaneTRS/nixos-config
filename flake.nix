@@ -45,18 +45,34 @@
         resolveList = l: builtins.map (i: i.content or i) (builtins.filter (i: i.condition or true) l);
         secrets = self.outputs.nixosConfigurations.default.config.sops.secrets;
       };
+
+      shellDeps = with pkgs-self; [
+        coreutils
+        gawk
+        gnused
+        git
+        lix
+        local.nix-shebang
+        nixd
+        nixos-rebuild
+        nix-output-monitor
+        sops
+        sudo
+        ugrep
+      ];
     in {
       devShells.${system} = with pkgs; rec {
         default = repl;
-        repl = mkShellNoCC { shellHook = ''exec nix repl --expr "builtins.getFlake \"$PWD?submodules=1\""''; };
+        repl = mkShellNoCC { shellHook = ''exec nix repl --expr "builtins.getFlake \"${self}?submodules=1\""''; };
         sops = mkShellNoCC {
-          buildInputs = [ ssh-to-age ];
+          buildInputs = [ ssh-to-age ] ++ shellDeps;
           shellHook = ''
-            export SOPS_AGE_KEY=$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null);
+            export SOPS_AGE_KEY="$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)"
             [ -z "$SOPS_AGE_KEY" ] &&
               echo 'warning: ssh key was not found; keys will need to be provided'
-            export NIX_SHELL_PACKAGES="sops";
-            exec nix shell
+            export NIX_SHELL_PACKAGES="sops"
+            PREF_SHELL="$SHELL"; which zsh &>/dev/null && PREF_SHELL=zsh
+            exec "$PREF_SHELL"
           '';
         };
       };
@@ -64,8 +80,7 @@
       packages.${system}.default = with pkgs-self;
         buildEnv {
           name = "flake-shell";
-          paths =
-            [ bash coreutils gawk gnused git lix local.nix-shebang unstable.nixd nix-output-monitor sops sudo ugrep ];
+          paths = [ bash ] ++ shellDeps;
         };
       legacyPackages.${system} = pkgs-self;
       nixosConfigurations.default = let inherit (inputs.pkgs-unstable) lib;

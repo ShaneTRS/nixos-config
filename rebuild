@@ -24,6 +24,7 @@ if ugrep --quiet 'serial ?= ?""' "$MACHINE"; then
     echo "Hardware config is missing! The build will fail."
     exit 1
   fi
+  "${EDITOR:-nano}" "$MACHINE"
 fi
 
 build() { $SUDO nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default" --log-format internal-json 2>&1 | nom --json; }
