@@ -4,7 +4,7 @@
   inputs = {
     pkgs-stable.url = "nixpkgs/nixos-24.11";
     pkgs-unstable.url = "nixpkgs/nixos-unstable";
-    pkgs-pinned.url = "nixpkgs/b73c2221a46c13557b1b3be9c2070cc42cf01eb3"; # July 26th, 2024
+    pkgs-pinned.url = "nixpkgs/d0797a04b81caeae77bcff10a9dde78bc17f5661";
 
     home-manager = {
       url = "github:nix-community/home-manager";

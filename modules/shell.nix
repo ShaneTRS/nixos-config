@@ -178,6 +178,7 @@ in {
     }
 
     (mkIf cfg.doas.enable {
+      environment.systemPackages = with pkgs; [ doas-sudo-shim ];
       security = {
         sudo.enable = false;
         doas = {
