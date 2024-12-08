@@ -18,32 +18,36 @@
 
   outputs = { self, ... }@inputs:
     let
-      inherit (builtins) fromTOML readFile pathExists;
-
-      machine = let this = fromTOML (readFile ./machine.toml); in this // { profile = this.profile or this.hostname; };
+      config.allowUnfree = true;
       system = "x86_64-linux";
 
-      config.allowUnfree = true;
-      pkgs = functions.importRepo inputs.pkgs-stable;
+      machine = let
+        inherit (builtins) fromTOML readFile;
+        this = fromTOML (readFile ./machine.toml);
+      in this // { profile = this.profile or this.hostname; };
+
+      pkgs = functions.importRepo inputs.pkgs-unstable;
       pkgs-self = self.outputs.nixosConfigurations.default.pkgs;
 
-      functions = let inherit (pkgs.lib) findFirst;
+      functions = let
+        inherit (pkgs.lib) findFirst;
+        inherit (builtins) filter map pathExists;
       in rec {
+        secrets = self.outputs.nixosConfigurations.default.config.sops.secrets;
         configs = file:
           if secrets ? ${file} then
             secrets.${file}.path
           else
-            findFirst (f: pathExists f) null [
+            findFirst (i: pathExists i) null [
               "${flake}/user/configs/${machine.user}/${machine.profile}/${file}"
               "${flake}/user/configs/${machine.user}/all/${file}"
               "${flake}/user/configs/global/${machine.profile}/${file}"
               "${flake}/user/configs/global/all/${file}"
             ];
         flake = self;
-        importRepo = repo: import repo { inherit system config; };
+        importRepo = repo: import repo { inherit config system; };
         nixFolder = nix: let folder = "${./.}/${nix}"; in if pathExists folder then folder else folder + ".nix";
-        resolveList = l: builtins.map (i: i.content or i) (builtins.filter (i: i.condition or true) l);
-        secrets = self.outputs.nixosConfigurations.default.config.sops.secrets;
+        resolveList = list: map (i: i.content or i) (filter (i: i.condition or true) list);
       };
 
       shellDeps = with pkgs-self; [
@@ -77,18 +81,22 @@
         };
       };
       formatter.${system} = pkgs.nixfmt-classic;
-      packages.${system}.default = with pkgs-self;
+
+      legacyPackages.${system} = pkgs-self;
+      packages.${system}.default = with pkgs;
         buildEnv {
           name = "flake-shell";
           paths = [ bash ] ++ shellDeps;
         };
-      legacyPackages.${system} = pkgs-self;
-      nixosConfigurations.default = let inherit (inputs.pkgs-unstable) lib;
-      in lib.nixosSystem {
-        modules = let
-          inherit (builtins) attrNames listToAttrs readDir replaceStrings;
-          inherit (functions) nixFolder importRepo;
-        in [
+
+      nixosConfigurations.default = let
+        inherit (builtins) attrNames listToAttrs readDir replaceStrings;
+        inherit (functions) nixFolder importRepo;
+        inherit (inputs.pkgs-unstable.lib) mkAliasOptionModule nixosSystem;
+        inherit (machine) user serial profile;
+        inherit (pkgs) callPackage;
+      in nixosSystem {
+        modules = [
           {
             environment.etc."nix/inputs/pkgs".source = self;
             home-manager = {
@@ -106,7 +114,7 @@
                     pinned = importRepo pkgs-pinned;
                     local = listToAttrs (map (file: {
                       name = replaceStrings [ ".nix" ] [ "" ] file;
-                      value = pkgs.callPackage "${./packages}/${file}" {
+                      value = callPackage "${./packages}/${file}" {
                         pkgs = pkgs-self;
                         inherit functions machine self;
                       };
@@ -119,10 +127,10 @@
               registry.pkgs.flake = self;
               settings = {
                 auto-optimise-store = true;
-                experimental-features = [ "nix-command" "flakes" ];
+                experimental-features = [ "nix-command" "flakes" "pipe-operator" ];
                 nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
                 substituters = [ "file:///var/cache/nix" ];
-                trusted-users = [ machine.user ];
+                trusted-users = [ user ];
                 use-xdg-base-directories = true;
               };
             };
@@ -131,10 +139,10 @@
           inputs.home-manager.nixosModules.home-manager
           inputs.sops.nixosModules.sops
 
-          (lib.mkAliasOptionModule [ "user" ] [ "home-manager" "users" machine.user ])
+          (mkAliasOptionModule [ "user" ] [ "home-manager" "users" user ])
 
-          (nixFolder "profiles/${machine.profile}")
-          (if machine.serial == "" then { } else nixFolder "hardware/${machine.serial}")
+          (nixFolder "profiles/${profile}")
+          (if serial == "" then { } else nixFolder "hardware/${serial}")
           ./modules
         ];
         specialArgs = { inherit functions machine; };

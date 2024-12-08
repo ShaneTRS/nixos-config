@@ -43,12 +43,12 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     (mkIf cfg.drivers.g710.enable {
-      environment.etc."sidewinderd.conf".text = ''
-        user = "${cfg.drivers.g710.user}";
-        capture_delays = ${if cfg.drivers.g710.captureDelays then "true" else "false"};
-        pid-file = "${cfg.drivers.g710.pidFile}";
-        encrypted_workdir = ${if cfg.drivers.g710.encryptedWorkDir then "true" else "false"};
-        ${optionalString (cfg.drivers.g710.workDir != null) ''workdir = "${cfg.drivers.g710.workDir}";''}
+      environment.etc."sidewinderd.conf".text = with cfg.drivers.g710; ''
+        user = "${user}";
+        capture_delays = ${if captureDelays then "true" else "false"};
+        pid-file = "${pidFile}";
+        encrypted_workdir = ${if encryptedWorkDir then "true" else "false"};
+        ${optionalString (workDir != null) ''workdir = "${workDir}";''}
       '';
       systemd.services.sidewinderd = {
         script = "${getExe pkgs.local.sidewinderd}";
