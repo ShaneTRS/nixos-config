@@ -27,7 +27,10 @@ if ugrep --quiet 'serial ?= ?""' "$MACHINE"; then
   "${EDITOR:-nano}" "$MACHINE"
 fi
 
-build() { $SUDO nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default" --log-format internal-json 2>&1 | nom --json; }
+build() {
+  $SUDO nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default" \
+    --log-format internal-json 2>&1 | nom --json
+}
 machine() { awk -F'"' "/$1 ?=/{print \$2}" "$MACHINE"; }
 
 track() {
@@ -58,7 +61,15 @@ fi
 $UPDATE && nix flake update
 IFS=: read -ra SKIP <<< "$SKIP"
 track add "$MACHINE" "${SKIP[@]}"
-BUILD=$(build "$@" && echo 1)
+if [ "$1" != "copy" ]; then
+  BUILD=$(build "$@" && echo 1)
+else
+  SYMLINK=${SYMLINK:-false}
+  "${EDITOR:-nano}" "$MACHINE"
+  nix copy --to "ssh://${TARGET:-$2}" \
+    "$SRC?submodules=1#nixosConfigurations.default.config.system.build.toplevel" \
+    --log-format internal-json 2>&1 | nom --json && BUILD=1
+fi
 track rm "$MACHINE" "${SKIP[@]}"
 
 if $COMMIT && [ -n "$BUILD" ] && [ "$1" != "test" ]; then
@@ -69,7 +80,7 @@ MACHINE_USER="$(machine user)"
 MACHINE_PROFILE="$(machine profile)"; [ -z "$MACHINE_PROFILE" ] &&
   MACHINE_PROFILE="$(machine hostname)"
 
-"$SRC/user/homes/symlink" \
+${SYMLINK:-true} && "$SRC/user/homes/symlink" \
   "$MACHINE_USER/$MACHINE_PROFILE" "$MACHINE_USER/all" \
   "global/$MACHINE_PROFILE" "global/all" 2> /dev/null
 

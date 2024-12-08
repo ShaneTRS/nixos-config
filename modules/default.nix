@@ -14,8 +14,8 @@ in {
     boot = {
       initrd.availableKernelModules = [ "ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod" ];
       kernelModules = [ "v4l2loopback" ]; # Allow using cameras
-      kernelPackages = mkStrongDefault pkgs.linuxPackages_zen; # Enable zen kernel
-      kernelParams = [ "quiet" "splash" ]; # Disable boot messages
+      kernelPackages = mkStrongDefault pkgs.linuxPackages_zen;
+      kernelParams = [ "quiet" "splash" ];
       extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
       tmp.useTmpfs = mkStrongDefault true; # Use RAM disk for /tmp
     };
