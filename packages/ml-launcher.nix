@@ -2,7 +2,7 @@
 let inherit (pkgs) writeShellApplication;
 in writeShellApplication {
   name = "ml-launcher";
-  runtimeInputs = with pkgs; [ coreutils local.addr-sort local.moonlight-qt xorg.xdpyinfo ];
+  runtimeInputs = with pkgs; [ coreutils local.moonlight-qt local.not-nice xorg.xdpyinfo ];
   text = ''
     ml_res () { xdpyinfo | awk '/dimensions/{print $2}'; }
     ml_args () {
@@ -22,7 +22,7 @@ in writeShellApplication {
     APPLICATION="''${APPLICATION:-desktop}"
 
     ARGS="''${ARGS:-$(ml_args)}"
-    COMMAND="moonlight stream "$TARGET:$PORT" ''${ARGS[*]} $*"
+    COMMAND="not-nice moonlight stream "$TARGET:$PORT" ''${ARGS[*]} $*"
 
     echo "Connecting to $TARGET at $RESOLUTION!"
     if [ "''${DEBUG:-}" ]; then
