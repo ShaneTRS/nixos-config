@@ -86,13 +86,9 @@ in {
       local.shadowplay
       (writeShellApplication {
         name = "persephone.audio";
-        runtimeInputs = [ noisetorch pulseaudio local.addr-sort ];
+        runtimeInputs = [ noisetorch pulseaudio ];
         text = ''
           set +o errexit
-          if [ -z "''${THAT:-}" ]; then
-            # shellcheck disable=SC2048 disable=SC2086
-            THAT=$(addr-sort ''${CLIENT[*]})
-          fi
 
           pactl unload-module module-null-sink
           pactl load-module module-switch-on-connect # load bluetooth auto-connect pulse module
@@ -101,8 +97,6 @@ in {
 
           noisetorch -u
           noisetorch -i -s "$(pactl get-default-source)" -t 1 &
-          # shellcheck disable=SC2016
-          ssh "$THAT" -f 'systemctl restart --user roc-recv.service'
 
           pkill shadowplay -USR1
           exec true

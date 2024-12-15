@@ -151,15 +151,7 @@ in {
               ];
               ExecStart = "${getExe (writeShellApplication {
                 name = "usbip.service";
-                runtimeInputs = with pkgs; [
-                  coreutils
-                  gash-utils
-                  local.addr-sort
-                  libnotify
-                  openssh
-                  systemd
-                  util-linux
-                ];
+                runtimeInputs = with pkgs; [ coreutils gash-utils libnotify openssh systemd util-linux ];
                 text = ''
                   set +o errexit
                   if ! doas true; then

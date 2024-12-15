@@ -166,7 +166,7 @@ index a501cdb6..be6e5abd 100644
 -            (event->keysym.mod & KMOD_CTRL) &&
 -            (event->keysym.mod & KMOD_ALT) &&
 -            (event->keysym.mod & KMOD_SHIFT)) {
-+    if (event->state == SDL_PRESSED && m_KeysDown.contains(sdl_vk_map.at(SDL_SCANCODE_F8))) {
++    if (event->state == SDL_PRESSED && m_KeysDown.contains(sdl_vk_map.at(SDL_SCANCODE_SCROLLLOCK))) {
 +        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Combo is held: %d", event->keysym.scancode);
          // First we test the SDLK combos for matches,
          // that way we ensure that latin keyboard users
