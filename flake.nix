@@ -135,6 +135,7 @@
               };
             };
           }
+          { services.pipewire.package = pkgs-self.pinned.pipewire; }
 
           inputs.home-manager.nixosModules.home-manager
           inputs.sops.nixosModules.sops

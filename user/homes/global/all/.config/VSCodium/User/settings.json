@@ -43,4 +43,8 @@
     },
     "editor.stickyScroll.enabled": false,
     "diffEditor.ignoreTrimWhitespace": false,
+    "editor.tabSize": 2,
+    "Lua.codeLens.enable": true,
+    "Lua.completion.autoRequire": false,
+    "Lua.format.enable": false,
 }
