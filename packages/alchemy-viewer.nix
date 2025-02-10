@@ -3,7 +3,7 @@ with pkgs;
 let inherit (builtins) replaceStrings;
 in stdenvNoCC.mkDerivation rec {
   pname = "alchemy-viewer";
-  version = "7.1.9.2492";
+  version = "7.1.9.2516";
 
   _tarball = "Alchemy_Beta_${replaceStrings [ "." ] [ "_" ] version}_x86_64";
 

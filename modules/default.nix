@@ -22,12 +22,9 @@ in {
 
     environment.systemPackages = with pkgs; [ git local.nix-shebang ];
 
-    hardware = mkStrongDefault {
-      graphics = {
-        enable = true;
-        enable32Bit = true;
-      };
-      pulseaudio.enable = false;
+    hardware.graphics = mkStrongDefault {
+      enable = true;
+      enable32Bit = true;
     };
 
     networking = {
@@ -46,6 +43,7 @@ in {
           ClientAliveInterval = mkStrongDefault 15;
         };
       };
+      pulseaudio.enable = mkStrongDefault false;
       udev.extraRules = ''
         KERNEL=="cpu_dma_latency", GROUP="realtime"
       '';
