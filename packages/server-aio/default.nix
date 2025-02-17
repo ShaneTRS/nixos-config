@@ -2,7 +2,7 @@
 with pkgs;
 rustPlatform.buildRustPackage {
   pname = "aio";
-  version = "0.1.0";
+  version = "0.2.0";
   meta.mainProgram = pname;
   src = ./.;
   cargoLock.lockFile = ./server_tools/Cargo.lock;
