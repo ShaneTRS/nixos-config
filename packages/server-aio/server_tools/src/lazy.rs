@@ -1,8 +1,7 @@
 use {
     shanetrs::{
-        emsg, smsg,
-        AnsiMod::{Bold, Reset, Underline},
-        StringDuration,
+        ansi::Modifier::{Bold as B, Reset as R, Underline as U},
+        emsg, smsg, StringDuration,
     },
     std::{
         error::Error,
@@ -15,59 +14,56 @@ use {
 };
 
 pub async fn main(args: Vec<String>) -> Result<(), Box<dyn Error>> {
-    let self_exe = std::env::args().next().unwrap();
-    shanetrs_pm::flags! { init, args.clone().into_iter(), [6, 16, 12];
-        "{Bold}{Underline}Usage{Reset}: {self_exe} lazy [ARGUMENTS] {Bold}--inbound{Reset} <PORT> {Bold}--outbound{Reset} <PORT> {Bold}--protocol{Reset} <PROTOCOL> [COMMAND]";
+    let args = args.into_iter();
+    let self_exe = std::env::args().next().unwrap_or_default();
 
-        "\n{Bold}{Underline}Required Arguments{Reset}:";
+    let cli = strs_pm::cli! { args.clone(), [6, 16, 12];
+        "{B}{U}Usage{R}: {self_exe} lazy [ARGUMENTS] {B}--inbound{R} <PORT> {B}--outbound{R} <PORT> {B}--protocol{R} <PROTOCOL> [COMMAND]";
+
+        "\n{B}{U}Required Arguments{R}:";
         inbound  i, u16, "PORT" "Listener port";
         outbound o, u16, "PORT" "Destination port";
         protocol p, Protocol, "PROTOCOL" "Protocols to proxy";
 
-        "\n{Bold}{Underline}TCP Arguments{Reset}:";
+        "\n{B}{U}TCP Arguments{R}:";
         timeout, StringDuration "1m".parse::<StringDuration>().unwrap(), "DURATION" "Connection timeout for forwarding";
         retry_interval, StringDuration "200ms".parse::<StringDuration>().unwrap(), "DURATION" "Attempt cooldown";
         min_lifetime, StringDuration "20ms".parse::<StringDuration>().unwrap(), "DURATION" "Minimum connection length for server startup";
 
-        "\n{Bold}{Underline}UDP Arguments{Reset}:";
+        "\n{B}{U}UDP Arguments{R}:";
         mtu, usize 1600, "BYTES" "Maximum packet size";
         blacklist, UdpBlacklist UdpBlacklist::default(), "BLACKLIST" "Socket binding blacklist (comma-separated)";
 
-        "\n{Bold}{Underline}Arguments{Reset}:";
+        "\n{B}{U}Arguments{R}:";
         debug, bool false, "BOOL" "Enable debug logging";
-        "      {Bold}--help{Reset}                          Print this help message and exit";
+        "      {B}--help{R}                          Print this help message and exit";
         "      [COMMAND]                       Server executable [default: ./start]";
     };
 
-    let exe: Box<str> = match shanetrs_flags.get("_") {
-        Some(v) => v.clone(),
-        None => "./start".into(),
-    };
-    shanetrs_flags.remove("_");
-
-    // using ↓ instead of flags_help!() to also catch empty args
-    if args.contains(&"--help".to_string()) || args.is_empty() {
-        flags_help();
+    if (cli.data.fn_help)() {
         return Ok(());
+    }
+    let exe: Box<str> = match (cli.data.fn_unknown)() {
+        Ok(_) => "./start".into(),
+        Err(e) => match e.to_string().strip_prefix("cli: unknown flag: ") {
+            Some(val) if !val.starts_with('-') => val.into(),
+            _ => return Err(e),
+        },
     };
-    drop(self_exe);
-    flags_unknown!()?;
 
-    // Unpack all in one go
     let (inbound, outbound, protocol, timeout, retry_interval, min_lifetime, mtu, debug) = (
-        inbound?,
-        outbound?,
-        protocol?,
-        timeout?,
-        retry_interval?,
-        min_lifetime?,
-        mtu?,
-        debug?,
+        cli.inbound?,
+        cli.outbound?,
+        cli.protocol?,
+        cli.timeout?,
+        cli.retry_interval?,
+        cli.min_lifetime?,
+        cli.mtu?,
+        cli.debug?,
     );
 
-    let mut blacklist = blacklist?;
+    let mut blacklist = cli.blacklist?;
     blacklist.deref_mut().push(outbound);
-    // println!("{blacklist:?}");
 
     smsg!("Proxying {protocol} connections from {inbound} to {outbound}.");
     let tcp = if protocol.tcp {
@@ -133,7 +129,7 @@ mod tcp {
         sleep(wait).await;
         !timeout(Duration::ZERO, stream.ready(Interest::READABLE))
             .await
-            .unwrap_or_else(|_| Ok(Ready::EMPTY))
+            .unwrap_or(Ok(Ready::EMPTY))
             .unwrap()
             .is_read_closed()
     }
@@ -345,24 +341,21 @@ fn format_err(e: Box<dyn Error>) -> Box<dyn Error> {
     // why, type, message
     let err: Vec<&str> = err.split(": ").collect();
     let err = match *err.get(1).unwrap_or(&err[0]) {
-        "cannot be undefined" => format!("Missing argument: {Bold}{}{Reset}", err[0]),
-        "parse failed" => format!(
-            "Could not parse {Underline}{}{Reset}: {Bold}{}{Reset}",
-            err[0], err[2]
-        ),
-        "unknown flag" => format!("Unknown argument: {Bold}{}{Reset}", err[2]),
+        "cannot be undefined" => format!("Missing argument: {B}{}{R}", err[0]),
+        "parse failed" => format!("Could not parse {U}{}{R}: {B}{}{R}", err[0], err[2]),
+        "unknown flag" => format!("Unknown argument: {B}{}{R}", err[2]),
         "bind failed" => format!(
-            "Failed to open a {Underline}{}{Reset} listener: {Bold}{}{Reset}",
+            "Failed to open a {U}{}{R} listener: {B}{}{R}",
             err[0].to_uppercase(),
             err[2]
         ),
         "accept failed" => format!(
-            "Failed to connect over {Underline}{}{Reset}: {Bold}{}{Reset}",
+            "Failed to connect over {U}{}{R}: {B}{}{R}",
             err[0].to_uppercase(),
             err[2]
         ),
         "entry failed" => format!(
-            "Failed to add {Underline}{}{Reset} client: {Bold}{}{Reset}",
+            "Failed to add {U}{}{R} client: {B}{}{R}",
             err[0].to_uppercase(),
             err[2]
         ),
@@ -384,7 +377,7 @@ fn startup(exe: Box<str>) {
                 Err(e) => {
                     emsg!(
                         false,
-                        "Failed to start {Underline}{exe}{Reset}: {Bold}{}{Reset}",
+                        "Failed to start {U}{exe}{R}: {B}{}{R}",
                         e.to_string().to_lowercase()
                     );
                 }

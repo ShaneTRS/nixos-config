@@ -1,8 +1,7 @@
 use {
     shanetrs::{
-        dmsg, smsg,
-        AnsiMod::{Bold, Reset, Underline},
-        StringDuration,
+        ansi::Modifier::{Bold as B, Reset as R, Underline as U},
+        dmsg, smsg, StringDuration,
     },
     std::{
         error::Error,
@@ -15,25 +14,25 @@ use {
 
 #[rustfmt::skip]
 pub fn main(args: Vec<String>) -> Result<(), Box<dyn Error>> {
-    let self_exe = std::env::args().next().unwrap();
-    shanetrs_pm::flags! { init, args.into_iter(), [6, 16, 12];
-        "{Bold}{Underline}Usage{Reset}: {self_exe} silence [ARGUMENTS]";
 
-        "\n{Bold}{Underline}Arguments{Reset}:";
-        length l, StringDuration "5m".parse().unwrap(), "DURATION" "Length of silence";
-        interval i, StringDuration "10s".parse().unwrap(), "DURATION" "Interval between checks";
+    let self_exe = std::env::args().next().unwrap();
+    let cli = strs_pm::cli! { args.into_iter(), [6, 16, 12];
+        "{B}{U}Usage{R}: {self_exe} silence [ARGUMENTS]";
+        "\n{B}{U}Arguments{R}:";
+        length l, StringDuration "5m".parse::<StringDuration>().unwrap(), "DURATION" "Length of silence";
+        interval i, StringDuration "10s".parse::<StringDuration>().unwrap(), "DURATION" "Interval between checks";
         threshold t, u64 512, "UNITS" "Threshold for silence";
-        device d, String "lo".into(), "DEVICE" "Device to monitor";
-        stat s, String "rx_bytes".into(), "STATISTIC" "Statistic to monitor";
+        device d, String "lo".to_string(), "DEVICE" "Device to monitor";
+        stat s, String "rx_bytes".to_string(), "STATISTIC" "Statistic to monitor";
         debug, bool false, "BOOL" "Enable debug logging";
-        "      {Bold}--help{Reset}                          Print this help message and exit";
+        "      {B}--help{R}                          Print this help message and exit";
     };
 
-    flags_help!(); drop(self_exe);
-    flags_unknown!()?;
+    if (cli.data.fn_help)() { return Ok(()) }
+    (cli.data.fn_unknown)()?;
 
     let (length, interval, threshold, device, stat, debug) =
-        (length?, interval?, threshold?, device?, stat?, debug?);
+        (cli.length?, cli.interval?, cli.threshold?, cli.device?, cli.stat?, cli.debug?);
 
     let mut eta = *length;
     let milestone = (*length / 3).as_secs();
@@ -61,12 +60,12 @@ fn get_difference(interface: &str, stat: &str, duration: Duration) -> Result<u64
 }
 
 fn get_statistic(device: &str, stat: &str) -> Result<u64, Box<dyn Error>> {
-    match read_to_string(format!("/sys/class/net/{}/statistics/{}", device, stat)) {
+    match read_to_string(format!("/sys/class/net/{device}/statistics/{stat}")) {
         Ok(v) => Ok(v.trim().parse::<u64>()?),
         Err(e) => Err(Box::new(io::Error::new(
             io::ErrorKind::Other,
             format!(
-                "Failed to check {Underline}{device}.{stat}{Reset}: {Bold}{}{Reset}",
+                "Failed to check {U}{device}.{stat}{R}: {B}{}{R}",
                 e.to_string().to_lowercase()
             ),
         ))),
