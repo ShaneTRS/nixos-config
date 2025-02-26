@@ -1,0 +1,46 @@
+// Zed keymap
+//
+// For information on binding keys, see the Zed
+// documentation: https://zed.dev/docs/key-bindings
+//
+// To see the default key bindings run `zed: open default keymap`
+// from the command palette.
+[
+	{
+		"context": "Workspace",
+		"bindings": {
+			"ctrl-`": "workspace::ToggleBottomDock"
+		}
+	},
+	{
+		"context": "Editor",
+		"bindings": {
+			"alt-q": "editor::ShowEditPrediction",
+			"kp_enter": ["workspace::SendKeystrokes", "enter"],
+			"kp_1": ["workspace::SendKeystrokes", "NUMPAD_1"]
+		}
+	},
+	{
+		"context": "Editor && edit_prediction",
+		"bindings": {
+			"alt-q": "editor::AcceptEditPrediction",
+			"alt-tab": "editor::Tab",
+			"alt-l": null,
+			"tab": "editor::Tab"
+		}
+	},
+	{
+		"context": "Editor && edit_prediction_conflict",
+		"bindings": {
+			"alt-q": "editor::AcceptEditPrediction",
+			"alt-tab": "editor::Tab",
+			"alt-l": null
+		}
+	},
+	{
+		"context": "Terminal",
+		"bindings": {
+			"alt-s": ["terminal::SendText", "\u001bs"]
+		}
+	}
+]

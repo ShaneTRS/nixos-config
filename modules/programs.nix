@@ -165,6 +165,17 @@ in {
           }];
       };
     };
+    zed-editor = {
+      enable = mkEnableOption "Zed configuration and integration";
+      features = mkOption {
+        type = types.listOf (types.enum [ "nix" "rust" ]);
+        default = [ "nix" "rust" ];
+      };
+      package = mkOption {
+        type = types.package;
+        default = pkgs.zed-editor;
+      };
+    };
   };
 
   config = mkMerge [
@@ -238,6 +249,18 @@ in {
             else
               [ ]);
         };
+      };
+    })
+
+    (mkIf cfg.zed-editor.enable {
+      user.programs.zed-editor = {
+        enable = true;
+        package = cfg.zed-editor.package;
+        extraPackages = with pkgs; [
+          (mkIf (elem "nix" cfg.zed-editor.features) nixd)
+          (mkIf (elem "nix" cfg.zed-editor.features) nixfmt-classic)
+          (mkIf (elem "rust" cfg.zed-editor.features) rust-analyzer)
+        ];
       };
     })
   ];

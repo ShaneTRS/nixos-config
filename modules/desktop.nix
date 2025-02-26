@@ -4,7 +4,7 @@ let
   inherit (builtins) attrNames;
   inherit (functions) configs;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption mkOptionDefault types;
-  this = sessions.${cfg.session}.${cfg.preset} or { };
+  this = if cfg.enable then sessions.${cfg.session}.${cfg.preset} or { } else { };
   presets = attrNames sessions.${cfg.session};
   sessions = {
     plasma = rec {
@@ -129,7 +129,7 @@ in {
     })
 
     (mkIf (cfg.session == "plasma") {
-      xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-kde ];
+      xdg.portal.extraPortals = [ pkgs.${this.libs}.xdg-desktop-portal-kde ];
       # Maybe try to use plasma-manager for some settings
       programs = {
         kdeconnect.enable = true;
