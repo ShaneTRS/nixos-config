@@ -18,6 +18,7 @@
     programs = {
       discord.enable = true;
       easyeffects.enable = true;
+      zed-editor.enable = true;
       vscode = {
         enable = true;
         features = [ "nix" ];

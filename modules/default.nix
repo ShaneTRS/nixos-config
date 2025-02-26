@@ -68,8 +68,8 @@ in {
     ];
 
     shanetrs = {
-      shell.doas.enable = true;
-      tundra.enable = true;
+      shell.doas.enable = mkStrongDefault true;
+      tundra.enable = mkStrongDefault true;
     };
 
     systemd.services = {

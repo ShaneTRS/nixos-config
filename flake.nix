@@ -30,7 +30,7 @@
       pkgs-self = self.outputs.nixosConfigurations.default.pkgs;
 
       functions = let
-        inherit (pkgs.lib) findFirst;
+        inherit (pkgs.lib) findFirst warn;
         inherit (builtins) filter map pathExists;
       in rec {
         secrets = self.outputs.nixosConfigurations.default.config.sops.secrets;
@@ -38,7 +38,7 @@
           if secrets ? ${file} then
             secrets.${file}.path
           else
-            findFirst (i: pathExists i) null [
+            findFirst (i: pathExists i) (warn "no config was found!" null) [
               "${flake}/user/configs/${machine.user}/${machine.profile}/${file}"
               "${flake}/user/configs/${machine.user}/all/${file}"
               "${flake}/user/configs/global/${machine.profile}/${file}"
@@ -67,7 +67,15 @@
     in {
       devShells.${system} = with pkgs; rec {
         default = repl;
-        repl = mkShellNoCC { shellHook = ''exec nix repl --expr "builtins.getFlake \"${self}?submodules=1\""''; };
+        repl = mkShellNoCC {
+          shellHook = ''
+            exec nix repl --expr "let
+            	flake = builtins.getFlake \"$PWD?submodules=1\";
+            in flake
+            	// flake.nixosConfigurations.default
+             	// flake.nixosConfigurations.default.config.home-manager.users"
+          '';
+        };
         sops = mkShellNoCC {
           buildInputs = [ ssh-to-age ] ++ shellDeps;
           shellHook = ''

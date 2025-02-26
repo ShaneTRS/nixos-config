@@ -28,28 +28,15 @@
   };
   fileSystems."/" = {
     device = "/dev/disk/by-label/Nix";
-    fsType = "btrfs";
-    options = [ "compress-force=zstd:6" ];
+    fsType = "ext4";
     neededForBoot = true;
   };
   hardware.cpu.intel.updateMicrocode = true;
-  nix.settings = {
-    substituters = [ "http://shanetrs.remote.host:5698" ];
-    trusted-public-keys = [ "shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ=" ];
-  };
   shanetrs = {
     hardware = {
       enable = true;
       graphics = "intel";
-      drivers.g710 = {
-        enable = true;
-        captureDelays = false;
-      };
       firmware = "redist";
-    };
-    remote.usb = {
-      devices = "/sys/bus/pci/devices/0000:00:14.0/usb";
-      ports = [ "2-7" ];
     };
   };
   swapDevices = [{
