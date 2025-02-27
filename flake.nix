@@ -70,10 +70,10 @@
         repl = mkShellNoCC {
           shellHook = ''
             exec nix repl --expr "let
-            	flake = builtins.getFlake \"$PWD?submodules=1\";
+              flake = builtins.getFlake \"$PWD?submodules=1\";
             in flake
-            	// flake.nixosConfigurations.default
-             	// flake.nixosConfigurations.default.config.home-manager.users"
+              // flake.nixosConfigurations.default
+               // flake.nixosConfigurations.default.config.home-manager.users"
           '';
         };
         sops = mkShellNoCC {
@@ -106,7 +106,7 @@
       in nixosSystem {
         modules = [
           {
-            environment.etc."nix/inputs/pkgs".source = self;
+            environment.etc."nix/inputs/pkgs".source = inputs.pkgs-unstable;
             home-manager = {
               useGlobalPkgs = true;
               useUserPackages = true;
