@@ -33,6 +33,8 @@ in {
       hostName = mkStrongDefault machine.hostname;
     };
 
+    programs.command-not-found.enable = mkStrongDefault false;
+
     services = {
       earlyoom.enable = mkStrongDefault true;
       openssh = {
