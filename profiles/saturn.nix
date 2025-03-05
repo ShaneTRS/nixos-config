@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   shanetrs = {
     enable = true;
     browser = {
@@ -25,5 +25,5 @@
     };
   };
 
-  user.home.packages = with pkgs; [ krita vlc ];
+  user.home.packages = with pkgs; [krita vlc];
 }

@@ -26,8 +26,8 @@
 	// "unstable.ui_density": "compact",
 
 	"indent_guides": { "coloring": "indent_aware" },
-	"preferred_line_length": 110,
-	"soft_wrap": "preferred_line_length",
+	"preferred_line_length": 120,
+	"soft_wrap": "editor_width",
 
 	"selection_highlight_debounce": 0,
 	"diagnostics": {
@@ -72,7 +72,10 @@
 	"features": { "edit_prediction_provider": "zed" },
 	"file_types": { "JSONC": ["*.json"] },
 	"languages": {
-		"Nix": { "language_servers": ["nixd", "!nil"] },
+		"Nix": {
+			"language_servers": ["nixd", "!nil"],
+			"hard_tabs": false
+		},
 		"Rust": {
 			// "tab_size": 4,
 			"formatter": {

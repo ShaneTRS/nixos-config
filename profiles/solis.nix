@@ -1,5 +1,9 @@
-{ pkgs, lib, ... }:
-let inherit (lib) mkOptionDefault;
+{
+  pkgs,
+  lib,
+  ...
+}: let
+  inherit (lib) mkOptionDefault;
 in {
   services.printing.enable = true;
   shanetrs = {
@@ -8,10 +12,10 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [ libsForQt5.kcalc ];
+      extraPackages = with pkgs; mkOptionDefault [libsForQt5.kcalc];
     };
     programs.vscode.enable = true;
   };
 
-  user.home.packages = with pkgs; [ flatpak gimp libreoffice-still vlc ];
+  user.home.packages = with pkgs; [flatpak gimp libreoffice-still vlc];
 }

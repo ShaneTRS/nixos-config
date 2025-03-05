@@ -1,4 +1,8 @@
-{ pkgs, lib, ... }: {
+{
+  pkgs,
+  lib,
+  ...
+}: {
   services.earlyoom.enable = false;
   zramSwap.enable = false;
   programs.noisetorch.enable = true;
@@ -21,7 +25,7 @@
       zed-editor.enable = true;
       vscode = {
         enable = true;
-        features = [ "nix" ];
+        features = ["nix"];
       };
     };
     shell.zsh.enable = true;
@@ -33,10 +37,10 @@
       gimp-with-plugins
       helvum
       jellyfin-media-player
-      local.moonlight-qt
-      local.spotify
+      shanetrs.moonlight-qt
+      shanetrs.spotify
       vlc
-      local.ml-launcher
+      shanetrs.ml-launcher
       (writeShellScriptBin "backlight-8b501" ''
         export DISPLAY=:0
         mkdir -p /tmp/backlight
@@ -70,13 +74,13 @@
           Description = "Bandage fix for not forwarding audio at boot";
         };
         Service = {
-          Environment = [ "TARGET=shanetrs.remote.host" "MIN_DELAY=5" ];
+          Environment = ["TARGET=shanetrs.remote.host" "MIN_DELAY=5"];
           ExecStart = let
             inherit (pkgs) writeShellApplication;
             inherit (lib) getExe;
           in "${getExe (writeShellApplication {
             name = "audio-fix.service";
-            runtimeInputs = with pkgs; [ inetutils ];
+            runtimeInputs = with pkgs; [inetutils];
             text = ''
               set +o errexit
               sleep "$MIN_DELAY"
@@ -90,7 +94,7 @@
           Restart = "on-failure";
           StartLimitBurst = 32;
         };
-        Install.WantedBy = [ "graphical-session.target" ];
+        Install.WantedBy = ["graphical-session.target"];
       };
     };
   };

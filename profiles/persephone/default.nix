@@ -1,17 +1,22 @@
-{ functions, machine, pkgs, lib, ... }:
-let
+{
+  functions,
+  machine,
+  pkgs,
+  lib,
+  ...
+}: let
   inherit (functions) configs;
   inherit (lib) mkIf mkOptionDefault;
 in {
-  imports = [ ./services.nix ];
+  imports = [./services.nix];
 
-  environment.systemPackages = with pkgs; [ local.not-nice ];
+  environment.systemPackages = with pkgs; [shanetrs.not-nice];
   programs = {
     dconf.enable = true; # Enable dconf for GTK apps
     noisetorch.enable = true;
     adb.enable = true; # Adds udev rules, adb, and creates group
   };
-  users.users.${machine.user}.extraGroups = [ "adbusers" ];
+  users.users.${machine.user}.extraGroups = ["adbusers"];
 
   services = {
     ddclient.enable = true;
@@ -31,7 +36,7 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [ wacomtablet libsForQt5.kdenlive ];
+      extraPackages = with pkgs; mkOptionDefault [wacomtablet libsForQt5.kdenlive];
     };
     gaming = {
       epic.enable = true;
@@ -39,13 +44,13 @@ in {
       lutris.enable = true;
       minecraft = {
         enable = true;
-        extraPackages = with pkgs; [ flite ];
+        extraPackages = with pkgs; [flite];
       };
       steam.enable = true;
       gamescope.enable = true;
       vr = {
         enable = true;
-        headsets = [ "quest2" ];
+        headsets = ["quest2"];
       };
     };
     remote = {
@@ -59,7 +64,7 @@ in {
     };
     shell = {
       zsh.enable = true;
-      doas.noPassCmds = mkOptionDefault [ "chrt" ];
+      doas.noPassCmds = mkOptionDefault ["chrt"];
     };
   };
 
@@ -83,10 +88,10 @@ in {
       jetbrains.idea-community-bin # java dev
       podman-compose # declarative containers
 
-      local.shadowplay
+      shanetrs.shadowplay
       (writeShellApplication {
         name = "persephone.audio";
-        runtimeInputs = [ noisetorch pulseaudio ];
+        runtimeInputs = [noisetorch pulseaudio];
         text = ''
           set +o errexit
 
@@ -106,11 +111,13 @@ in {
       qbittorrent-qt5 # download client
       tor-browser # private web browser
 
-      local.wlx-overlay-s # vr desktops
-      local.jfa-go # jellyfin temp. accounts
+      shanetrs.wlx-overlay-s # vr desktops
+      shanetrs.jfa-go # jellyfin temp. accounts
     ];
-    xdg.configFile."keynav/keynavrc" = let attempt = configs "keynavrc";
-    in mkIf (attempt != null) { source = attempt; };
+    xdg.configFile."keynav/keynavrc" = let
+      attempt = configs "keynavrc";
+    in
+      mkIf (attempt != null) {source = attempt;};
   };
 
   virtualisation = {

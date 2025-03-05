@@ -3,10 +3,14 @@
 # - Create update checker, with notifications, and daemon service
 # - Figure out support for local secrets
 # - Create package that holds Tundra scripts and icons
-{ config, lib, pkgs, ... }:
-let
-  cfg = config.shanetrs.tundra;
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
+  cfg = config.shanetrs.tundra;
 in {
   options.shanetrs.tundra = {
     enable = mkEnableOption "Tundra configuration";
@@ -20,7 +24,7 @@ in {
         default = false;
       };
       checkInterval = mkOption {
-        type = types.enum [ "daily" "weekly" "monthly" ];
+        type = types.enum ["daily" "weekly" "monthly"];
         default = "daily";
       };
       push = {
@@ -28,12 +32,12 @@ in {
           type = types.bool;
           default = false;
         };
-        credentials = mkOption { type = types.str; };
+        credentials = mkOption {type = types.str;};
       };
     };
     appStores = mkOption {
-      type = types.listOf (types.enum [ "flatpak" "nix" ]);
-      default = [ "flatpak" ];
+      type = types.listOf (types.enum ["flatpak" "nix"]);
+      default = ["flatpak"];
     };
     # appStore = {
     #   nix = mkOption {
@@ -48,7 +52,7 @@ in {
   };
 
   config = mkIf cfg.enable (mkMerge [
-    { environment.systemPackages = with pkgs; [ local.tundra ]; }
+    {environment.systemPackages = with pkgs; [shanetrs.tundra];}
 
     (mkIf cfg.updates.enable {
       systemd = {
@@ -60,7 +64,7 @@ in {
                 UPDATE = "true";
                 DISPLAY = ":0";
               };
-              script = "${getExe pkgs.local.tundra} notify"; # This is a filler
+              script = "${getExe pkgs.shanetrs.tundra} notify"; # This is a filler
               serviceConfig.Type = "oneshot";
             };
             tundra-updater = {
@@ -68,13 +72,13 @@ in {
                 INTERACTIVE = "false";
                 UPDATE = "true";
               };
-              script = "${getExe pkgs.local.tundra} update";
+              script = "${getExe pkgs.shanetrs.tundra} update";
               serviceConfig.Type = "oneshot";
             };
           };
           timers = {
             tundra-updater = {
-              wantedBy = [ "timers.target" ];
+              wantedBy = ["timers.target"];
               timerConfig = {
                 OnCalendar = let
                   intervals = {
@@ -82,8 +86,12 @@ in {
                     "weekly" = "Thu *-*-* 04:40:00";
                     "monthly" = "Thu *-*-1..7 04:40:00";
                   };
-                in intervals.${cfg.updates.checkInterval};
-                Unit = if cfg.updates.unattended then "tundra-updater.service" else "tundra-notifier.service";
+                in
+                  intervals.${cfg.updates.checkInterval};
+                Unit =
+                  if cfg.updates.unattended
+                  then "tundra-updater.service"
+                  else "tundra-notifier.service";
               };
             };
           };
@@ -100,8 +108,13 @@ in {
 
     (mkIf (builtins.elem "flatpak" cfg.appStores) {
       services.flatpak.enable = true;
-      environment.systemPackages = with pkgs;
-        [ (if config.shanetrs.desktop.session == "plasma" then kdePackages.discover else gnome.gnome-software) ];
+      environment.systemPackages = with pkgs; [
+        (
+          if config.shanetrs.desktop.session == "plasma"
+          then kdePackages.discover
+          else gnome.gnome-software
+        )
+      ];
     })
   ]);
 }

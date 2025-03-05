@@ -1,7 +1,12 @@
-{ config, lib, pkgs, machine, ... }:
-let
-  cfg = config.shanetrs.hardware;
+{
+  config,
+  lib,
+  pkgs,
+  machine,
+  ...
+}: let
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption optionalString types;
+  cfg = config.shanetrs.hardware;
 in {
   options.shanetrs.hardware = {
     enable = mkEnableOption "Hardware driver installation and configuration";
@@ -32,11 +37,11 @@ in {
       };
     };
     firmware = mkOption {
-      type = types.enum [ "redist" "all" null ];
+      type = types.enum ["redist" "all" null];
       default = null;
     };
     graphics = mkOption {
-      type = types.enum [ "intel" "nvidia" "virtualbox" null ];
+      type = types.enum ["intel" "nvidia" "virtualbox" null];
       default = null;
     };
   };
@@ -45,19 +50,27 @@ in {
     (mkIf cfg.drivers.g710.enable {
       environment.etc."sidewinderd.conf".text = with cfg.drivers.g710; ''
         user = "${user}";
-        capture_delays = ${if captureDelays then "true" else "false"};
+        capture_delays = ${
+          if captureDelays
+          then "true"
+          else "false"
+        };
         pid-file = "${pidFile}";
-        encrypted_workdir = ${if encryptedWorkDir then "true" else "false"};
+        encrypted_workdir = ${
+          if encryptedWorkDir
+          then "true"
+          else "false"
+        };
         ${optionalString (workDir != null) ''workdir = "${workDir}";''}
       '';
       systemd.services.sidewinderd = {
-        script = "${getExe pkgs.local.sidewinderd}";
-        wantedBy = [ "multi-user.target" ];
+        script = "${getExe pkgs.shanetrs.sidewinderd}";
+        wantedBy = ["multi-user.target"];
       };
     })
 
     (mkIf cfg.drivers.artist12.enable {
-      environment.systemPackages = with pkgs; [ libsForQt5.xp-pen-deco-01-v2-driver ];
+      environment.systemPackages = with pkgs; [libsForQt5.xp-pen-deco-01-v2-driver];
     })
 
     (mkIf (cfg.firmware != null) {
@@ -68,7 +81,7 @@ in {
     })
 
     (mkIf (cfg.graphics == "nvidia") {
-      services.xserver.videoDrivers = [ "nvidia" ];
+      services.xserver.videoDrivers = ["nvidia"];
       virtualisation.podman.enableNvidia = true;
       hardware.nvidia = {
         modesetting.enable = true;
@@ -82,10 +95,13 @@ in {
       };
     })
 
-    (mkIf (cfg.graphics == "virtualbox") { virtualisation.virtualbox.guest.enable = true; })
+    (mkIf (cfg.graphics == "virtualbox") {virtualisation.virtualbox.guest.enable = true;})
 
     (mkIf (cfg.graphics == "intel") {
-      hardware.graphics.extraPackages = with pkgs; [ intel-media-driver intel-vaapi-driver ];
+      hardware.graphics.extraPackages = with pkgs; [
+        intel-media-driver
+        intel-vaapi-driver
+      ];
     })
   ]);
 }

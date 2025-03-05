@@ -1,14 +1,21 @@
-{ config, functions, machine, pkgs, lib, ... }:
-let
+{
+  config,
+  functions,
+  machine,
+  pkgs,
+  lib,
+  ...
+}: let
   inherit (functions) configs;
   inherit (lib) getExe mkIf optionalString;
   inherit (pkgs) writeShellApplication;
   jfa-go-conf = configs "jfa-go.ini";
 in {
-  sops.templates = let ph = config.sops.placeholder;
+  sops.templates = let
+    ph = config.sops.placeholder;
   in {
     jfa-go = {
-      content = mkIf (jfa-go-conf != null) (builtins.replaceStrings [ "$PASSWORD" "$PUBLIC_SERVER" ] [
+      content = mkIf (jfa-go-conf != null) (builtins.replaceStrings ["$PASSWORD" "$PUBLIC_SERVER"] [
         ph."jellyfin/jfa-go/password"
         ph."jellyfin/jfa-go/public_server"
       ] (builtins.readFile (configs "jfa-go.ini")));
@@ -16,7 +23,10 @@ in {
     };
     ddclient.content = let
       cfg = config.services.ddclient;
-      boolYN = bool: if bool then "YES" else "NO";
+      boolYN = bool:
+        if bool
+        then "YES"
+        else "NO";
     in ''
       cache=/var/lib/ddclient/ddclient.cache
       foreground=YES
@@ -54,7 +64,7 @@ in {
           RemainAfterExit = true;
           ExecStart = getExe (writeShellApplication {
             name = "podman-autostart.start";
-            runtimeInputs = with pkgs; [ coreutils podman ];
+            runtimeInputs = with pkgs; [coreutils podman];
             text = ''
               set +o errexit
               mkdir /tmp/1050368e08b494751a7fccc79f422a89 # Discord Bot
@@ -74,7 +84,7 @@ in {
           });
           ExecStop = getExe (writeShellApplication {
             name = "podman-autostart.stop";
-            runtimeInputs = with pkgs; [ coreutils podman ];
+            runtimeInputs = with pkgs; [coreutils podman];
             text = ''
               set +o errexit
               podman container ps --filter restart-policy=unless-stopped -q |
@@ -88,14 +98,14 @@ in {
           User = machine.user;
           WorkingDirectory = "/home/${machine.user}/Containers/.shanetrs/.podman-autostart";
         };
-        wantedBy = [ "network-online.target" ];
-        after = [ "network-online.target" ];
+        wantedBy = ["network-online.target"];
+        after = ["network-online.target"];
       };
       podman-autostart-check = {
         serviceConfig = {
           ExecStart = getExe (writeShellApplication {
             name = "podman-autostart-check";
-            runtimeInputs = with pkgs; [ coreutils podman ];
+            runtimeInputs = with pkgs; [coreutils podman];
             text = ''
               set +o errexit
               podman container ps --filter restart-policy=unless-stopped -q |
@@ -110,7 +120,7 @@ in {
     };
     timers = {
       podman-autostart-check = {
-        wantedBy = [ "timers.target" ];
+        wantedBy = ["timers.target"];
         timerConfig = {
           OnCalendar = "*-*-* *:30:00";
           Unit = "podman-autostart-check.service";
@@ -122,14 +132,14 @@ in {
   systemd.user.services = {
     keynav = {
       serviceConfig.ExecStart = "${getExe pkgs.keynav}";
-      wantedBy = [ "graphical-session.target" ];
+      wantedBy = ["graphical-session.target"];
     };
     jfa-go = {
       script = ''
         sleep 15
-        ${getExe pkgs.local.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.sops.templates.jfa-go.path}'"}
+        ${getExe pkgs.shanetrs.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.sops.templates.jfa-go.path}'"}
       '';
-      wantedBy = [ "graphical-session.target" ];
+      wantedBy = ["graphical-session.target"];
     };
   };
 }

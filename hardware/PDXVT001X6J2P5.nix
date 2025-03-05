@@ -1,8 +1,8 @@
 # HP EliteBook 840 G1 (A3009CD10002)
-{ pkgs, ... }: {
+{pkgs, ...}: {
   boot = {
     kernelPackages = pkgs.linuxPackages_5_15;
-    kernelParams = [ "intel_iommu=off" "acpi_backlight=native" "acpi_sleep=nonvs" ];
+    kernelParams = ["intel_iommu=off" "acpi_backlight=native" "acpi_sleep=nonvs"];
     loader.grub = {
       enable = true;
       device = "/dev/sda";
@@ -29,13 +29,13 @@
   fileSystems."/" = {
     device = "/dev/disk/by-label/Nix";
     fsType = "btrfs";
-    options = [ "compress-force=zstd:6" ];
+    options = ["compress-force=zstd:6"];
     neededForBoot = true;
   };
   hardware.cpu.intel.updateMicrocode = true;
   nix.settings = {
-    substituters = [ "http://shanetrs.remote.host:5698" ];
-    trusted-public-keys = [ "shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ=" ];
+    substituters = ["http://shanetrs.remote.host:5698"];
+    trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
   };
   shanetrs = {
     hardware = {
@@ -49,11 +49,13 @@
     };
     remote.usb = {
       devices = "/sys/bus/pci/devices/0000:00:14.0/usb";
-      ports = [ "2-7" ];
+      ports = ["2-7"];
     };
   };
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 8192;
-  }];
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8192;
+    }
+  ];
 }
