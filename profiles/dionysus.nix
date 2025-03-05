@@ -1,4 +1,4 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   services.earlyoom.enable = false;
   zramSwap.enable = false;
 
@@ -16,11 +16,11 @@
     };
     programs.vscode = {
       enable = true;
-      features = [ "nix" ];
+      features = ["nix"];
     };
     shell.zsh.enable = true;
-    tundra.appStores = [ ];
+    tundra.appStores = [];
   };
 
-  user.home.packages = with pkgs; [ local.moonlight-qt local.ml-launcher ];
+  user.home.packages = with pkgs; [shanetrs.moonlight-qt shanetrs.ml-launcher];
 }

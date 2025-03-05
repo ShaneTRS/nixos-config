@@ -1,22 +1,27 @@
-{ config, lib, pkgs, functions, ... }:
-let
-  cfg = config.shanetrs.programs;
+{
+  config,
+  lib,
+  pkgs,
+  functions,
+  ...
+}: let
   inherit (builtins) elem toJSON;
   inherit (functions) configs;
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
   inherit (pkgs) makeDesktopItem writeShellApplication;
+  cfg = config.shanetrs.programs;
 in {
   options.shanetrs.programs = {
     enable = mkEnableOption "Program configuration and integration";
     discord = {
       enable = mkEnableOption "Discord configuration and integration";
       branch = mkOption {
-        type = types.enum [ "stable" "canary" "ptb" ];
+        type = types.enum ["stable" "canary" "ptb"];
         default = "canary";
       };
       vencord = {
         enable = mkOption {
-          type = types.enum [ true false "manual" ];
+          type = types.enum [true false "manual"];
           default = true;
         };
         quickCss = mkOption {
@@ -88,7 +93,7 @@ in {
             notifyAboutUpdates = true;
             autoUpdate = true;
             useQuickCss = true;
-            themeLinks = [ ];
+            themeLinks = [];
             enableReactDevtools = false;
             frameless = false;
             transparent = false;
@@ -110,7 +115,7 @@ in {
               settingsSync = false;
               settingsSyncVersion = 1711701851176;
             };
-            enabledThemes = [ ];
+            enabledThemes = [];
           };
         };
       };
@@ -147,8 +152,8 @@ in {
     vscode = {
       enable = mkEnableOption "VSCode configuration and integration";
       features = mkOption {
-        type = types.listOf (types.enum [ "nix" "rust" ]);
-        default = [ "nix" "rust" ];
+        type = types.listOf (types.enum ["nix" "rust"]);
+        default = ["nix" "rust"];
       };
       package = mkOption {
         type = types.package;
@@ -157,23 +162,30 @@ in {
       extensions = mkOption {
         type = types.listOf types.package;
         default = with pkgs.vscode-extensions;
-          [ usernamehw.errorlens tamasfe.even-better-toml ] ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
-            name = "codeium";
-            publisher = "Codeium";
-            version = "1.9.18";
-            sha256 = "sha256-a20ALzOKBkgAPN6dyemOVYv1lGRddsdQSI9vwl1uOn0=";
-          }];
+          [usernamehw.errorlens tamasfe.even-better-toml]
+          ++ pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+            {
+              name = "codeium";
+              publisher = "Codeium";
+              version = "1.9.18";
+              sha256 = "sha256-a20ALzOKBkgAPN6dyemOVYv1lGRddsdQSI9vwl1uOn0=";
+            }
+          ];
       };
     };
     zed-editor = {
       enable = mkEnableOption "Zed configuration and integration";
       features = mkOption {
-        type = types.listOf (types.enum [ "nix" "rust" ]);
-        default = [ "nix" "rust" ];
+        type = types.listOf (types.enum ["nix" "rust"]);
+        default = ["nix" "rust"];
       };
       package = mkOption {
         type = types.package;
         default = pkgs.zed-editor;
+      };
+      extraPackages = mkOption {
+        type = types.listOf types.package;
+        default = [];
       };
     };
   };
@@ -201,13 +213,17 @@ in {
             });
             terminal = false;
             type = "Application";
-            icon = let branch = cfg.discord.branch;
+            icon = let
+              branch = cfg.discord.branch;
             in "${cfg.discord.package}/share/icons/hicolor/256x256/apps/discord${
-              if branch == "stable" then "" else "-${branch}"
+              if branch == "stable"
+              then ""
+              else "-${branch}"
             }.png";
           })
         ];
-        xdg.configFile = let vcfg = cfg.discord.vencord;
+        xdg.configFile = let
+          vcfg = cfg.discord.vencord;
         in {
           "Vencord/settings/quickCss.css".text = mkIf (vcfg.enable == true) vcfg.quickCss;
           "Vencord/settings/settings.json".text = mkIf (vcfg.enable == true) (toJSON vcfg.settings);
@@ -218,7 +234,7 @@ in {
     (mkIf cfg.easyeffects.enable {
       programs.dconf.enable = true;
       user = {
-        home.packages = [ cfg.easyeffects.package ];
+        home.packages = [cfg.easyeffects.package];
         xdg.configFile."easyeffects" = {
           recursive = true;
           source = configs "easyeffects";
@@ -227,27 +243,32 @@ in {
     })
 
     (mkIf cfg.vscode.enable {
-      environment.systemPackages = with pkgs; mkIf (elem "nix" cfg.vscode.features) [ unstable.nixd nixfmt-classic ];
+      environment.systemPackages = with pkgs; mkIf (elem "nix" cfg.vscode.features) [unstable.nixd nixfmt-classic];
       user = {
         programs.vscode = {
           enable = true;
           package = cfg.vscode.package;
-          extensions = with pkgs.vscode-extensions;
+          profiles.default.extensions = with pkgs.vscode-extensions;
             [
               # (mkIf (builtins.elem "nix" cfg.vscode.features) kamadorueda.alejandra)
               (mkIf (elem "nix" cfg.vscode.features) jnoortheen.nix-ide)
               (mkIf (elem "nix" cfg.vscode.features) timonwong.shellcheck)
               (mkIf (elem "rust" cfg.vscode.features) rust-lang.rust-analyzer)
               (mkIf (elem "rust" cfg.vscode.features) serayuzgur.crates)
-            ] ++ (if (elem "rust" cfg.vscode.features) then
-              pkgs.vscode-utils.extensionsFromVscodeMarketplace [{
-                name = "rust-syntax";
-                publisher = "dustypomerleau";
-                version = "0.6.1";
-                sha256 = "sha256-o9iXPhwkimxoJc1dLdaJ8nByLIaJSpGX/nKELC26jGU=";
-              }]
-            else
-              [ ]);
+            ]
+            ++ (
+              if (elem "rust" cfg.vscode.features)
+              then
+                pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+                  {
+                    name = "rust-syntax";
+                    publisher = "dustypomerleau";
+                    version = "0.6.1";
+                    sha256 = "sha256-o9iXPhwkimxoJc1dLdaJ8nByLIaJSpGX/nKELC26jGU=";
+                  }
+                ]
+              else []
+            );
         };
       };
     })
@@ -256,11 +277,13 @@ in {
       user.programs.zed-editor = {
         enable = true;
         package = cfg.zed-editor.package;
-        extraPackages = with pkgs; [
-          (mkIf (elem "nix" cfg.zed-editor.features) nixd)
-          (mkIf (elem "nix" cfg.zed-editor.features) nixfmt-classic)
-          (mkIf (elem "rust" cfg.zed-editor.features) rust-analyzer)
-        ];
+        extraPackages = with pkgs;
+          cfg.zed-editor.extraPackages
+          ++ [
+            (mkIf (elem "nix" cfg.zed-editor.features) nixd)
+            (mkIf (elem "nix" cfg.zed-editor.features) nixfmt-classic)
+            (mkIf (elem "rust" cfg.zed-editor.features) rust-analyzer)
+          ];
       };
     })
   ];

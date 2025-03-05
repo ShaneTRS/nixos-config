@@ -1,8 +1,8 @@
 # HP EliteBook 840 G1 (A3009CD10002)
-{ pkgs, ... }: {
+{pkgs, ...}: {
   boot = {
     kernelPackages = pkgs.linuxPackages_5_15;
-    kernelParams = [ "intel_iommu=off" "acpi_backlight=native" "acpi_sleep=nonvs" ];
+    kernelParams = ["intel_iommu=off" "acpi_backlight=native" "acpi_sleep=nonvs"];
     loader.grub = {
       enable = true;
       device = "/dev/sda";
@@ -39,8 +39,10 @@
       firmware = "redist";
     };
   };
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 8192;
-  }];
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8192;
+    }
+  ];
 }

@@ -1,5 +1,9 @@
-{ pkgs, lib, ... }:
-let inherit (lib) mkOptionDefault;
+{
+  pkgs,
+  lib,
+  ...
+}: let
+  inherit (lib) mkOptionDefault;
 in {
   services.zerotierone.enable = true;
 
@@ -12,7 +16,7 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [ wacomtablet kdePackages.kolourpaint ];
+      extraPackages = with pkgs; mkOptionDefault [wacomtablet kdePackages.kolourpaint];
     };
     gaming = {
       epic.enable = true;
@@ -25,7 +29,7 @@ in {
       easyeffects.enable = true;
       vscode = {
         enable = true;
-        features = [ "nix" ];
+        features = ["nix"];
       };
     };
     shell.zsh.enable = true;
@@ -42,7 +46,7 @@ in {
         jellyfin-media-player
         protontricks
         r2modman
-        local.spotify
+        shanetrs.spotify
         vlc
       ];
     };

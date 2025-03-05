@@ -1,7 +1,7 @@
 # HP t530 Thin Client
-{
+{...}: {
   boot = {
-    kernelModules = [ "kvm-amd" ];
+    kernelModules = ["kvm-amd"];
     loader.grub = {
       enable = true;
       device = "/dev/sda";
@@ -23,7 +23,7 @@
     };
     remote.usb = {
       devices = "/sys/bus/pci/devices/0000:00:12.0/usb";
-      ports = [ "1-1.1" "1-1.2" ];
+      ports = ["1-1.1" "1-1.2"];
     };
   };
   hardware.cpu.amd.updateMicrocode = true;

@@ -1,4 +1,0 @@
-hostname = "lachesis"   # The hostname for the device
-# profile = ""          # System configuration to use (hostname, by default)
-serial = ""             # Motherboard serial number
-user = "shane"          # The home and configs to import

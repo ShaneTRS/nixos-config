@@ -1,0 +1,30 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+	"languages": {
+		"Nix": {
+			"hard_tabs": false,
+			"tab_size": 2
+		}
+	},
+	"lsp": {
+		"nixd": {
+			"settings": {
+				"formatting": { "command": ["nix", "fmt", "--", "-"] },
+				"nixpkgs": {
+					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.pkgs"
+				},
+				"options": {
+					"nixos": {
+						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.options"
+					},
+					"home-manager": {
+						"expr": "{user = (builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.options.home-manager.users.type.getSubOptions [];}"
+					}
+				}
+			}
+		}
+	}
+}
