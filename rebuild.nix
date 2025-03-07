@@ -87,7 +87,7 @@ pkgs.writeShellApplication {
     fi
     track rm machine.json "''${SKIP[@]}"
 
-    [[ $COMMIT && $BUILD && "$1" != "test" ]] && update-repo
+    $COMMIT && $BUILD && [ ! "$1" = "test" ] && update-repo
 
     exit 0
   '';

@@ -1,13 +1,13 @@
 {
   config,
-  functions,
+  fn,
   lib,
   machine,
   pkgs,
   ...
 }: let
   inherit (builtins) attrNames;
-  inherit (functions) configs;
+  inherit (fn) configs;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
 
   sessions = {
@@ -96,14 +96,14 @@ in {
         };
       };
       user = {
-        xsession = {
-          enable = true;
-          profileExtra = ''
-            XCOMPOSEFILE="$HOME/.config/XCompose"
-            XCOMPOSECACHE="$HOME/.cache/XCompose"
-          '';
+        home.sessionVariables = {
+          XCOMPOSEFILE = "${config.user.xdg.configHome}/XCompose";
+          XCOMPOSECACHE = "${config.user.xdg.cacheHome}/XCompose";
         };
-        xdg.configFile."XCompose" = let attempt = configs ".XCompose"; in mkIf (attempt != null) {source = attempt;};
+        xdg.configFile."XCompose" = let
+          attempt = configs ".XCompose";
+        in
+          mkIf (attempt != null) {source = attempt;};
       };
     })
   ]);

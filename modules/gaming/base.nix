@@ -59,6 +59,13 @@ in {
     steam = {
       enable = mkEnableOption "Steam configuration and installation";
       package = mkPackageOption pkgs "steam" {};
+      protontricks = {
+        enable = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        package = mkPackageOption pkgs "protontricks" {};
+      };
       extraCompatPackages = mkOption {
         type = types.listOf types.package;
         default = with pkgs; [proton-ge-bin];
@@ -91,7 +98,7 @@ in {
       programs.gamescope = {
         enable = true;
         args = cfg.gamescope.args;
-        capSysNice = true;
+        capSysNice = true; # security wrapper
         env = cfg.gamescope.env;
         package = cfg.gamescope.package;
       };
@@ -114,11 +121,11 @@ in {
 
     (mkIf cfg.steam.enable {
       programs.steam = {
-        enable = true;
-        package = cfg.steam.package;
-        remotePlay.openFirewall = true;
-        dedicatedServer.openFirewall = true;
-        inherit (cfg.steam) extraCompatPackages extraPackages;
+        inherit (cfg.steam) enable package extraCompatPackages extraPackages;
+        remotePlay.openFirewall = true; # 27031..27036
+        dedicatedServer.openFirewall = true; # 27015
+        protontricks = {inherit (cfg.steam.protontricks) enable package;};
+        localNetworkGameTransfers.openFirewall = true; # 27040
       };
     })
 

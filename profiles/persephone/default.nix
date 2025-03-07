@@ -1,11 +1,11 @@
 {
-  functions,
+  fn,
   machine,
   pkgs,
   lib,
   ...
 }: let
-  inherit (functions) configs;
+  inherit (fn) configs;
   inherit (lib) mkIf mkOptionDefault;
 in {
   imports = [./services.nix];

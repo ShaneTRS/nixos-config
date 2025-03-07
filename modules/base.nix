@@ -1,14 +1,14 @@
 {
   self,
   config,
-  functions,
+  fn,
   lib,
   machine,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOverride;
-  inherit (functions) configs;
+  inherit (fn) configs;
   mkStrongDefault = x: mkOverride 900 x;
 in {
   options.shanetrs.enable =
@@ -115,8 +115,8 @@ in {
                 FILE="''${FILE#*/}" # Strip target profile"
                 FILE="''${FILE#*/}" # Strip target user
                 if [ ! -L "$HOME/$FILE" ]; then
-                  mkdir -p "$HOME/$(dirname "$FILE")"
-                  ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
+                  run mkdir -p "$HOME/$(dirname "$FILE")"
+                  run ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
                 fi
               done < "$PWD/last"
             '';

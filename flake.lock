@@ -18,22 +18,6 @@
 				"type": "github"
 			}
 		},
-		"pkgs-pinned": {
-			"locked": {
-				"lastModified": 1733392399,
-				"narHash": "sha256-kEsTJTUQfQFIJOcLYFt/RvNxIK653ZkTBIs4DG+cBns=",
-				"owner": "nixos",
-				"repo": "nixpkgs",
-				"rev": "d0797a04b81caeae77bcff10a9dde78bc17f5661",
-				"type": "github"
-			},
-			"original": {
-				"owner": "nixos",
-				"repo": "nixpkgs",
-				"rev": "d0797a04b81caeae77bcff10a9dde78bc17f5661",
-				"type": "github"
-			}
-		},
 		"nixpkgs": {
 			"locked": {
 				"lastModified": 1741048562,
@@ -47,6 +31,22 @@
 				"owner": "nixos",
 				"ref": "nixos-24.11",
 				"repo": "nixpkgs",
+				"type": "github"
+			}
+		},
+		"pkgs-pinned": {
+			"locked": {
+				"lastModified": 1733392399,
+				"narHash": "sha256-kEsTJTUQfQFIJOcLYFt/RvNxIK653ZkTBIs4DG+cBns=",
+				"owner": "nixos",
+				"repo": "nixpkgs",
+				"rev": "d0797a04b81caeae77bcff10a9dde78bc17f5661",
+				"type": "github"
+			},
+			"original": {
+				"owner": "nixos",
+				"repo": "nixpkgs",
+				"rev": "d0797a04b81caeae77bcff10a9dde78bc17f5661",
 				"type": "github"
 			}
 		},
@@ -69,8 +69,8 @@
 		"root": {
 			"inputs": {
 				"home-manager": "home-manager",
-				"pkgs-pinned": "pkgs-pinned",
 				"nixpkgs": "nixpkgs",
+				"pkgs-pinned": "pkgs-pinned",
 				"pkgs-unstable": "pkgs-unstable",
 				"sops": "sops"
 			}

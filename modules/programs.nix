@@ -2,11 +2,11 @@
   config,
   lib,
   pkgs,
-  functions,
+  fn,
   ...
 }: let
   inherit (builtins) elem toJSON;
-  inherit (functions) configs;
+  inherit (fn) configs;
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
   inherit (pkgs) makeDesktopItem writeShellApplication;
   cfg = config.shanetrs.programs;
@@ -232,7 +232,7 @@ in {
     })
 
     (mkIf cfg.easyeffects.enable {
-      programs.dconf.enable = true;
+      programs.dconf.enable = true; # settings daemon
       user = {
         home.packages = [cfg.easyeffects.package];
         xdg.configFile."easyeffects" = {
@@ -243,14 +243,15 @@ in {
     })
 
     (mkIf cfg.vscode.enable {
-      environment.systemPackages = with pkgs; mkIf (elem "nix" cfg.vscode.features) [unstable.nixd nixfmt-classic];
       user = {
+        home.packages = with pkgs; [
+          (mkIf (elem "nix" cfg.vscode.features) nixd)
+        ];
         programs.vscode = {
-          enable = true;
-          package = cfg.vscode.package;
+          inherit (cfg.vscode) enable package;
           profiles.default.extensions = with pkgs.vscode-extensions;
             [
-              # (mkIf (builtins.elem "nix" cfg.vscode.features) kamadorueda.alejandra)
+              # (mkIf (elem "nix" cfg.vscode.features) kamadorueda.alejandra)
               (mkIf (elem "nix" cfg.vscode.features) jnoortheen.nix-ide)
               (mkIf (elem "nix" cfg.vscode.features) timonwong.shellcheck)
               (mkIf (elem "rust" cfg.vscode.features) rust-lang.rust-analyzer)
@@ -275,8 +276,7 @@ in {
 
     (mkIf cfg.zed-editor.enable {
       user.programs.zed-editor = {
-        enable = true;
-        package = cfg.zed-editor.package;
+        inherit (cfg.zed-editor) enable package;
         extraPackages = with pkgs;
           cfg.zed-editor.extraPackages
           ++ [

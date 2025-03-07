@@ -55,44 +55,42 @@ in {
     {environment.systemPackages = with pkgs; [shanetrs.tundra];}
 
     (mkIf cfg.updates.enable {
-      systemd = {
-        user = {
-          services = {
-            tundra-notifier = {
-              environment = {
-                INTERACTIVE = "false";
-                UPDATE = "true";
-                DISPLAY = ":0";
-              };
-              script = "${getExe pkgs.shanetrs.tundra} notify"; # This is a filler
-              serviceConfig.Type = "oneshot";
+      systemd.user = {
+        services = {
+          tundra-notifier = {
+            environment = {
+              INTERACTIVE = "false";
+              UPDATE = "true";
+              DISPLAY = ":0";
             };
-            tundra-updater = {
-              environment = {
-                INTERACTIVE = "false";
-                UPDATE = "true";
-              };
-              script = "${getExe pkgs.shanetrs.tundra} update";
-              serviceConfig.Type = "oneshot";
-            };
+            script = "${getExe pkgs.shanetrs.tundra} notify"; # This is a filler
+            serviceConfig.Type = "oneshot";
           };
-          timers = {
-            tundra-updater = {
-              wantedBy = ["timers.target"];
-              timerConfig = {
-                OnCalendar = let
-                  intervals = {
-                    "daily" = "*-*-* 04:40:00";
-                    "weekly" = "Thu *-*-* 04:40:00";
-                    "monthly" = "Thu *-*-1..7 04:40:00";
-                  };
-                in
-                  intervals.${cfg.updates.checkInterval};
-                Unit =
-                  if cfg.updates.unattended
-                  then "tundra-updater.service"
-                  else "tundra-notifier.service";
-              };
+          tundra-updater = {
+            environment = {
+              INTERACTIVE = "false";
+              UPDATE = "true";
+            };
+            script = "${getExe pkgs.shanetrs.tundra} update";
+            serviceConfig.Type = "oneshot";
+          };
+        };
+        timers = {
+          tundra-updater = {
+            wantedBy = ["timers.target"];
+            timerConfig = {
+              OnCalendar = let
+                intervals = {
+                  "daily" = "*-*-* 04:40:00";
+                  "weekly" = "Thu *-*-* 04:40:00";
+                  "monthly" = "Thu *-*-1..7 04:40:00";
+                };
+              in
+                intervals.${cfg.updates.checkInterval};
+              Unit =
+                if cfg.updates.unattended
+                then "tundra-updater.service"
+                else "tundra-notifier.service";
             };
           };
         };

@@ -10,6 +10,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "pkgs-unstable";
     };
+    # nixgl = {
+    #   url = "github:nix-community/nixGL";
+    #   inputs.nixpkgs.follows = "pkgs-unstable";
+    # };
     sops = {
       url = "github:mic92/sops-nix";
       inputs.nixpkgs.follows = "pkgs-unstable";
@@ -17,18 +21,25 @@
   };
 
   outputs = {self, ...} @ inputs: let
-    inherit (builtins) attrValues filter isFunction map pathExists replaceStrings;
-    inherit (base.lib) findFirst mkAliasOptionModule nixosSystem warn;
-    inherit (functions) importItem;
-
-    tree = functions.fileTree self;
+    inherit (builtins) attrValues filter isFunction map replaceStrings;
+    inherit (base.lib) mkAliasOptionModule nixosSystem;
+    inherit (fn) importItem importRepo fileTree;
 
     base = inputs.pkgs-unstable;
-    pkgs = functions.importRepo base;
-    pkgs-self = self.outputs.nixosConfigurations.default.pkgs;
+    nixosConfiguration = self.outputs.nixosConfigurations.default;
+    pkgs = importRepo base;
 
     config.allowUnfree = true;
     system = "x86_64-linux";
+
+    pkgs-self = nixosConfiguration.pkgs;
+
+    fn = import ./functions.nix {
+      inherit self machine pkgs;
+      inherit (nixosConfiguration.config.sops) secrets;
+      pkgsConfig = {inherit config system;};
+    };
+    tree = fileTree self;
 
     machine = let
       x = tree.machine;
@@ -38,27 +49,6 @@
         source = replaceStrings ["\${user}"] [x.user] x.source;
         profile = x.profile or x.hostname;
       };
-
-    functions = with machine; rec {
-      secrets = self.outputs.nixosConfigurations.default.config.sops.secrets;
-      configs = file:
-        if secrets ? ${file}
-        then secrets.${file}.path
-        else
-          findFirst (i: pathExists i) (warn "no config was found for ${file}!" null) [
-            "${self}/user/configs/${user}/${profile}/${file}"
-            "${self}/user/configs/${user}/all/${file}"
-            "${self}/user/configs/global/${profile}/${file}"
-            "${self}/user/configs/global/all/${file}"
-          ];
-      fileTree = dir: import ./file-tree.nix dir;
-      importItem = nix:
-        if isFunction nix
-        then nix
-        else nix.default;
-      importRepo = repo: import repo {inherit config system;};
-      resolveList = list: map (i: i.content or i) (filter (i: i.condition or true) list);
-    };
 
     shellDeps = with pkgs; [
       coreutils
@@ -73,7 +63,7 @@
       sops
     ];
 
-    specialArgs = {inherit self functions machine tree;};
+    specialArgs = {inherit self fn machine tree;};
   in {
     devShells.${system} = with pkgs; rec {
       default = repl;
@@ -159,9 +149,21 @@
         )
       ];
     };
+    homeConfigurations.default = inputs.home-manager.lib.homeManagerConfiguration {
+      extraSpecialArgs = specialArgs;
+      modules =
+        nixosConfiguration.options.user.definitions
+        ++ [
+          {
+            home = {
+              username = machine.user;
+              homeDirectory = nixosConfiguration.config.users.users.${machine.user}.home;
+            };
+          }
+        ];
+      pkgs = pkgs-self;
+    };
 
     nixosModules.default.imports = base.lib.collect isFunction tree.modules;
-
-    # homeConfigurations.default = {};
   };
 }

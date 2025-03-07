@@ -1,10 +1,10 @@
 {
   self,
-  functions,
+  fn,
   ...
 }: new: old:
 with self.inputs; let
-  inherit (functions) importRepo;
+  inherit (fn) importRepo;
 in {
   stable = importRepo nixpkgs;
   pinned = importRepo pkgs-pinned;
