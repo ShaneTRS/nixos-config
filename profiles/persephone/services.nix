@@ -1,12 +1,12 @@
 {
   config,
-  functions,
+  fn,
   machine,
   pkgs,
   lib,
   ...
 }: let
-  inherit (functions) configs;
+  inherit (fn) configs;
   inherit (lib) getExe mkIf optionalString;
   inherit (pkgs) writeShellApplication;
   jfa-go-conf = configs "jfa-go.ini";

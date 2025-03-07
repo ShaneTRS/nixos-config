@@ -2,12 +2,12 @@
   config,
   lib,
   pkgs,
-  functions,
+  fn,
   machine,
   ...
 }: let
-  inherit (functions) configs;
-  inherit (lib) concatStringsSep getExe mkEnableOption mkIf mkMerge mkOption optionalString types;
+  inherit (fn) configs;
+  inherit (lib) concatStringsSep getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString types;
   inherit (pkgs) makeDesktopItem writeShellApplication writeShellScriptBin;
   cfg = config.shanetrs.remote;
 in {
@@ -17,10 +17,7 @@ in {
       type = types.enum ["host" "client"];
       example = "host";
     };
-    package = mkOption {
-      type = types.package;
-      default = pkgs.shanetrs.tigervnc;
-    };
+    package = mkPackageOption pkgs.shanetrs "tigervnc" {};
     addresses = {
       client = mkOption {
         type = types.str;

@@ -1,11 +1,11 @@
 {
   config,
-  functions,
+  fn,
   lib,
   pkgs,
   ...
 }: let
-  inherit (functions) resolveList;
+  inherit (fn) resolveList;
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf optionals;
 
   cfg = config.shanetrs.gaming;

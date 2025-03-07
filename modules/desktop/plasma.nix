@@ -9,11 +9,10 @@
 in {
   config = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.session == "plasma") {
-      xdg.portal.extraPortals = [pkgs.kdePackages.xdg-desktop-portal-kde];
       # Maybe try to use plasma-manager for some settings
       programs = {
-        kdeconnect.enable = true;
-        partition-manager.enable = true;
+        kdeconnect.enable = true; # opens firewall
+        partition-manager.enable = true; # polkit and dbus
       };
       shanetrs.browser = {
         firefox = {

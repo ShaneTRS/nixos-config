@@ -9,7 +9,6 @@
 in {
   config = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.session == "gnome") {
-      xdg.portal.extraPortals = with pkgs; [xdg-desktop-portal-gnome];
       environment.gnome.excludePackages = with pkgs; [
         gnome-contacts
         gnome-logs

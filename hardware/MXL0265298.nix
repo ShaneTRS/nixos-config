@@ -12,6 +12,11 @@
     fsType = "ext4";
     neededForBoot = true;
   };
+  hardware.cpu.amd.updateMicrocode = true;
+  nix.settings = {
+    substituters = ["http://shanetrs.remote.host:5698"];
+    trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
+  };
   shanetrs = {
     hardware = {
       enable = true;
@@ -26,5 +31,4 @@
       ports = ["1-1.1" "1-1.2"];
     };
   };
-  hardware.cpu.amd.updateMicrocode = true;
 }

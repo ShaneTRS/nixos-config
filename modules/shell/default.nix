@@ -1,6 +1,6 @@
 {
   config,
-  functions,
+  fn,
   lib,
   machine,
   pkgs,
@@ -8,7 +8,7 @@
 }: let
   inherit (builtins) attrValues elem fromJSON mapAttrs readFile;
   inherit (lib) concatLines mkEnableOption mkIf mkPackageOption mkMerge mkOption mkOverride optionalString types;
-  inherit (functions) configs;
+  inherit (fn) configs;
 
   nixHelpers = import ./_nixHelpers.nix;
   featureAliases = {
@@ -238,7 +238,7 @@ in {
             ])
           + cfg.zsh.extraRc;
       };
-      user = {config, ...}: {
+      user = {
         home.packages = with pkgs; [zsh-completions];
         programs = {
           fzf.enableZshIntegration = true;
@@ -249,7 +249,7 @@ in {
             dotDir = ".config/zsh";
             historySubstringSearch.enable = true;
             history = {
-              path = "${config.xdg.configHome}/zsh/zsh_history";
+              path = "${config.user.xdg.configHome}/zsh/zsh_history";
               ignorePatterns = ["exit"];
             };
             shellAliases = featureAliases // cfg.zsh.aliases;
