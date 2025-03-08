@@ -63,7 +63,7 @@ pkgs.writeShellApplication {
     }
 
     if ! git diff-index --quiet HEAD -- &&
-      $COMMIT && $INTERACTIVE && ! git diff --color-words |
+      $COMMIT && $INTERACTIVE && [ ! "$1" = "test" ] && ! git diff --color-words |
         awk '!/--- a|+++ b|index [0-9a-z]{6}/ {print $0}' | less -RK;
     then
       echo "Cancelled configuration update";

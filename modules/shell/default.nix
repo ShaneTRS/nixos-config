@@ -123,18 +123,18 @@ in {
   config = mkMerge [
     {
       users.defaultUserShell = mkIf (cfg.default != null) cfg.default;
-      environment.systemPackages = with pkgs;
-        cfg.extraPackages
-        ++ [
-          (mkIf (elem "nix-index" cfg._.features) nix-index)
-          (mkIf (elem "fuck" cfg._.features) thefuck)
-        ];
-      fonts.packages = mkIf (elem "fastfetch" cfg._.features) [pkgs.nerd-fonts.hack];
       user = {
+        fonts.fontconfig.enable = true;
         home = {
-          packages = with pkgs; [(mkIf (elem "ugrep" cfg._.features) ugrep)];
+          packages = with pkgs;
+            cfg.extraPackages
+            ++ [
+              (mkIf (elem "ugrep" cfg._.features) ugrep)
+              (mkIf (elem "fastfetch" cfg._.features) nerd-fonts.hack)
+            ];
           sessionVariables = {
             FZF_COMPLETION_TRIGGER = mkIf (elem "zoxide" cfg._.features) "#";
+            NIX_MISSING = mkIf (elem "nix-index" cfg._.features) "auto";
           };
         };
         programs = {
@@ -161,6 +161,7 @@ in {
             enable = true;
             settings.updates.auto_update = true;
           };
+          thefuck.enable = mkIf (elem "fuck" cfg._.features) true;
           zoxide = mkIf (elem "zoxide" cfg._.features) {
             enable = true;
             options = ["--cmd cd"];
@@ -188,78 +189,79 @@ in {
       };
     })
 
-    (mkIf cfg.bash.enable {
-      users.defaultUserShell = mkOverride 999 pkgs.bash;
-      programs.bash = {
-        enableCompletion = true;
-        promptInit =
-          concatLines (attrValues
-            (mapAttrs (k: v: "bind '\"${k}\":\"${v}\"'") cfg.bash.binds)
-            ++ [
-              nixHelpers.extraRc
-              (readFile (configs ".bashrc"))
-              (optionalString (elem "fuck" cfg._.features) ''eval "$(thefuck --alias)"'')
-              (optionalString (elem "nix-index" cfg._.features) ''
-                nix-find() { ${pkgs.nix-index}/bin/nix-locate --no-group --top-level -r "$@"; }
-              '')
-            ])
-          + cfg.bash.extraRc;
-        shellAliases = featureAliases // cfg.bash.aliases;
-      };
-      user.programs = {
-        bash = {
-          enable = true;
-          historyFile = "$HOME/.config/.bash_history";
-          historyControl = ["erasedups"];
-        };
-        fzf.enableBashIntegration = true;
-        zoxide.enableBashIntegration = true;
-      };
-    })
-
-    (mkIf cfg.zsh.enable {
-      users.defaultUserShell = mkOverride 999 pkgs.zsh;
-      programs.zsh = {
-        enable = true;
-        autosuggestions.enable = true;
-        histSize = 10000; # home-manager default
-        promptInit =
-          concatLines (attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds)
-            ++ [
-              nixHelpers.extraRc
-              (readFile (configs ".zshrc"))
-              (optionalString (elem "fuck" cfg._.features) ''
-                eval "$(thefuck --alias)"
-                bindkey -s '\e\e' 'f\n'
-                bindkey -s '^[f' 'f\n'
-              '')
-              (optionalString (elem "nix-index" cfg._.features)
-                (nixHelpers.nixIndex {inherit pkgs;}))
-            ])
-          + cfg.zsh.extraRc;
-      };
-      user = {
-        home.packages = with pkgs; [zsh-completions];
-        programs = {
-          fzf.enableZshIntegration = true;
-          zoxide.enableZshIntegration = true;
-          zsh = {
+    (let
+      extraRc =
+        concatLines (attrValues
+          (mapAttrs (k: v: "bind '\"${k}\":\"${v}\"'") cfg.bash.binds)
+          ++ [
+            nixHelpers.extraRc
+            (readFile (configs ".bashrc"))
+            (optionalString (elem "nix-index" cfg._.features)
+              (nixHelpers.nixIndex {inherit config pkgs;}))
+          ])
+        + cfg.bash.extraRc;
+    in
+      mkIf cfg.bash.enable {
+        users.defaultUserShell = mkOverride 999 pkgs.bash;
+        programs.bash.promptInit = extraRc;
+        user.programs = {
+          bash = {
             enable = true;
-            package = cfg.zsh.package;
-            dotDir = ".config/zsh";
-            historySubstringSearch.enable = true;
-            history = {
-              path = "${config.user.xdg.configHome}/zsh/zsh_history";
-              ignorePatterns = ["exit"];
-            };
-            shellAliases = featureAliases // cfg.zsh.aliases;
-            syntaxHighlighting = mkIf (elem "highlight" cfg.zsh.features) {
-              enable = true;
-              highlighters = ["brackets"];
+            historyFile = "$HOME/.config/.bash_history";
+            historyControl = ["erasedups"];
+            initExtra = extraRc;
+            shellAliases = featureAliases // cfg.bash.aliases;
+          };
+          fzf.enableBashIntegration = true;
+          zoxide.enableBashIntegration = true;
+        };
+      })
+
+    (let
+      extraRc =
+        concatLines (attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds)
+          ++ [
+            nixHelpers.extraRc
+            (readFile (configs ".zshrc"))
+            (optionalString (elem "fuck" cfg._.features) ''
+              bindkey -s '\e\e' 'f\n'
+              bindkey -s '^[f' 'f\n'
+            '')
+            (optionalString (elem "nix-index" cfg._.features)
+              (nixHelpers.nixIndex {inherit config pkgs;}))
+          ])
+        + cfg.zsh.extraRc;
+    in
+      mkIf cfg.zsh.enable {
+        users.defaultUserShell = mkOverride 999 pkgs.zsh;
+        programs.zsh = {
+          inherit (cfg.zsh) enable;
+          autosuggestions.enable = true;
+          histSize = config.user.programs.zsh.history.size;
+          promptInit = extraRc;
+        };
+        user = {
+          home.packages = with pkgs; [zsh-completions];
+          programs = {
+            fzf.enableZshIntegration = true;
+            zoxide.enableZshIntegration = true;
+            zsh = {
+              inherit (cfg.zsh) enable package;
+              dotDir = ".config/zsh";
+              historySubstringSearch.enable = true;
+              history = {
+                path = "${config.user.xdg.configHome}/zsh/zsh_history";
+                ignorePatterns = ["exit"];
+              };
+              initExtra = extraRc;
+              shellAliases = featureAliases // cfg.zsh.aliases;
+              syntaxHighlighting = mkIf (elem "highlight" cfg.zsh.features) {
+                enable = true;
+                highlighters = ["brackets"];
+              };
             };
           };
         };
-      };
-    })
+      })
   ];
 }
