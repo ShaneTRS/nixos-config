@@ -5,7 +5,7 @@
   fn,
   ...
 }: let
-  inherit (builtins) elem toJSON;
+  inherit (builtins) attrNames elem listToAttrs toJSON;
   inherit (fn) configs;
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
   inherit (pkgs) makeDesktopItem writeShellApplication;
@@ -143,11 +143,10 @@ in {
         type = types.package;
         default = pkgs.easyeffects;
       };
-      # TODO: Add support for adding presets not in the user configs
-      # extraPresets = mkOption {
-      #   type = types.anything;
-      #   default = [ ];
-      # };
+      extraPresets = mkOption {
+        type = types.attrs;
+        default = {};
+      };
     };
     vscode = {
       enable = mkEnableOption "VSCode configuration and integration";
@@ -235,10 +234,18 @@ in {
       programs.dconf.enable = true; # settings daemon
       user = {
         home.packages = [cfg.easyeffects.package];
-        xdg.configFile."easyeffects" = {
-          recursive = true;
-          source = configs "easyeffects";
-        };
+        xdg.configFile =
+          {
+            "easyeffects" = {
+              recursive = true;
+              source = configs "easyeffects";
+            };
+          }
+          // listToAttrs (map (k: {
+              name = "easyeffects/output/${k}.json";
+              value = {text = toJSON cfg.easyeffects.extraPresets.${k};};
+            })
+            (attrNames cfg.easyeffects.extraPresets));
       };
     })
 

@@ -49,7 +49,6 @@ in {
           ClientAliveInterval = mkStrongDefault 15;
         };
       };
-      pulseaudio.enable = mkStrongDefault false;
       udev.extraRules = ''
         KERNEL=="cpu_dma_latency", GROUP="realtime"
       '';

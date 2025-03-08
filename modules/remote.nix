@@ -9,6 +9,7 @@
   inherit (fn) configs;
   inherit (lib) concatStringsSep getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString types;
   inherit (pkgs) makeDesktopItem writeShellApplication writeShellScriptBin;
+  inherit (builtins) attrNames listToAttrs toJSON;
   cfg = config.shanetrs.remote;
 in {
   options.shanetrs.remote = {
@@ -81,34 +82,6 @@ in {
     }
 
     (mkIf (cfg.role == "client") {
-      services.pipewire.extraConfig.pipewire = {
-        "60-shanetrs-remote"."context.modules" = mkIf cfg.audio.enable [
-          {
-            name = "libpipewire-module-rtp-source";
-            args = {
-              "audio.channels" = 1;
-              "audio.position" = ["MONO"];
-              "sess.latency.msec" = 80;
-              "sess.ignore-ssrc" = true;
-              "sess.media" = "opus";
-              "source.ip" = "0.0.0.0";
-              "source.port" = 46601;
-              "stream.props" = {"node.name" = "shanetrs.remote.client";};
-            };
-          }
-          {
-            name = "libpipewire-module-rtp-sink";
-            args = {
-              "audio.channels" = 1;
-              "audio.position" = ["MONO"];
-              "sess.media" = "opus";
-              "destination.ip" = "shanetrs.remote.host";
-              "destination.port" = 46602;
-              "stream.props" = {"node.name" = "shanetrs.remote.client-mic";};
-            };
-          }
-        ];
-      };
       systemd.services = mkIf cfg.usb.enable {
         usbip-resume = {
           after = ["suspend.target"];
@@ -228,64 +201,105 @@ in {
             Install.WantedBy = ["graphical-session.target"];
           };
         };
+        xdg.configFile = let
+          input = {
+            "60-shanetrs-remote"."context.modules" = [
+              {
+                name = "libpipewire-module-rtp-source";
+                args = {
+                  "audio.channels" = 1;
+                  "audio.position" = ["MONO"];
+                  "sess.latency.msec" = 80;
+                  "sess.ignore-ssrc" = true;
+                  "sess.media" = "opus";
+                  "source.ip" = "0.0.0.0";
+                  "source.port" = 46601;
+                  "stream.props" = {"node.name" = "shanetrs.remote.client";};
+                };
+              }
+              {
+                name = "libpipewire-module-rtp-sink";
+                args = {
+                  "audio.channels" = 1;
+                  "audio.position" = ["MONO"];
+                  "sess.media" = "opus";
+                  "destination.ip" = "shanetrs.remote.host";
+                  "destination.port" = 46602;
+                  "stream.props" = {"node.name" = "shanetrs.remote.client-mic";};
+                };
+              }
+            ];
+          };
+        in
+          mkIf cfg.audio.enable (listToAttrs (map (k: {
+              name = "pipewire/pipewire.conf.d/${k}.conf";
+              value = {text = toJSON input.${k};};
+            })
+            (attrNames input)));
       };
     })
 
     (mkIf (cfg.role == "host") {
-      services = {
-        pipewire.extraConfig.pipewire = {
-          "60-shanetrs-remote"."context.modules" = mkIf cfg.audio.enable [
-            {
-              name = "libpipewire-module-rtp-sink";
-              args = {
-                "audio.channels" = 1;
-                "audio.position" = ["MONO"];
-                "sess.media" = "opus";
-                "destination.ip" = "shanetrs.remote.client";
-                "destination.port" = 46601;
-                "stream.props" = {
-                  "media.class" = "Audio/Sink";
-                  "node.description" = cfg.audio.sinkName;
-                  "node.name" = "shanetrs.remote.host";
+      services.xserver.enable = true;
+      user = {
+        xdg.configFile = let
+          input = {
+            "60-shanetrs-remote"."context.modules" = mkIf cfg.audio.enable [
+              {
+                name = "libpipewire-module-rtp-sink";
+                args = {
+                  "audio.channels" = 1;
+                  "audio.position" = ["MONO"];
+                  "sess.media" = "opus";
+                  "destination.ip" = "shanetrs.remote.client";
+                  "destination.port" = 46601;
+                  "stream.props" = {
+                    "media.class" = "Audio/Sink";
+                    "node.description" = cfg.audio.sinkName;
+                    "node.name" = "shanetrs.remote.host";
+                  };
                 };
-              };
-            }
-            {
-              name = "libpipewire-module-rtp-source";
-              args = {
-                "audio.channels" = 1;
-                "audio.position" = ["MONO"];
-                "sess.latency.msec" = 0;
-                "sess.ignore-ssrc" = true;
-                "sess.media" = "opus";
-                "source.ip" = "0.0.0.0";
-                "source.port" = 46602;
-                "stream.props" = {
-                  "media.class" = "Audio/Source";
-                  "node.description" = cfg.audio.sourceName;
-                  "node.name" = "shanetrs.remote.client-mic";
+              }
+              {
+                name = "libpipewire-module-rtp-source";
+                args = {
+                  "audio.channels" = 1;
+                  "audio.position" = ["MONO"];
+                  "sess.latency.msec" = 0;
+                  "sess.ignore-ssrc" = true;
+                  "sess.media" = "opus";
+                  "source.ip" = "0.0.0.0";
+                  "source.port" = 46602;
+                  "stream.props" = {
+                    "media.class" = "Audio/Source";
+                    "node.description" = cfg.audio.sourceName;
+                    "node.name" = "shanetrs.remote.client-mic";
+                  };
                 };
-              };
-            }
-          ];
-        };
-        xserver.enable = true;
-      };
-
-      user.systemd.user.services = {
-        x0vncserver = {
-          Unit.Description = "Low-latency VNC display server";
-          Service = {
-            Environment = "DISPLAY=:0";
-            ExecStart = let
-              attempt = configs ".vnc/passwd";
-            in "${getExe pkgs.shanetrs.not-nice} x0vncserver Geometry=2732x1536 ${
-              optionalString (attempt != null) ''-rfbauth "${attempt}"''
-            } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
-            Restart = "on-failure";
-            StartLimitBurst = 32;
+              }
+            ];
           };
-          Install.WantedBy = ["graphical-session.target"];
+        in
+          builtins.listToAttrs (map (k: {
+              name = "pipewire/pipewire.conf.d/${k}.conf";
+              value = {text = builtins.toJSON input.${k};};
+            })
+            (builtins.attrNames input));
+        systemd.user.services = {
+          x0vncserver = {
+            Unit.Description = "Low-latency VNC display server";
+            Service = {
+              Environment = "DISPLAY=:0";
+              ExecStart = let
+                attempt = configs ".vnc/passwd";
+              in "${getExe pkgs.shanetrs.not-nice} x0vncserver Geometry=2732x1536 ${
+                optionalString (attempt != null) ''-rfbauth "${attempt}"''
+              } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+              Restart = "on-failure";
+              StartLimitBurst = 32;
+            };
+            Install.WantedBy = ["graphical-session.target"];
+          };
         };
       };
     })
