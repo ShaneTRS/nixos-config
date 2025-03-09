@@ -105,7 +105,7 @@ in {
               set +o errexit
               cd "${source}/user/homes" || exit 1
 
-              for i in "${user}/${profile}" "${user}/all" "global/${profile}"; do
+              for i in "${user}/${profile}" "${user}/all" "global/${profile}" "global/all"; do
               	find "$i" -type f >> last
               done
 

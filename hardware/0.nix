@@ -26,13 +26,13 @@ in {
     hashedPassword = "$y$jET$N7MIfVqgEUh3jVxAi6cwB0$x7AbQ95awn0HjsS8csB2JRWXm98Pdg28zp.6dfmKmT/";
     hashedPasswordFile = null;
   };
-  # shanetrs.remote = {
-  #   package = pkgs.tigervnc; # Don't compile patched version
-  #   usb = {
-  #     devices = "/sys/bus/pci/devices/0000:00:06.0/usb2/";
-  #     ports = [ "2-1" ];
-  #   };
-  # };
+  shanetrs.remote = {
+    package = pkgs.tigervnc; # Don't compile patched version
+    usb = {
+      devices = "/sys/bus/pci/devices/0000:00:06.0/usb2/";
+      ports = ["2-1"];
+    };
+  };
   boot.kernelPackages = pkgs.linuxPackages_6_11;
   # shanetrs.hardware = {
   #   enable = true;
