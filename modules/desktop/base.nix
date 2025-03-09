@@ -34,7 +34,7 @@
     };
   };
   this =
-    if cfg.enable
+    if cfg.enable && cfg.session != null
     then sessions.${cfg.session}.${cfg.preset} or {}
     else {};
 

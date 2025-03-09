@@ -10,10 +10,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "pkgs-unstable";
     };
-    # nixgl = {
-    #   url = "github:nix-community/nixGL";
-    #   inputs.nixpkgs.follows = "pkgs-unstable";
-    # };
+    nixgl = {
+      url = "github:nix-community/nixGL";
+      inputs.nixpkgs.follows = "pkgs-unstable";
+    };
     sops = {
       url = "github:mic92/sops-nix";
       inputs.nixpkgs.follows = "pkgs-unstable";
