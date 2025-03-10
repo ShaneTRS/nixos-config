@@ -14,6 +14,7 @@ pkgs.writeShellApplication {
     INTERACTIVE=''${INTERACTIVE:-true}
     COMMIT=''${COMMIT:-true}
     UPDATE=''${UPDATE:-false}
+    AS_ROOT=''${AS_ROOT:-false}
 
     cd "$SRC"
 
@@ -76,7 +77,11 @@ pkgs.writeShellApplication {
     IFS=: read -ra SKIP <<< "$SKIP"
     track add machine.json "''${SKIP[@]}"
     if [ "$1" != "copy" ]; then
-      with_nom as_root nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default"
+    	if $AS_ROOT; then
+      	with_nom as_root nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default"
+      else
+      	with_nom nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default"
+      fi
     else
       "''${EDITOR:-nano}" machine.json
       TARGET="''${TARGET:-$2}"

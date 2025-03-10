@@ -6,7 +6,7 @@
   pkgs,
   ...
 }: let
-  inherit (builtins) attrNames;
+  inherit (builtins) attrNames length;
   inherit (fn) configs;
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
 
@@ -69,8 +69,11 @@ in {
     {
       hardware.bluetooth.enable = true;
       security.rtkit.enable = true; # Interactive privilege escalation
-      xdg.portal.enable = true;
-      user.home.packages = cfg.extraPackages;
+      xdg.portal.enable = mkIf (length config.xdg.portal.extraPortals != 0) true;
+      user = {
+        home.packages = cfg.extraPackages;
+        xdg.portal.enable = mkIf (length config.user.xdg.portal.extraPortals != 0) true;
+      };
     }
 
     (mkIf cfg.audio {
@@ -104,6 +107,19 @@ in {
           attempt = configs ".XCompose";
         in
           mkIf (attempt != null) {source = attempt;};
+      };
+    })
+
+    (mkIf (cfg.type == "wayland") {
+      user = {
+        xdg.configFile."XCompose" = let
+          attempt = configs ".XCompose";
+        in
+          mkIf (attempt != null) {
+            text =
+              builtins.readFile "${pkgs.xorg.libX11}/share/X11/locale/en_US.UTF-8/Compose"
+              + builtins.readFile attempt;
+          };
       };
     })
   ]);

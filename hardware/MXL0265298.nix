@@ -1,7 +1,8 @@
 # HP t530 Thin Client
-{...}: {
+{pkgs, ...}: {
   boot = {
     kernelModules = ["kvm-amd"];
+    kernelParams = ["radeon.si_support=0" "amdgpu.si_support=1" "radeon.cik_support=0" "amdgpu.cik_support=1"];
     loader.grub = {
       enable = true;
       device = "/dev/sda";
@@ -12,7 +13,13 @@
     fsType = "ext4";
     neededForBoot = true;
   };
-  hardware.cpu.amd.updateMicrocode = true;
+  hardware = {
+    cpu.amd.updateMicrocode = true;
+    graphics = {
+      extraPackages = [pkgs.amdvlk];
+      extraPackages32 = [pkgs.driversi686Linux.amdvlk];
+    };
+  };
   nix.settings = {
     substituters = ["http://shanetrs.remote.host:5698"];
     trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
