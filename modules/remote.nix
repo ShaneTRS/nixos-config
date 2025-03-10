@@ -129,7 +129,7 @@ in {
             Service = {
               Environment = [
                 "TARGET=shanetrs.remote.host"
-                "PORTS='${concatStringsSep " " cfg.usb.ports}'"
+                "PORTS='${optionalString cfg.usb.enable concatStringsSep " " cfg.usb.ports}'"
                 "DEVICES=${cfg.usb.devices}"
               ];
               ExecStart = "${getExe (writeShellApplication {
