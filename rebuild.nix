@@ -14,7 +14,7 @@ pkgs.writeShellApplication {
     INTERACTIVE=''${INTERACTIVE:-true}
     COMMIT=''${COMMIT:-true}
     UPDATE=''${UPDATE:-false}
-    AS_ROOT=''${AS_ROOT:-false}
+    AS_ROOT=''${AS_ROOT:-true}
 
     cd "$SRC"
 
@@ -33,6 +33,7 @@ pkgs.writeShellApplication {
     if [ -z "$(jq .serial machine.json -r)" ]; then
     	echo Serial number is missing! Grabbing from system..
       SERIAL=$(as_root cat /sys/devices/virtual/dmi/id/board_serial || exit)
+      SERIAL=''${SERIAL//\//}
       jq_write machine.json serial = "\"$SERIAL\""
       # shellcheck disable=SC2016 disable=SC2091
       $(jq '."$defs".serials.enum|any(.=="'"$SERIAL"'")' schema.json) ||

@@ -16,7 +16,7 @@ in
           "$APPLICATION" --resolution "$RESOLUTION" --fps "$FPS" --bitrate "$BITRATE" \
           --audio-on-host --quit-after --game-optimization --multi-controller \
           --background-gamepad --capture-system-keys fullscreen \
-          --video-codec H.264 --video-decoder hardware --no-vsync --frame-pacing
+          --video-codec H.264 --video-decoder hardware --no-vsync
       EOF
       }
 

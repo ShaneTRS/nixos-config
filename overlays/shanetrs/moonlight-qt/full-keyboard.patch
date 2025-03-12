@@ -5,7 +5,7 @@ index a501cdb6..be6e5abd 100644
 @@ -3,15 +3,146 @@
  #include <Limelight.h>
  #include <SDL.h>
- 
+
 -#define VK_0 0x30
 -#define VK_A 0x41
 -
@@ -155,18 +155,18 @@ index a501cdb6..be6e5abd 100644
 +    {SDL_SCANCODE_CLEARAGAIN, 0xF9},
 +    {SDL_SCANCODE_CLEAR, 0xFE}
 +};
- 
+
  void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
  {
 @@ -156,10 +287,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
      }
- 
+
      // Check for our special key combos
 -    if ((event->state == SDL_PRESSED) &&
 -            (event->keysym.mod & KMOD_CTRL) &&
 -            (event->keysym.mod & KMOD_ALT) &&
 -            (event->keysym.mod & KMOD_SHIFT)) {
-+    if (event->state == SDL_PRESSED && m_KeysDown.contains(sdl_vk_map.at(SDL_SCANCODE_SCROLLLOCK))) {
++    if (event->state == SDL_PRESSED && m_KeysDown.contains(sdl_vk_map.at(SDL_SCANCODE_F9))) {
 +        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Combo is held: %d", event->keysym.scancode);
          // First we test the SDLK combos for matches,
          // that way we ensure that latin keyboard users
@@ -397,5 +397,5 @@ index a501cdb6..be6e5abd 100644
 +        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unknown key code for scan code %d", event->keysym.scancode);
 +        return;
      }
- 
+
      // Track the key state so we always know which keys are down
