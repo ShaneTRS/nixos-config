@@ -112,9 +112,8 @@ in {
                 TARGET="''${TARGET:-shanetrs.remote.host}"
                 while true; do
                   ping "$TARGET" -c1 &&
-                    (exec -a "loop-vncviewer.child" "vncviewer" -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 ${
-                  optionalString (attempt != null) ''-passwd="${attempt}"''
-                } /home/${machine.user}/.vnc/loop.tigervnc "$TARGET")
+                    (exec -a "loop-vncviewer.child" "vncviewer" -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 \
+                     		${optionalString (attempt != null) ''-passwd="${attempt}"''} <(sed "s:\$TARGET:$TARGET:g" /home/${machine.user}/.vnc/loop.tigervnc))
                   sleep .6
                 done
               '');

@@ -1,14 +1,13 @@
 TigerVNC Configuration file Version 1.0
 
-X509CA=/home/shane/.vnc/x509_ca.pem
-X509CRL=/home/shane/.vnc/x509_crl.pem
-SecurityTypes=None,VncAuth,RA2ne,RA2ne_256,Plain,DH,MSLogonII,TLSNone,TLSVnc,TLSPlain,X509None,X509Vnc,X509Plain
+ServerName=$TARGET
+SecurityTypes=None,VncAuth,RA2ne,RA2ne_256,Plain,DH,MSLogonII,TLSNone,TLSVnc,TLSPlain,X509None,X509Vnc,X509Plain,RA2,RA2_256
 ReconnectOnError=0
 Shared=1
 AutoSelect=0
 FullColor=1
 LowColorLevel=2
-PreferredEncoding=raw
+PreferredEncoding=Tight
 CustomCompressLevel=1
 NoJPEG=0
 CompressLevel=0
@@ -23,5 +22,5 @@ AcceptClipboard=1
 SendClipboard=1
 SendPrimary=1
 SetPrimary=1
-MenuKey=Scroll_Lock
+MenuKey=F9
 FullscreenSystemKeys=1
