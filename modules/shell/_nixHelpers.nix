@@ -60,24 +60,23 @@
     nix-find() { nix-locate --no-group --top-level -r "$@"; }
     command_not_found_handler() {(
       echo -n '...\b\b\b'
+      if [[ "$NIX_MISSING" = auto || "$NIX_MISSING" = always ]]; then
+      	MATCH="$(${pkgs.lib.getExe pkgs.fd} "$1" /nix/store --glob --exact-depth 3 --type x --max-results 1)"
+        [ -n "$MATCH" ] && PATH="$(dirname "$MATCH"):$PATH" exec "$@"
+      fi
       IFS=$'\n' MATCHES=($(nix-locate --no-group --type x --type s --top-level --whole-name --at-root "/bin/$1"))
-      for i in "''${MATCHES[@]}"; do
-        [ -f "''${i##* }" ] && MATCH="''${i##* }" && break
-      done
       if [ "$NIX_MISSING" = never ]; then
         FMT "%1%34❭❭ %0%1$1%0 not found! You can use %1nix-find -wtx /$1%0 to find it\n" >&2
         exit 127
       fi
-      [[ -n "$MATCH" && "$NIX_MISSING" = auto || "$NIX_MISSING" = always ]] &&
-        PATH="$(dirname "$MATCH"):$PATH" exec "$@"
       case ''${#MATCHES} in
         0) FMT "%1%34❭❭ %0%1$1%0 not found! Are you sure you've typed the command correctly?\n" >&2;;
         1) [[ "$NIX_MISSING" = auto || "$NIX_MISSING" = always ]] &&
-              exec nix-shell "''${MATCHES[1]}" --command "$@"
+              exec nix-shell "''${MATCHES[1]%% *}" --command "$@"
           FMT "%1%34❭❭ %0%1$1%0 not found! Would you like to bring %1''${''${MATCHES[1]%% *}%.*}%0 into scope? " >&2; read
-          exec nix-shell "''${MATCHES[1]}" --command "$@" ;;
+          exec nix-shell "''${MATCHES[1]%% *}" --command "$@" ;;
         *) [ "$NIX_MISSING" = always ] &&
-            exec nix-shell "''${MATCHES[1]}" --command "$@"
+            exec nix-shell "''${MATCHES[1]%% *}" --command "$@"
           FMT "%1%34❭❭ %0%1$1%0 not found! Would you like to bring one of the following packages into scope?\n" >&2
           PS3=""; select PKG in ''${''${MATCHES[@]%% *}%.*}; do
             echo -n '\e[F'; exec nix-shell "$PKG" --command "$@"

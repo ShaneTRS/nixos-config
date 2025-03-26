@@ -29,7 +29,7 @@ in {
     search = {
       default = mkOption {
         type = types.str;
-        default = "DuckDuckGo";
+        default = "ddg";
       };
       engines = mkOption {
         type = types.attrsOf types.attrs;
