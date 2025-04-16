@@ -8,7 +8,7 @@
 }: let
   inherit (builtins) attrNames length;
   inherit (fn) configs;
-  inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types;
 
   sessions = {
     plasma = {
@@ -58,6 +58,24 @@ in {
       type = types.bool;
       default = true;
     };
+    keymap = {
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+      };
+      keymap = mkOption {
+        type = types.listOf types.attrs;
+        default = [];
+      };
+      modmap = mkOption {
+        type = types.listOf types.attrs;
+        default = [];
+      };
+      virtualModifiers = mkOption {
+        type = types.listOf types.str;
+        default = [];
+      };
+    };
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = this.extraPackages or [];
@@ -83,6 +101,23 @@ in {
         alsa.support32Bit = true;
         pulse.enable = true;
         jack.enable = true;
+      };
+    })
+
+    (mkIf cfg.keymap.enable {
+      hardware.uinput.enable = true;
+      users.users.${machine.user}.extraGroups = ["input" "uinput"];
+      user.systemd.user.services = {
+        xremap = let
+          yaml =
+            builtins.removeAttrs
+            (cfg.keymap // {virtual_modifiers = cfg.keymap.virtualModifiers;})
+            ["enable" "virtualModifiers"];
+        in {
+          Unit.Description = "Key remapper for X11 and Wayland";
+          Service.ExecStart = "${getExe pkgs.shanetrs.xremap} ${fn.toYAML {inherit pkgs;} yaml}";
+          Install.WantedBy = ["graphical-session.target"];
+        };
       };
     })
 

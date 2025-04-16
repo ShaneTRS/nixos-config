@@ -1,5 +1,5 @@
 # Inspiron 3501 ()
-{...}: {
+{lib, ...}: {
   boot.loader = {
     efi = {
       canTouchEfiVariables = true;
@@ -30,6 +30,17 @@
     trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
   };
   shanetrs = {
+    desktop.keymap.keymap = [
+      {
+        "name" = "H1XH7F3CNCMC0015F0243";
+        "remap" = {
+          "pageup" = "home";
+          "pagedown" = "end";
+          "home" = "pageup";
+          "end" = "pagedown";
+        };
+      }
+    ];
     hardware = {
       enable = true;
       graphics = "intel";
