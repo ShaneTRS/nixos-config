@@ -7,7 +7,7 @@
 }: let
   inherit (builtins) attrNames filter isAttrs isFunction listToAttrs mapAttrs;
   inherit (builtins) isString match replaceStrings;
-  inherit (builtins) pathExists readDir readFile fromJSON;
+  inherit (builtins) pathExists readDir readFile fromJSON toJSON;
   inherit (builtins) head length tail trace;
 in rec {
   inherit secrets;
@@ -92,4 +92,12 @@ in rec {
     else nix.default;
   importRepo = repo: import repo pkgsConfig;
   resolveList = list: map (i: i.content or i) (filter (i: i.condition or true) list);
+  toYAML = {pkgs, ...}: attrs: "${pkgs.runCommandNoCC "toYAML" {
+      buildInputs = [pkgs.yj];
+      attrs = toJSON attrs;
+      passAsFile = ["attrs"];
+    } ''
+      mkdir -p $out
+      yj -jy < "$attrsPath" > $out/attrs.yaml
+    ''}/attrs.yaml";
 }

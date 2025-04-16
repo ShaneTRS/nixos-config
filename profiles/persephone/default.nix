@@ -36,6 +36,81 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
+      keymap.keymap = [
+        {
+          name = "global";
+          remap = {
+            # quick access
+            "alt-shift-q" = {
+              timeout_key = "leftmeta";
+              timeout_millis = 750;
+              exact_match = true;
+              remap = {
+                # discord
+                d = {
+                  launch = [
+                    "/home/shane/Documents/Scripts/window"
+                    "windowactivate"
+                    "--name"
+                    "Equibop"
+                    "--"
+                    "equibop"
+                  ];
+                };
+                # editor
+                e = {
+                  launch = [
+                    "/home/shane/Documents/Scripts/window"
+                    "windowactivate"
+                    "--class"
+                    "Zed"
+                    "--"
+                    "zeditor"
+                  ];
+                };
+                # firefox
+                f = {
+                  launch = [
+                    "/home/shane/Documents/Scripts/window"
+                    "windowactivate"
+                    "--name"
+                    "Firefox"
+                    "--"
+                    "firefox-developer-edition"
+                  ];
+                };
+                # spotify
+                s = {
+                  launch = [
+                    "/home/shane/Documents/Scripts/window"
+                    "windowactivate"
+                    "--class"
+                    "Spotify"
+                    "--"
+                    "env LD_PRELOAD=/usr/lib/spotify-adblock.so spotify --uri=%U"
+                  ];
+                };
+                # terminal
+                t = {
+                  launch = [
+                    "/home/shane/Documents/Scripts/window"
+                    "windowactivate"
+                    "--desktop"
+                    "0"
+                    "--class"
+                    "Konsole"
+                    "--"
+                    "konsole"
+                  ];
+                };
+              };
+            };
+            "super-p" = {launch = ["/home/shane/Documents/Scripts/pipewire"];};
+            "super-shift-s" = {launch = ["/home/shane/Documents/Scripts/screenshot"];};
+            "super-space" = {launch = ["/home/shane/Documents/Scripts/freeze"];};
+          };
+        }
+      ];
       extraPackages = with pkgs; mkOptionDefault [wacomtablet libsForQt5.kdenlive];
     };
     gaming = {

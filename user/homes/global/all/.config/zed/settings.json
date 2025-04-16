@@ -11,6 +11,7 @@
 	"tab_size": 2,
 	"hard_tabs": true,
 	"ensure_final_newline_on_save": false,
+	"remove_trailing_whitespace_on_save": false,
 
 	"expand_excerpt_lines": 12,
 	"use_system_path_prompts": false,
