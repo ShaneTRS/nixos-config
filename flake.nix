@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     pkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    pkgs-pinned.url = "github:nixos/nixpkgs/d0797a04b81caeae77bcff10a9dde78bc17f5661";
+    pkgs-pinned.url = "github:nixos/nixpkgs/698214a32beb4f4c8e3942372c694f40848b360d";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -141,7 +141,6 @@
             };
           };
         }
-        {services.pipewire.package = pkgs-self.pinned.pipewire;}
 
         (importItem tree.profiles.${machine.profile})
         (
