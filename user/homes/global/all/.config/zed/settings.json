@@ -63,11 +63,12 @@
 
 	"show_edit_predictions": false,
 	"assistant": {
-		"default_width": 360,
-		"default_model": {
-			"provider": "zed.dev",
-			"model": "claude-3-5-sonnet-latest"
+		"inline_assistant_model": {
+			"provider": "google",
+			"model": "gemini-2.0-flash"
 		},
+		"default_width": 360,
+		"default_model": { "model": "gemini-2.0-flash", "provider": "google" },
 		"version": "2"
 	},
 	"features": { "edit_prediction_provider": "zed" },

@@ -13,7 +13,7 @@
         fi
         ARGS+="pkgs#$i"
       done
-      IN_NIX_SHELL=1 NIXPKGS_ALLOW_UNFREE=1 nix shell --impure "''${ARGS[@]}"
+      IN_NIX_SHELL=impure NIXPKGS_ALLOW_UNFREE=1 nix shell --impure "''${ARGS[@]}"
     )}
     nix-inspect() { cd $(
       PARSE='$(

@@ -202,7 +202,7 @@ in {
                 set +o errexit
                 pre_exec="$(date +%s)"
                 "${getExe cfg.discord.package}"
-                [ "$pre_exec" -eq "$(date +%s)" ] && exec "${
+                [ $(($(date +%s) - pre_exec)) -lt 3 ] && exec "${
                   getExe (cfg.discord.package.override {
                     withOpenASAR = false;
                     withVencord = false;
