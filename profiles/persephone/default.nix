@@ -111,7 +111,7 @@ in {
           };
         }
       ];
-      extraPackages = with pkgs; mkOptionDefault [wacomtablet libsForQt5.kdenlive];
+      extraPackages = with pkgs; mkOptionDefault [wacomtablet kdePackages.kdenlive];
     };
     gaming = {
       epic.enable = true;
@@ -147,7 +147,7 @@ in {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
       audacity # audio editor
-      gimp # image editor
+      gimp3 # image editor
       krita # drawing
       inkscape-with-extensions # vector editor
       libreoffice-still # office suite
@@ -174,9 +174,6 @@ in {
           pactl load-module module-switch-on-connect # load bluetooth auto-connect pulse module
           pactl load-module module-null-sink sink_name=alvr-output sink_properties=device.description='ALVR Speakers'
           pactl load-module module-null-sink media.class=Audio/Source/Virtual sink_name=alvr-input sink_properties=device.description='ALVR Microphone'
-
-          noisetorch -u
-          noisetorch -i -s "$(pactl get-default-source)" -t 1 &
 
           pkill shadowplay -USR1
           exec true

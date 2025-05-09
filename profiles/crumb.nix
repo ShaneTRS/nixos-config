@@ -40,7 +40,7 @@ in {
     home = {
       packages = with pkgs; [
         audacity
-        gimp
+        gimp3
         helvum
         krita
         jellyfin-media-player

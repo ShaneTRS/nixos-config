@@ -34,7 +34,7 @@
   user = {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
-      gimp-with-plugins
+      gimp3-with-plugins
       helvum
       jellyfin-media-player
       shanetrs.moonlight-qt

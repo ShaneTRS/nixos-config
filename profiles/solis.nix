@@ -17,5 +17,5 @@ in {
     programs.vscode.enable = true;
   };
 
-  user.home.packages = with pkgs; [flatpak gimp libreoffice-still vlc];
+  user.home.packages = with pkgs; [flatpak gimp3 libreoffice-still vlc];
 }

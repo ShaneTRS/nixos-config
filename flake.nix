@@ -22,7 +22,7 @@
 
   outputs = {self, ...} @ inputs: let
     inherit (builtins) attrValues filter isFunction map replaceStrings;
-    inherit (base.lib) mkAliasOptionModule nixosSystem;
+    inherit (base.lib) collect getExe mkAliasOptionModule nixosSystem optionalAttrs;
     inherit (fn) importItem importRepo fileTree;
 
     base = inputs.pkgs-unstable;
@@ -84,25 +84,21 @@
       sops = mkShellNoCC {
         buildInputs = shellDeps;
         shellHook = ''
-          export SOPS_AGE_KEY="$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)"
-          [ -z "$SOPS_AGE_KEY" ] &&
-            echo 'warning: ssh key was not found; keys will need to be provided'
-          export NIX_SHELL_PACKAGES="sops"
-          PREF_SHELL="$SHELL"; which zsh &>/dev/null && PREF_SHELL=zsh
-          exec "$PREF_SHELL"
+          export NIX_SHELL_PACKAGES=impure
+          if [ -z "$SOPS_AGE_KEY" ]; then
+          	export SOPS_AGE_KEY="$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)"
+            [ -z "$SOPS_AGE_KEY" ] &&
+            	echo warning: ssh key was not found; keys will need to be provided
+          fi
+          type zsh &> /dev/null && exec zsh
         '';
       };
     };
     formatter.${system} = pkgs.alejandra;
     legacyPackages.${system} = pkgs-self;
-    packages.${system}.default = with pkgs;
-      buildEnv {
-        name = "flake-shell";
-        paths = [bash] ++ shellDeps;
-      };
     apps.${system}.default = {
       type = "app";
-      program = base.lib.getExe (import ./rebuild.nix {inherit machine pkgs shellDeps;});
+      program = getExe (import ./rebuild.nix {inherit machine pkgs shellDeps;});
     };
 
     nixosConfigurations.default = nixosSystem {
@@ -143,11 +139,9 @@
         }
 
         (importItem tree.profiles.${machine.profile})
-        (
-          if tree.hardware ? "${machine.serial}"
-          then importItem tree.hardware.${machine.serial}
-          else {}
-        )
+        (optionalAttrs
+          (tree.hardware ? "${machine.serial}")
+          (importItem tree.hardware.${machine.serial}))
       ];
     };
     homeConfigurations.default = inputs.home-manager.lib.homeManagerConfiguration {
@@ -165,6 +159,6 @@
       pkgs = pkgs-self;
     };
 
-    nixosModules.default.imports = base.lib.collect isFunction tree.modules;
+    nixosModules.default.imports = collect isFunction tree.modules;
   };
 }

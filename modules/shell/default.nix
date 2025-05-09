@@ -253,7 +253,7 @@ in {
                 path = "${config.user.xdg.configHome}/zsh/zsh_history";
                 ignorePatterns = ["exit"];
               };
-              initExtra = extraRc;
+              initContent = extraRc;
               shellAliases = featureAliases // cfg.zsh.aliases;
               syntaxHighlighting = mkIf (elem "highlight" cfg.zsh.features) {
                 enable = true;
