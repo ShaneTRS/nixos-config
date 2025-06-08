@@ -1,10 +1,15 @@
-{pkgs, ...}:
+{
+  pkgs,
+  version ? "7.1.9.2516",
+  hash ? "sha256-fQmhtgQtAGaPZ5yREqRWFZ8h1CIe3MFYi94qtIVaeok=",
+  ...
+}:
 with pkgs; let
   inherit (builtins) replaceStrings;
 in
   stdenvNoCC.mkDerivation rec {
     pname = "alchemy-viewer";
-    version = "7.1.9.2516";
+    inherit version;
 
     _tarball = "Alchemy_Beta_${replaceStrings ["."] ["_"] version}_x86_64";
 
@@ -42,6 +47,6 @@ in
 
     src = fetchurl {
       url = "https://github.com/AlchemyViewer/Alchemy/releases/download/${version}-beta/${_tarball}.tar.xz";
-      hash = "sha256-fQmhtgQtAGaPZ5yREqRWFZ8h1CIe3MFYi94qtIVaeok=";
+      inherit hash;
     };
   }

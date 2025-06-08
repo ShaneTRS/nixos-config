@@ -62,7 +62,7 @@
 	},
 
 	"show_edit_predictions": false,
-	"assistant": {
+	"agent": {
 		"inline_assistant_model": {
 			"provider": "google",
 			"model": "gemini-2.0-flash"

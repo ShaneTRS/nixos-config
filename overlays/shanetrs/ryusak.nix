@@ -1,10 +1,15 @@
-{pkgs, ...}:
+{
+  pkgs,
+  version ? "1.6.2",
+  hash ? "sha256-nlRkNK5a0fMnq1uarPeeFI6wtvHSq4jWNW3wDriVCoY=",
+  ...
+}:
 with pkgs; let
   inherit (lib) getExe;
 in
   stdenvNoCC.mkDerivation rec {
     pname = "ryusak";
-    version = "1.6.2";
+    inherit version;
     nativeBuildInputs = [autoPatchelfHook];
     buildInputs = [
       unzip
@@ -40,6 +45,6 @@ in
     '';
     src = fetchurl {
       url = "https://github.com/Ecks1337/RyuSAK/releases/download/v${version}/RyuSAK-linux-x64-${version}.zip";
-      hash = "sha256-nlRkNK5a0fMnq1uarPeeFI6wtvHSq4jWNW3wDriVCoY=";
+      inherit hash;
     };
   }

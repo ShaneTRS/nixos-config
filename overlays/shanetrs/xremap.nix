@@ -1,12 +1,14 @@
 {
   pkgs,
   wm ? "x11",
+  version ? "0.10.8",
+  hash ? "sha256-WbRYxzdUFErkVuHfXlYRl04FnY4b7Kl1OGnC/gYtlRk=",
   ...
 }:
 with pkgs;
   stdenvNoCC.mkDerivation rec {
     pname = "xremap";
-    version = "0.10.8";
+    inherit version;
     buildInputs = [unzip];
     meta.mainProgram = pname;
     unpackPhase = "unzip $src";
@@ -17,6 +19,6 @@ with pkgs;
     '';
     src = fetchurl {
       url = "https://github.com/${pname}/${pname}/releases/download/v${version}/${pname}-linux-${pkgs.hostPlatform.linuxArch}-${wm}.zip";
-      hash = "sha256-WbRYxzdUFErkVuHfXlYRl04FnY4b7Kl1OGnC/gYtlRk=";
+      inherit hash;
     };
   }

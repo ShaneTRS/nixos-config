@@ -16,7 +16,6 @@
     ccat = mkIf (elem "bat" cfg._.features) "command cat";
     ccd = mkIf (elem "zoxide" cfg._.features) "builtin cd";
     eza = mkIf (elem "eza" cfg._.features) (mkOverride 99 "eza --header -o");
-    f = mkIf (elem "fuck" cfg._.features) "fuck";
     grep = mkIf (elem "ugrep" cfg._.features) "ugrep";
     ls = mkIf (elem "eza" cfg._.features) "eza";
     tree = mkIf (elem "eza" cfg._.features) "eza -T";
@@ -25,7 +24,7 @@
   cfg = config.shanetrs.shell // {_.features = cfg.bash.features ++ cfg.zsh.features;};
 in {
   options.shanetrs.shell = let
-    shellFeatures = ["bat" "eza" "fd" "fuck" "fastfetch" "fzf" "highlight" "nix-index" "tldr" "ugrep" "zoxide"];
+    shellFeatures = ["bat" "eza" "fd" "fastfetch" "fzf" "highlight" "nix-index" "tldr" "ugrep" "zoxide"];
     shellDefaults = rec {
       bash = {
         aliases = {
@@ -161,7 +160,6 @@ in {
             enable = true;
             settings.updates.auto_update = true;
           };
-          thefuck.enable = mkIf (elem "fuck" cfg._.features) true;
           zoxide = mkIf (elem "zoxide" cfg._.features) {
             enable = true;
             options = ["--cmd cd"];
@@ -223,10 +221,6 @@ in {
           ++ [
             nixHelpers.extraRc
             (readFile (configs ".zshrc"))
-            (optionalString (elem "fuck" cfg._.features) ''
-              bindkey -s '\e\e' 'f\n'
-              bindkey -s '^[f' 'f\n'
-            '')
             (optionalString (elem "nix-index" cfg._.features)
               (nixHelpers.nixIndex {inherit config pkgs;}))
           ])

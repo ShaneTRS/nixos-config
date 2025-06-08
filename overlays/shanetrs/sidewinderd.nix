@@ -1,8 +1,13 @@
-{pkgs, ...}:
+{
+  pkgs,
+  version ? "638bc839d74dc9bc6dfd3375f00742662be2f8a4",
+  hash ? "sha256-vlmL/Wz31/xAmKV5hxQ3H5eQOCZRFKbqRjRCxQn4pdo=",
+  ...
+}:
 with pkgs;
   stdenv.mkDerivation rec {
     pname = "sidewinderd";
-    version = "638bc839d74dc9bc6dfd3375f00742662be2f8a4";
+    inherit version;
     nativeBuildInputs = [cmake pkg-config];
     buildInputs = [libconfig systemdLibs tinyxml-2];
     meta.mainProgram = pname;
@@ -13,6 +18,6 @@ with pkgs;
       owner = "tolga9009";
       repo = pname;
       rev = version;
-      hash = "sha256-vlmL/Wz31/xAmKV5hxQ3H5eQOCZRFKbqRjRCxQn4pdo=";
+      inherit hash;
     };
   }

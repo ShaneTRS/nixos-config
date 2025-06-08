@@ -2,7 +2,14 @@
 with pkgs;
   writeShellApplication {
     name = "shadowplay";
-    runtimeInputs = [gawk gpu-screen-recorder libnotify losslesscut-bin pulseaudio xorg.xdpyinfo];
+    runtimeInputs = [
+      gawk
+      gpu-screen-recorder
+      libnotify
+      losslesscut-bin
+      pulseaudio
+      xorg.xdpyinfo
+    ];
     text = ''
       set +o errexit
       # shellcheck disable=SC2104 disable=2128 disable=2207

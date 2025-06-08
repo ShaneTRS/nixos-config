@@ -4,8 +4,8 @@ with pkgs;
     src = fetchFromGitHub {
       owner = "moonlight-stream";
       repo = old.pname;
-      rev = "ab791cf4c825481be03a065e4acd3eb35eaa094d";
-      sha256 = "sha256-1cieP/m+0qBg0eu6/6l/Jxz45dIjKtCWunPTXej6aWg=";
+      rev = "1dbdcb5279b3c2bce756e6eff3b97d3f12a38092";
+      sha256 = "sha256-CLXJo513ZGa7nU+sqpyYW1XC242W8pu9rkXSY/i/Lbg=";
       fetchSubmodules = true;
     };
     patches = [./always-quit.patch ./full-keyboard.patch];

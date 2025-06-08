@@ -7,5 +7,5 @@ with pkgs;
   tigervnc.overrideAttrs (old: {
     buildInputs = [ffmpeg] ++ old.buildInputs or [];
     cmakeFlags = ["-DENABLE_H264=true"] ++ old.cmakeFlags or [];
-    patches = [./rapid-polling.patch ./laptop-viewport.patch] ++ old.patches or [];
+    patches = [./rapid-polling.patch] ++ old.patches or [];
   })

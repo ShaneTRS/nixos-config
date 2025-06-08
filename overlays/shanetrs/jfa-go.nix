@@ -1,8 +1,13 @@
-{pkgs, ...}:
+{
+  pkgs,
+  version ? "0.5.1",
+  hash ? "sha256-YAaAqQMJJZUpV72P+n6cDdp4ZufUoosHcpk7DCQgi3I=",
+  ...
+}:
 with pkgs;
   stdenvNoCC.mkDerivation rec {
     pname = "jfa-go";
-    version = "0.5.1";
+    inherit version;
     buildInputs = [unzip];
     meta.mainProgram = pname;
     unpackPhase = "unzip $src";
@@ -13,6 +18,6 @@ with pkgs;
     '';
     src = fetchurl {
       url = "https://github.com/hrfee/${pname}/releases/download/v${version}/${pname}_${version}_Linux_x86_64.zip";
-      hash = "sha256-YAaAqQMJJZUpV72P+n6cDdp4ZufUoosHcpk7DCQgi3I=";
+      inherit hash;
     };
   }
