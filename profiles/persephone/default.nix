@@ -1,4 +1,5 @@
 {
+  config,
   fn,
   machine,
   pkgs,
@@ -6,11 +7,11 @@
   ...
 }: let
   inherit (fn) configs;
-  inherit (lib) mkIf mkOptionDefault;
+  inherit (lib) getExe mkIf mkOptionDefault;
 in {
   imports = [./services.nix];
 
-  environment.systemPackages = with pkgs; [shanetrs.not-nice];
+  environment.systemPackages = with pkgs; [shanetrs.not-nice iptables];
   programs = {
     dconf.enable = true; # Enable dconf for GTK apps
     noisetorch.enable = true;
@@ -36,7 +37,11 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
-      keymap.keymap = [
+      keymap.keymap = let
+        window = "/home/shane/Documents/Scripts/window";
+        exe = exe: "/usr/bin/env ${exe}";
+        launch = cmd: {launch = getExe (pkgs.writeShellScriptBin "xremap-launch" cmd);};
+      in [
         {
           name = "global";
           remap = {
@@ -49,65 +54,76 @@ in {
                 # discord
                 d = {
                   launch = [
-                    "/home/shane/Documents/Scripts/window"
+                    window
                     "windowactivate"
                     "--name"
-                    "Equibop"
+                    "Discord"
                     "--"
-                    "equibop"
+                    (getExe config.shanetrs.programs.discord.package)
                   ];
                 };
                 # editor
                 e = {
                   launch = [
-                    "/home/shane/Documents/Scripts/window"
+                    window
                     "windowactivate"
                     "--class"
                     "Zed"
                     "--"
-                    "zeditor"
+                    (exe "zeditor")
                   ];
                 };
                 # firefox
                 f = {
                   launch = [
-                    "/home/shane/Documents/Scripts/window"
+                    window
                     "windowactivate"
                     "--name"
                     "Firefox"
                     "--"
-                    "firefox-developer-edition"
+                    (exe "firefox")
                   ];
                 };
                 # spotify
                 s = {
                   launch = [
-                    "/home/shane/Documents/Scripts/window"
+                    window
                     "windowactivate"
                     "--class"
                     "Spotify"
                     "--"
-                    "env LD_PRELOAD=/usr/lib/spotify-adblock.so spotify --uri=%U"
+                    (getExe pkgs.shanetrs.spotify)
                   ];
                 };
                 # terminal
                 t = {
                   launch = [
-                    "/home/shane/Documents/Scripts/window"
+                    window
                     "windowactivate"
                     "--desktop"
                     "0"
                     "--class"
                     "Konsole"
                     "--"
-                    "konsole"
+                    (exe "konsole")
                   ];
                 };
               };
             };
-            "super-p" = {launch = ["/home/shane/Documents/Scripts/pipewire"];};
-            "super-shift-s" = {launch = ["/home/shane/Documents/Scripts/screenshot"];};
-            "super-space" = {launch = ["/home/shane/Documents/Scripts/freeze"];};
+            "super-p" = launch "ssh shanetrs.remote.client systemctl --user restart audio-fix";
+            "super-shift-s" = launch ''
+              [[ "$(ls /tmp/clipboard-*.png | wc -l)" -gt 24 ]] && rm /tmp/clipboard-*.png
+              file="/tmp/clipboard-$RANDOM.png"
+              spectacle -brno "$file"
+              [ ! -f "$file" ] && exit 1
+              xclip -sel c -t image/png -i < "$file"
+            '';
+            "super-space" = launch ''
+              p=$(xdotool getwindowpid $(xdotool getactivewindow))
+              ps=($(cat /proc/$p/stat)); s=9
+              [ ''${ps[2]} == 'T' ] && ((s-=1))
+              kill -1$s $p
+            '';
           };
         }
       ];
@@ -136,10 +152,11 @@ in {
       discord.enable = true;
       easyeffects.enable = true;
       vscode.enable = true;
+      zed-editor.enable = true;
     };
     shell = {
       zsh.enable = true;
-      doas.noPassCmds = mkOptionDefault ["chrt"];
+      doas.noPassCmds = mkOptionDefault ["chrt" "iptables"];
     };
   };
 
@@ -154,6 +171,7 @@ in {
 
       helvum # patchbay
       spicetify-cli # spotify mods
+      shanetrs.spotify # music player
 
       jellyfin-media-player # dvd library
       jellyfin-mpv-shim # library casting
@@ -161,6 +179,7 @@ in {
       vlc # media player
 
       jetbrains.idea-community-bin # java dev
+      podman-desktop # container management
       podman-compose # declarative containers
 
       shanetrs.shadowplay
@@ -180,11 +199,12 @@ in {
         '';
       })
 
-      qbittorrent-qt5 # download client
+      qbittorrent # download client
       tor-browser # private web browser
 
-      shanetrs.wlx-overlay-s # vr desktops
+      shanetrs.alchemy-viewer # metaverse client
       shanetrs.jfa-go # jellyfin temp. accounts
+      shanetrs.wlx-overlay-s # vr desktops
     ];
     xdg.configFile."keynav/keynavrc" = let
       attempt = configs "keynavrc";
@@ -193,11 +213,11 @@ in {
   };
 
   virtualisation = {
-    containers.cdi.dynamic.nvidia.enable = true;
     podman = {
       enable = true;
       dockerCompat = true;
       defaultNetwork.settings.dns_enabled = true;
+      extraPackages = [pkgs.slirp4netns];
     };
   };
 }

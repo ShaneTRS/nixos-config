@@ -72,7 +72,7 @@ in {
       };
       extraPackages = mkOption {
         type = types.listOf types.package;
-        default = with pkgs; [protontricks];
+        default = [];
       };
     };
     vr = {

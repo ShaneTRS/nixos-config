@@ -1,5 +1,5 @@
 # Inspiron 3501 ()
-{lib, ...}: {
+{...}: {
   boot.loader = {
     efi = {
       canTouchEfiVariables = true;

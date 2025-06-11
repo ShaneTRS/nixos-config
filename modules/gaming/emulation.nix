@@ -87,15 +87,15 @@ in {
       ++ optionals n.wii-u.enable n.wii-u.extraPackages
       ++ optionals n.switch.enable n.switch.extraPackages
       ++ [
-        (mkIf r.enable (r.package.override {
-          cores =
+        (mkIf r.enable (r.package.withCores (
+          cores:
             r.cores
             ++ resolveList [
               (mkIf n.ds.enable n.ds.package)
               (mkIf n."3ds".enable n."3ds".package)
               (mkIf n.wii.enable n.wii.package)
-            ];
-        }))
+            ]
+        )))
         (mkIf n.wii-u.enable n.wii-u.package)
         (mkIf n.switch.enable n.switch.package)
       ];

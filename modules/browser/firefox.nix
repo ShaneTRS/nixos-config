@@ -19,6 +19,7 @@ in {
         "addon@darkreader.org:darkreader/latest"
         "faststream@andrews:faststream/latest"
         "{446900e4-71c2-419f-a6a7-df9c091e268b}:bitwarden-password-manager/latest"
+        "sponsorBlocker@ajay.app:sponsorblock/latest"
         (mkIf cfg.pwa.enable "firefoxpwa@filips.si:pwas-for-firefox/latest")
       ];
     };

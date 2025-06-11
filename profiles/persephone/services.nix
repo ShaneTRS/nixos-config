@@ -11,6 +11,11 @@
   inherit (pkgs) writeShellApplication;
   jfa-go-conf = configs "jfa-go.ini";
 in {
+  boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
+  networking.extraHosts = ''
+    127.0.0.1 localhost shanetrs.ddns.net
+  '';
+
   sops.templates = let
     ph = config.sops.placeholder;
   in {
@@ -30,7 +35,7 @@ in {
     in ''
       cache=/var/lib/ddclient/ddclient.cache
       foreground=YES
-      use=${cfg.use}
+      usev4=${cfg.usev4}
       protocol=${cfg.protocol}
       server=${cfg.server}
       ssl=${boolYN cfg.ssl}
@@ -45,7 +50,7 @@ in {
   };
 
   services.ddclient = {
-    use = "web, web=ifconfig.so/";
+    usev4 = "webv4, webv4=ifconfig.so/";
     interval = "3h";
     protocol = "noip";
     server = "dynupdate.no-ip.com";
@@ -98,7 +103,7 @@ in {
           User = machine.user;
           WorkingDirectory = "/home/${machine.user}/Containers/.shanetrs/.podman-autostart";
         };
-        wantedBy = ["network-online.target"];
+        wants = ["network-online.target"];
         after = ["network-online.target"];
       };
       podman-autostart-check = {

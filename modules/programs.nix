@@ -19,106 +19,6 @@ in {
         type = types.enum ["stable" "canary" "ptb"];
         default = "canary";
       };
-      vencord = {
-        enable = mkOption {
-          type = types.enum [true false "manual"];
-          default = true;
-        };
-        quickCss = mkOption {
-          type = types.str;
-          default = ''
-            .theme-dark .messagelogger-edited {
-              visibility: hidden;
-              position: absolute;
-            }
-            .messagelogger-deleted :is(div, h1, h2, h3, p) {
-              visibility: hidden;
-              position: absolute;
-            }
-            svg.vc-trans-icon {
-              width: 0;
-            }
-            .botTag__4211a {
-              display: none;
-            }
-          '';
-        };
-        plugins = mkOption {
-          type = types.attrs;
-          default = {
-            CallTimer.enabled = true;
-            EmoteCloner.enabled = true;
-            Experiments.enabled = true;
-            FakeNitro = {
-              enabled = true;
-              transformEmojis = false;
-              enableStickerBypass = false;
-            };
-            ForceOwnerCrown.enabled = true;
-            MessageLogger.enabled = true;
-            NoUnblockToJump.enabled = true;
-            ShowHiddenChannels = {
-              enabled = true;
-              showMode = 1;
-            };
-            SpotifyCrack.enabled = true;
-            TypingTweaks.enabled = true;
-            VolumeBooster = {
-              enabled = true;
-              multipler = 2;
-            };
-            WhoReacted.enabled = true;
-            MoreCommands.enabled = true;
-            NoCanaryMessageLinks.enabled = true;
-            PlatformIndicators = {
-              enabled = true;
-              badges = true;
-              list = false;
-              messages = false;
-            };
-            GameActivityToggle.enabled = true;
-            UserVoiceShow.enabled = true;
-            PermissionsViewer.enabled = true;
-            Translate.enabled = true;
-            FixSpotifyEmbeds = {
-              enabled = true;
-              volume = 10;
-            };
-            DisableCallIdle.enable = true;
-          };
-        };
-        settings = mkOption {
-          type = types.attrs;
-          default = {
-            notifyAboutUpdates = true;
-            autoUpdate = true;
-            useQuickCss = true;
-            themeLinks = [];
-            enableReactDevtools = false;
-            frameless = false;
-            transparent = false;
-            winCtrlQ = false;
-            plugins = cfg.discord.vencord.plugins;
-            winNativeTitleBar = false;
-            notifications = {
-              timeout = 5000;
-              position = "bottom-right";
-              useNative = "not-focused";
-              logLimit = 50;
-            };
-            autoUpdateNotification = false;
-            macosTranslucency = false;
-            disableMinSize = true;
-            cloud = {
-              authenticated = false;
-              url = "https://api.vencord.dev/";
-              settingsSync = false;
-              settingsSyncVersion = 1711701851176;
-            };
-            enabledThemes = [];
-          };
-        };
-      };
       openasar.enable = mkOption {
         type = types.bool;
         default = true;
@@ -133,7 +33,6 @@ in {
           };
         in (branches.${cfg.discord.branch}.override {
           withOpenASAR = cfg.discord.openasar.enable;
-          withVencord = cfg.discord.vencord.enable != false;
         });
       };
     };
@@ -205,7 +104,6 @@ in {
                 [ $(($(date +%s) - pre_exec)) -lt 3 ] && exec "${
                   getExe (cfg.discord.package.override {
                     withOpenASAR = false;
-                    withVencord = false;
                   })
                 }"
               '';
@@ -221,12 +119,6 @@ in {
             }.png";
           })
         ];
-        xdg.configFile = let
-          vcfg = cfg.discord.vencord;
-        in {
-          "Vencord/settings/quickCss.css".text = mkIf (vcfg.enable == true) vcfg.quickCss;
-          "Vencord/settings/settings.json".text = mkIf (vcfg.enable == true) (toJSON vcfg.settings);
-        };
       };
     })
 

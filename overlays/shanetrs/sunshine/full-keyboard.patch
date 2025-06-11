@@ -1,7 +1,7 @@
-diff --git a/third-party/inputtino/src/uinput/keyboard.hpp b/third-party/inputtino/src/uinput/keyboard.hpp
+diff --git a/third-party/inputtino/src/uinput/include/inputtino/keyboard.hpp b/third-party/inputtino/src/uinput/include/inputtino/keyboard.hpp
 index 6cf92d1..437b6af 100644
---- a/third-party/inputtino/src/uinput/keyboard.hpp
-+++ b/third-party/inputtino/src/uinput/keyboard.hpp
+--- a/third-party/inputtino/src/uinput/include/inputtino/keyboard.hpp
++++ b/third-party/inputtino/src/uinput/include/inputtino/keyboard.hpp
 @@ -14,6 +14,31 @@ constexpr auto UNKNOWN = 0;
   * A map of [Moonlight keyboard code] -> {linux_code, scan_code}
   */

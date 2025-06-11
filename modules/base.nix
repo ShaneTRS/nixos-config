@@ -16,7 +16,7 @@ in {
 
   config = mkIf config.shanetrs.enable {
     boot = {
-      initrd.availableKernelModules = ["ata_piix" "ohci_pci" "ehci_pci" "ahci" "sd_mod" "sr_mod"];
+      initrd.availableKernelModules = ["ahci" "ata_piix" "ehci_pci" "nvme" "ohci_pci" "sd_mod" "sr_mod" "usbhid"];
       kernelModules = ["v4l2loopback"];
       kernelPackages = mkStrongDefault pkgs.linuxPackages_zen;
       kernelParams = ["quiet" "splash"];

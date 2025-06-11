@@ -1,7 +1,7 @@
 {
   pkgs,
   version ? "7.1.9.2516",
-  hash ? "sha256-fQmhtgQtAGaPZ5yREqRWFZ8h1CIe3MFYi94qtIVaeok=",
+  hash ? "sha256-FjqDU7HskfQkZlgLhT/gMdl9YHRnaNlwvxBUYdLlock=",
   ...
 }:
 with pkgs; let
@@ -13,7 +13,7 @@ in
 
     _tarball = "Alchemy_Beta_${replaceStrings ["."] ["_"] version}_x86_64";
 
-    nativeBuildInputs = [autoPatchelfHook];
+    nativeBuildInputs = [autoPatchelfHook zstd];
     buildInputs = [
       SDL2
       dbus
@@ -46,7 +46,7 @@ in
     '';
 
     src = fetchurl {
-      url = "https://github.com/AlchemyViewer/Alchemy/releases/download/${version}-beta/${_tarball}.tar.xz";
+      url = "https://github.com/AlchemyViewer/Alchemy/releases/download/${version}-beta/${_tarball}.tar.zst";
       inherit hash;
     };
   }

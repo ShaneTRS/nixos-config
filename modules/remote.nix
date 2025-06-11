@@ -243,7 +243,7 @@ in {
       user = {
         xdg.configFile = let
           input = {
-            "60-shanetrs-remote"."context.modules" = mkIf cfg.audio.enable [
+            "60-shanetrs-remote"."context.modules" = [
               {
                 name = "libpipewire-module-rtp-sink";
                 args = {
@@ -279,11 +279,11 @@ in {
             ];
           };
         in
-          builtins.listToAttrs (map (k: {
+          mkIf cfg.audio.enable (listToAttrs (map (k: {
               name = "pipewire/pipewire.conf.d/${k}.conf";
-              value = {text = builtins.toJSON input.${k};};
+              value = {text = toJSON input.${k};};
             })
-            (builtins.attrNames input));
+            (attrNames input)));
         systemd.user.services = {
           x0vncserver = {
             Unit.Description = "Low-latency VNC display server";
@@ -294,6 +294,15 @@ in {
               in "${getExe pkgs.shanetrs.not-nice} x0vncserver Geometry=2732x1536 ${
                 optionalString (attempt != null) ''-rfbauth "${attempt}"''
               } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+              Restart = "on-failure";
+              StartLimitBurst = 32;
+            };
+            Install.WantedBy = ["graphical-session.target"];
+          };
+          sunshine = {
+            Unit.Description = "Self-hosted game stream host for Moonlight";
+            Service = {
+              ExecStart = with pkgs; "${getExe shanetrs.not-nice} ${getExe shanetrs.sunshine}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };
