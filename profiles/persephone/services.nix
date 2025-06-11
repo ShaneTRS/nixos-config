@@ -49,20 +49,23 @@ in {
     '';
   };
 
-  services.ddclient = {
-    usev4 = "webv4, webv4=ifconfig.so/";
-    interval = "3h";
-    protocol = "noip";
-    server = "dynupdate.no-ip.com";
-    configFile = config.sops.templates.ddclient.path;
+  services = {
+    ddclient = {
+      usev4 = "webv4, webv4=ifconfig.so/";
+      interval = "3h";
+      protocol = "noip";
+      server = "dynupdate.no-ip.com";
+      configFile = config.sops.templates.ddclient.path;
+    };
+    nix-serve = {
+      enable = true;
+      openFirewall = true;
+      port = 5698;
+      secretKeyFile = "/var/cache-priv-key.pem";
+    };
   };
   systemd = {
     services = {
-      zerotierone.preStart = ''
-        for netId in $(cat ${configs "zerotier"}); do
-          touch "/var/lib/zerotier-one/networks.d/$netId.conf"
-        done
-      '';
       podman-autostart = {
         environment.LOGGING = "--log-level=info";
         serviceConfig = {
@@ -105,6 +108,7 @@ in {
         };
         wants = ["network-online.target"];
         after = ["network-online.target"];
+        wantedBy = ["graphical.target"];
       };
       podman-autostart-check = {
         serviceConfig = {
@@ -122,6 +126,11 @@ in {
           WorkingDirectory = "/home/${machine.user}/Containers/.shanetrs/.podman-autostart";
         };
       };
+      zerotierone.preStart = ''
+        for netId in $(cat ${configs "zerotier"}); do
+          touch "/var/lib/zerotier-one/networks.d/$netId.conf"
+        done
+      '';
     };
     timers = {
       podman-autostart-check = {

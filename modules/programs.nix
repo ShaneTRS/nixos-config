@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (builtins) attrNames elem listToAttrs toJSON;
-  inherit (fn) configs;
+  inherit (fn) configs resolveList;
   inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
   inherit (pkgs) makeDesktopItem writeShellApplication;
   cfg = config.shanetrs.programs;
@@ -174,16 +174,24 @@ in {
     })
 
     (mkIf cfg.zed-editor.enable {
-      user.programs.zed-editor = {
-        inherit (cfg.zed-editor) enable package;
-        extraPackages = with pkgs;
-          cfg.zed-editor.extraPackages
-          ++ [
-            (mkIf (elem "nix" cfg.zed-editor.features) nixd)
-            (mkIf (elem "nix" cfg.zed-editor.features) nixfmt-classic)
-            (mkIf (elem "rust" cfg.zed-editor.features) rust-analyzer)
-          ];
-      };
+      user.home.packages = [
+        (pkgs.symlinkJoin {
+          name = "zed-editor-wrapped";
+          paths = [cfg.zed-editor.package];
+          preferLocalBuild = true;
+          nativeBuildInputs = with pkgs; [makeWrapper];
+          postBuild = ''
+            wrapProgram $out/bin/zeditor \
+            --suffix PATH : ${lib.makeBinPath (cfg.zed-editor.extraPackages
+              ++ (with pkgs;
+                resolveList [
+                  (mkIf (elem "nix" cfg.zed-editor.features) nixd)
+                  (mkIf (elem "nix" cfg.zed-editor.features) alejandra)
+                  (mkIf (elem "rust" cfg.zed-editor.features) rust-analyzer)
+                ]))}
+          '';
+        })
+      ];
     })
   ];
 }

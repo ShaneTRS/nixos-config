@@ -16,14 +16,14 @@ in
           "$APPLICATION" --resolution "$RESOLUTION" --fps "$FPS" --bitrate "$BITRATE" \
           --audio-on-host --quit-after --game-optimization --multi-controller \
           --background-gamepad --capture-system-keys fullscreen \
-          --video-codec H.264 --video-decoder hardware --no-vsync
+          --video-codec HEVC --video-decoder hardware --no-vsync
       EOF
       }
 
       RESOLUTION="''${RESOLUTION:-$(ml_res)}"
       TARGET="''${TARGET:-${targetHost}}"
-      PORT="''${PORT:-46989}"
-      BITRATE="''${BITRATE:-19000}"
+      PORT="''${PORT:-47989}"
+      BITRATE="''${BITRATE:-45000}"
       FPS="''${FPS:-62}"
       APPLICATION="''${APPLICATION:-desktop}"
 

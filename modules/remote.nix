@@ -48,13 +48,25 @@ in {
         type = types.bool;
         default = true;
       };
-      sinkName = mkOption {
-        type = types.str;
-        default = "Laptop Speakers";
+      sink = {
+        name = mkOption {
+          type = types.str;
+          default = "Laptop Speakers";
+        };
+        priority = mkOption {
+          type = types.int;
+          default = 1000;
+        };
       };
-      sourceName = mkOption {
-        type = types.str;
-        default = "Laptop Microphone";
+      source = {
+        name = mkOption {
+          type = types.str;
+          default = "Laptop Microphone";
+        };
+        priority = mkOption {
+          type = types.int;
+          default = 1000;
+        };
       };
     };
   };
@@ -254,8 +266,9 @@ in {
                   "destination.port" = 46601;
                   "stream.props" = {
                     "media.class" = "Audio/Sink";
-                    "node.description" = cfg.audio.sinkName;
+                    "node.description" = cfg.audio.sink.name;
                     "node.name" = "shanetrs.remote.host";
+                    "priority.session" = cfg.audio.sink.priority;
                   };
                 };
               }
@@ -271,8 +284,9 @@ in {
                   "source.port" = 46602;
                   "stream.props" = {
                     "media.class" = "Audio/Source";
-                    "node.description" = cfg.audio.sourceName;
+                    "node.description" = cfg.audio.source.name;
                     "node.name" = "shanetrs.remote.client-mic";
+                    "priority.session" = cfg.audio.source.priority;
                   };
                 };
               }

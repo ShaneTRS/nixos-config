@@ -100,10 +100,12 @@ in {
       home = {
         stateVersion = "23.11";
         activation = {
+          # TODO: Add clean up before `rm last`
           symlinkFarmHomes = with machine;
             self.inputs.home-manager.lib.hm.dag.entryAfter ["writeBoundary"] ''
               set +o errexit
               cd "${source}/user/homes" || exit 1
+              rm last
 
               for i in "${user}/${profile}" "${user}/all" "global/${profile}" "global/all"; do
               	find "$i" -type f >> last

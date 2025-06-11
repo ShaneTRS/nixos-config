@@ -1,0 +1,44 @@
+diff --git a/zotify/config.py b/zotify/config.py
+index 802d5ce..84f9a61 100644
+--- a/zotify/config.py
++++ b/zotify/config.py
+@@ -31,6 +31,7 @@ TEMP_DOWNLOAD_DIR = 'TEMP_DOWNLOAD_DIR'
+ MD_SAVE_GENRES = 'MD_SAVE_GENRES'
+ MD_ALLGENRES = 'MD_ALLGENRES'
+ MD_GENREDELIMITER = 'MD_GENREDELIMITER'
++FFMPEG_ARGS = 'FFMPEG_ARGS'
+ PRINT_PROGRESS_INFO = 'PRINT_PROGRESS_INFO'
+ PRINT_WARNINGS = 'PRINT_WARNINGS'
+ RETRY_ATTEMPTS = 'RETRY_ATTEMPTS'
+@@ -38,6 +39,7 @@ CONFIG_VERSION = 'CONFIG_VERSION'
+ DOWNLOAD_LYRICS = 'DOWNLOAD_LYRICS'
+ 
+ CONFIG_VALUES = {
++    FFMPEG_ARGS:                { 'default': '',      'type': str,  'arg': '--ffmpeg-args'                },
+     SAVE_CREDENTIALS:           { 'default': 'True',  'type': bool, 'arg': '--save-credentials'           },
+     CREDENTIALS_LOCATION:       { 'default': '',      'type': str,  'arg': '--credentials-location'       },
+     OUTPUT:                     { 'default': '',      'type': str,  'arg': '--output'                     },
+@@ -274,6 +276,9 @@ class Config:
+         return cls.get(MD_GENREDELIMITER)
+     
+     @classmethod
++    def get_ffmpeg_args(cls) -> str:
++        return cls.get(FFMPEG_ARGS)
++    @classmethod
+     def get_output(cls, mode: str) -> str:
+         v = cls.get(OUTPUT)
+         if v:
+diff --git a/zotify/track.py b/zotify/track.py
+index a739a3d..503a84c 100644
+--- a/zotify/track.py
++++ b/zotify/track.py
+@@ -319,6 +319,9 @@ def convert_audio_format(filename) -> None:
+     if bitrate:
+         output_params += ['-b:a', bitrate]
+ 
++    ffmpeg_args = Zotify.CONFIG.get_ffmpeg_args()
++    if ffmpeg_args:
++        output_params += ffmpeg_args.split('_')
+     try:
+         ff_m = ffmpy.FFmpeg(
+             global_options=['-y', '-hide_banner', '-loglevel error'],

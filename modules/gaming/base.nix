@@ -43,6 +43,27 @@ in {
         default = [];
       };
     };
+    mangohud = {
+      enable = mkEnableOption "MangoHud configuration and installation";
+      package = mkPackageOption pkgs "mangohud" {};
+      settings = mkOption {
+        type = types.attrs;
+        default = {
+          "gpu_temp" = 1;
+          "cpu_temp" = 1;
+          "graphs" = "vram,ram";
+          "frame_timing" = 1;
+          "wine" = 1;
+          "resolution" = 1;
+          "no_display" = 1;
+          "font_size" = 19;
+          "position" = "top-right";
+          "toggle_hud" = "Shift_R+F12";
+          "toggle_fps_limit" = "Shift_R+F1";
+          "fps_limit" = "64,144";
+        };
+      };
+    };
     minecraft = {
       enable = mkEnableOption "Minecraft configuration and installation";
       package = mkPackageOption pkgs "prismlauncher" {};
@@ -96,11 +117,8 @@ in {
 
     (mkIf cfg.gamescope.enable {
       programs.gamescope = {
-        enable = true;
-        args = cfg.gamescope.args;
+        inherit (cfg.gamescope) enable args env package;
         capSysNice = true; # security wrapper
-        env = cfg.gamescope.env;
-        package = cfg.gamescope.package;
       };
     })
 
@@ -111,6 +129,12 @@ in {
           extraPkgs = pkgs: cfg.lutris.extraPackages;
         })
       ];
+    })
+
+    (mkIf cfg.mangohud.enable {
+      user.programs.mangohud = {
+        inherit (cfg.mangohud) enable package settings;
+      };
     })
 
     (mkIf cfg.minecraft.enable {

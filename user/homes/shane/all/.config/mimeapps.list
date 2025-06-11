@@ -1,27 +1,24 @@
 [Added Associations]
-audio/ogg=mpv.desktop;
 inode/directory=org.kde.dolphin.desktop;dev.zed.Zed.desktop
-x-scheme-handler/podman-desktop=Podman Desktop.desktop;
-x-scheme-handler/ror2mm=r2modman.desktop;
-x-scheme-handler/sidequest=SideQuest.desktop;
 
 [Default Applications]
 application/java-archive=org.kde.ark.desktop;
 application/json=dev.zed.Zed.desktop
 application/vnd.debian.binary-package=org.kde.ark.desktop;
-audio/ogg=mpv.desktop;
+application/xhtml+xml=firefox.desktop;
+audio/ogg=vlc.desktop;
 image/jpeg=gimp.desktop;
 image/png=gimp.desktop;
 image/svg+xml=org.inkscape.Inkscape.desktop;
 image/webp=gimp.desktop;
 inode/directory=org.kde.dolphin.desktop;
+text/html=firefox.desktop;
 text/plain=dev.zed.Zed.desktop
 video/mp4=vlc.desktop;
+x-scheme-handler/heroic=com.heroicgameslauncher.hgl.desktop
 x-scheme-handler/podman-desktop=Podman Desktop.desktop
 x-scheme-handler/ror2mm=r2modman.desktop
-x-scheme-handler/logseq=logseq-desktop.desktop
 x-scheme-handler/sidequest=SideQuest.desktop
-x-scheme-handler/heroic=com.heroicgameslauncher.hgl.desktop
 
 [Removed Associations]
 application/octet-stream=org.kde.kdeconnect_open.desktop;

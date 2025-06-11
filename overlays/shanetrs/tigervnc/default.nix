@@ -1,7 +1,6 @@
 # TigerVNC with the following patches
 # - x264 encoding
 # - Reduced polling delay
-# - Faster viewport scrolling
 {pkgs, ...}:
 with pkgs;
   tigervnc.overrideAttrs (old: {

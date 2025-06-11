@@ -2,6 +2,8 @@
 {...}: {
   boot = {
     kernelModules = ["kvm-amd"];
+    # blacklistedKernelModules = [ "amdgpu" ];
+    # kernelParams = ["i915.force_probe=!56a0" "xe.force_probe=56a0"];
     loader = {
       efi = {
         canTouchEfiVariables = true;
@@ -47,6 +49,15 @@
       firmware = "redist";
       graphics = "intel";
     };
+  };
+  user.xdg.configFile.
+    "wireplumber/wireplumber.conf.d/doqaus-priority.conf".text = builtins.toJSON {
+    "monitor.alsa.rules" = [
+      {
+        matches = [{"node.name" = "bluez_output.F4_4E_FC_DA_61_E5.1";}];
+        actions.update-props = {"priority.session" = 1100;};
+      }
+    ];
   };
   swapDevices = [
     {

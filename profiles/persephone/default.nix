@@ -38,9 +38,19 @@ in {
       enable = true;
       session = "plasma";
       keymap.keymap = let
-        window = "/home/shane/Documents/Scripts/window";
-        exe = exe: "/usr/bin/env ${exe}";
-        launch = cmd: {launch = getExe (pkgs.writeShellScriptBin "xremap-launch" cmd);};
+        xdotool = getExe pkgs.xdotool;
+        window = getExe (pkgs.writeShellScriptBin "xremap-window" ''
+          for i in "$@"; do
+          	[[ "$i" = -- || -n "$exe" ]] &&
+           	exe+=("$i") || flags+=("$i")
+          done
+          for i in $(${xdotool} search --onlyvisible --any "''${flags[@]:1}"); do
+          	[ -z "$(${xdotool} "''${flags[0]}" "$i" 2>&1)" ] &&
+           	exec echo "$i"
+          done
+          "''${exe[@]:1}" & disown
+        '');
+        launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
       in [
         {
           name = "global";
@@ -70,7 +80,8 @@ in {
                     "--class"
                     "Zed"
                     "--"
-                    (exe "zeditor")
+                    "/usr/bin/env"
+                    "zeditor"
                   ];
                 };
                 # firefox
@@ -81,7 +92,8 @@ in {
                     "--name"
                     "Firefox"
                     "--"
-                    (exe "firefox")
+                    "/usr/bin/env"
+                    "firefox"
                   ];
                 };
                 # spotify
@@ -92,7 +104,8 @@ in {
                     "--class"
                     "Spotify"
                     "--"
-                    (getExe pkgs.shanetrs.spotify)
+                    "/usr/bin/env"
+                    "spotify"
                   ];
                 };
                 # terminal
@@ -105,7 +118,8 @@ in {
                     "--class"
                     "Konsole"
                     "--"
-                    (exe "konsole")
+                    "/usr/bin/env"
+                    "konsole"
                   ];
                 };
               };
@@ -115,11 +129,12 @@ in {
               [[ "$(ls /tmp/clipboard-*.png | wc -l)" -gt 24 ]] && rm /tmp/clipboard-*.png
               file="/tmp/clipboard-$RANDOM.png"
               spectacle -brno "$file"
+              sleep 0.1
               [ ! -f "$file" ] && exit 1
-              xclip -sel c -t image/png -i < "$file"
+              ${getExe pkgs.xclip} -sel c -t image/png -i < "$file"
             '';
             "super-space" = launch ''
-              p=$(xdotool getwindowpid $(xdotool getactivewindow))
+              p=$(${xdotool} getwindowpid $(${xdotool} getactivewindow))
               ps=($(cat /proc/$p/stat)); s=9
               [ ''${ps[2]} == 'T' ] && ((s-=1))
               kill -1$s $p
@@ -133,6 +148,7 @@ in {
       epic.enable = true;
       emulation.enable = true;
       lutris.enable = true;
+      mangohud.enable = true;
       minecraft = {
         enable = true;
         extraPackages = with pkgs; [flite];
@@ -147,6 +163,7 @@ in {
     remote = {
       enable = true;
       role = "host";
+      audio.source.priority = 1300;
     };
     programs = {
       discord.enable = true;
@@ -172,6 +189,7 @@ in {
       helvum # patchbay
       spicetify-cli # spotify mods
       shanetrs.spotify # music player
+      shanetrs.zotify # music downloader
 
       jellyfin-media-player # dvd library
       jellyfin-mpv-shim # library casting
@@ -183,21 +201,6 @@ in {
       podman-compose # declarative containers
 
       shanetrs.shadowplay
-      (writeShellApplication {
-        name = "persephone.audio";
-        runtimeInputs = [noisetorch pulseaudio];
-        text = ''
-          set +o errexit
-
-          pactl unload-module module-null-sink
-          pactl load-module module-switch-on-connect # load bluetooth auto-connect pulse module
-          pactl load-module module-null-sink sink_name=alvr-output sink_properties=device.description='ALVR Speakers'
-          pactl load-module module-null-sink media.class=Audio/Source/Virtual sink_name=alvr-input sink_properties=device.description='ALVR Microphone'
-
-          pkill shadowplay -USR1
-          exec true
-        '';
-      })
 
       qbittorrent # download client
       tor-browser # private web browser
