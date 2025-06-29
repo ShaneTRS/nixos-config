@@ -88,7 +88,7 @@
           if [ -z "$SOPS_AGE_KEY" ]; then
           	export SOPS_AGE_KEY="$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)"
             [ -z "$SOPS_AGE_KEY" ] &&
-            	echo warning: ssh key was not found; keys will need to be provided
+            	echo warning: ssh key was not found\; keys will need to be provided
           fi
           type zsh &> /dev/null && exec zsh
         '';

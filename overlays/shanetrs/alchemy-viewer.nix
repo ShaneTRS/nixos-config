@@ -42,7 +42,13 @@ in
     installPhase = ''
       cp --no-preserve=all -r ${_tarball}/. $out
       chmod +x $out -R
-      ln -s $out/alchemy $out/bin/${meta.mainProgram}
+      cat > $out/bin/${meta.mainProgram} <<-EOF
+      	#!/bin/sh
+      	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$out
+      	steam-run $out/alchemy "\$@"
+      EOF
+      chmod +x $out/bin/${meta.mainProgram}
+      # ln -s $out/alchemy $out/bin/${meta.mainProgram}
     '';
 
     src = fetchurl {

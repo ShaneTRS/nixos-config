@@ -187,7 +187,7 @@ in {
                 resolveList [
                   (mkIf (elem "nix" cfg.zed-editor.features) nixd)
                   (mkIf (elem "nix" cfg.zed-editor.features) alejandra)
-                  (mkIf (elem "rust" cfg.zed-editor.features) rust-analyzer)
+                  (mkIf (elem "rust" cfg.zed-editor.features) rustup)
                 ]))}
           '';
         })

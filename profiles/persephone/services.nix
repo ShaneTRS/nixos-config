@@ -13,7 +13,7 @@
 in {
   boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
   networking.extraHosts = ''
-    127.0.0.1 localhost shanetrs.ddns.net
+    192.168.1.11 shanetrs.ddns.net
   '';
 
   sops.templates = let
@@ -72,13 +72,14 @@ in {
           RemainAfterExit = true;
           ExecStart = getExe (writeShellApplication {
             name = "podman-autostart.start";
-            runtimeInputs = with pkgs; [coreutils podman];
+            runtimeInputs = with pkgs; [coreutils podman slirp4netns];
             text = ''
               set +o errexit
               mkdir /tmp/1050368e08b494751a7fccc79f422a89 # Discord Bot
               mkdir -p "/home/${machine.user}/Containers/.shanetrs/.podman-autostart"
               touch ps
 
+              export PATH="$PATH:/run/wrappers/bin"
               pids=$(cat ps)
               # shellcheck disable=SC2068
               for i in ''${pids[@]}; do

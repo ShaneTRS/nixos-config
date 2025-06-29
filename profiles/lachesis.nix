@@ -40,7 +40,6 @@
       shanetrs.moonlight-qt
       shanetrs.spotify
       vlc
-      shanetrs.ml-launcher
     ];
     systemd.user.services = {
       audio-fix = {

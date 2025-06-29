@@ -22,5 +22,5 @@
     tundra.appStores = [];
   };
 
-  user.home.packages = with pkgs; [shanetrs.moonlight-qt shanetrs.ml-launcher];
+  user.home.packages = with pkgs; [shanetrs.moonlight-qt];
 }

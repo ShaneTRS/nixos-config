@@ -162,6 +162,7 @@ in {
     };
     remote = {
       enable = true;
+      usb.enable = true;
       role = "host";
       audio.source.priority = 1300;
     };

@@ -35,6 +35,9 @@ in
         echo "$COMMAND"
         read -rt2
       fi
-      eval "$COMMAND"
+      while true; do
+      	eval "$COMMAND"
+       	sleep .6
+      done
     '';
   }

@@ -107,6 +107,7 @@ in {
             text = ''
               pkill usbip.service -USR1
               pkill -f loop-vncviewer.child
+              pkill -P "$(pgrep ml-launcher)" -KILL
             '';
           })}";
           wantedBy = ["suspend.target"];
@@ -114,6 +115,7 @@ in {
       };
       user = {
         home.packages = [
+          pkgs.shanetrs.ml-launcher
           (makeDesktopItem {
             name = "loop-vncviewer";
             desktopName = "loop-vncviewer";

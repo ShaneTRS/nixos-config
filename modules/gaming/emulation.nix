@@ -50,7 +50,7 @@ in {
         package = mkPackageOption pkgs "ryujinx" {};
         extraPackages = mkOption {
           type = types.listOf types.package;
-          default = with pkgs; [shanetrs.ryusak];
+          default = [];
         };
       };
       wii = {
