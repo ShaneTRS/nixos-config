@@ -17,7 +17,7 @@ in {
     noisetorch.enable = true;
     adb.enable = true; # Adds udev rules, adb, and creates group
   };
-  users.users.${machine.user}.extraGroups = ["adbusers"];
+  users.users.${machine.user}.extraGroups = ["adbusers" "vboxusers"];
 
   services = {
     ddclient.enable = true;
@@ -142,7 +142,7 @@ in {
           };
         }
       ];
-      extraPackages = with pkgs; mkOptionDefault [wacomtablet kdePackages.kdenlive];
+      extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kdenlive];
     };
     gaming = {
       epic.enable = true;
@@ -186,14 +186,13 @@ in {
       krita # drawing
       inkscape-with-extensions # vector editor
       libreoffice-still # office suite
+      equibop # discord client
 
       helvum # patchbay
       spicetify-cli # spotify mods
       shanetrs.spotify # music player
       shanetrs.zotify # music downloader
 
-      jellyfin-media-player # dvd library
-      jellyfin-mpv-shim # library casting
       scrcpy # android-to-pc casting
       vlc # media player
 
@@ -216,7 +215,13 @@ in {
       mkIf (attempt != null) {source = attempt;};
   };
 
+  boot.kernelParams = [ "kvm.enable_virt_at_load=0" ];
   virtualisation = {
+    virtualbox.host = {
+      enable = true;
+      enableExtensionPack = true;
+      enableHardening = false;
+    };
     podman = {
       enable = true;
       dockerCompat = true;

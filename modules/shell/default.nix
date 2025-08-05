@@ -241,7 +241,7 @@ in {
             zoxide.enableZshIntegration = true;
             zsh = {
               inherit (cfg.zsh) enable package;
-              dotDir = ".config/zsh";
+              dotDir = "${config.user.xdg.configHome}/zsh";
               historySubstringSearch.enable = true;
               history = {
                 path = "${config.user.xdg.configHome}/zsh/zsh_history";

@@ -136,10 +136,12 @@ in {
         home-manager.enable = mkStrongDefault true;
         ssh = mkStrongDefault {
           enable = true;
-          controlMaster = "auto";
-          controlPersist = "5m";
-          serverAliveCountMax = 3000;
-          serverAliveInterval = 15;
+          matchBlocks."*" = {
+            controlMaster = "auto";
+            controlPersist = "5m";
+            serverAliveCountMax = 3000;
+            serverAliveInterval = 15;
+          };
         };
       };
     };

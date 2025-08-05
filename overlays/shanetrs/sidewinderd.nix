@@ -12,6 +12,7 @@ with pkgs;
     buildInputs = [libconfig systemdLibs tinyxml-2];
     meta.mainProgram = pname;
     postPatch = ''
+      sed -i "s:VERSION 2.8.8:VERSION 3.5:g" CMakeLists.txt
       sed -i "s:DESTINATION :DESTINATION $out/:g" src/CMakeLists.txt
     '';
     src = fetchFromGitHub {

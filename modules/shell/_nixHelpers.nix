@@ -57,14 +57,14 @@
        fi
        "${pkgs.nix-index}/bin/nix-locate" "$@"
     }
-    nix-find() { nix-locate --no-group --top-level -r "$@"; }
+    nix-find() { nix-locate --no-group -r "$@"; }
     command_not_found_handler() {(
       echo -n '...\b\b\b'
       if [[ "$NIX_MISSING" = auto || "$NIX_MISSING" = always ]]; then
       	MATCH="$(${pkgs.lib.getExe pkgs.fd} "$1" /nix/store --glob --exact-depth 3 --type x --max-results 1)"
         [ -n "$MATCH" ] && PATH="$(dirname "$MATCH"):$PATH" exec "$@"
       fi
-      IFS=$'\n' MATCHES=($(nix-locate --no-group --type x --type s --top-level --whole-name --at-root "/bin/$1"))
+      IFS=$'\n' MATCHES=($(nix-locate --no-group --type x --type s --whole-name --at-root "/bin/$1"))
       if [ "$NIX_MISSING" = never ]; then
         FMT "%1%34❭❭ %0%1$1%0 not found! You can use %1nix-find -wtx /$1%0 to find it\n" >&2
         exit 127

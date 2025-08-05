@@ -18,7 +18,6 @@
           filelight
           kate
           kfind
-          pkgs.krename
           plasma-browser-integration
           sddm-kcm
         ];

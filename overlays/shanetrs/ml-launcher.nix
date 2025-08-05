@@ -36,7 +36,8 @@ in
         read -rt2
       fi
       while true; do
-      	eval "$COMMAND"
+      	eval "$COMMAND" & pid=$!
+        wait $pid
        	sleep .6
       done
     '';

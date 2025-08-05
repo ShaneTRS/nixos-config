@@ -19,6 +19,7 @@ x-scheme-handler/heroic=com.heroicgameslauncher.hgl.desktop
 x-scheme-handler/podman-desktop=Podman Desktop.desktop
 x-scheme-handler/ror2mm=r2modman.desktop
 x-scheme-handler/sidequest=SideQuest.desktop
+x-scheme-handler/discord=equibop.desktop
 
 [Removed Associations]
 application/octet-stream=org.kde.kdeconnect_open.desktop;

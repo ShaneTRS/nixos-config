@@ -16,7 +16,7 @@ in {
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [wacomtablet kdePackages.kolourpaint];
+      extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kolourpaint];
     };
     gaming = {
       epic.enable = true;

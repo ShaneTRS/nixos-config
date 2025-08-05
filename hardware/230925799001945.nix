@@ -55,7 +55,7 @@
     "monitor.alsa.rules" = [
       {
         matches = [{"node.name" = "bluez_output.F4_4E_FC_DA_61_E5.1";}];
-        actions.update-props = {"priority.session" = 1100;};
+        actions.update-props = {"priority.session" = 1500;};
       }
     ];
   };

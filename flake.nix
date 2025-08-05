@@ -55,7 +55,6 @@
       gawk
       git
       jq
-      lix
       nixd
       nixos-rebuild
       nix-output-monitor
@@ -124,11 +123,10 @@
               (filter isFunction (attrValues tree.overlays));
           };
           nix = {
-            package = pkgs.lix;
             registry.pkgs.flake = self;
             settings = {
               auto-optimise-store = true;
-              experimental-features = ["nix-command" "flakes" "pipe-operator"];
+              experimental-features = ["nix-command" "flakes"];
               nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
               trusted-users = [machine.user];
               substituters = ["https://nix-community.cachix.org"];

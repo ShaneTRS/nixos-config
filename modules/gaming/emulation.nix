@@ -47,7 +47,7 @@ in {
           type = types.bool;
           default = cfg.emulation.nintendo.enable;
         };
-        package = mkPackageOption pkgs "ryujinx" {};
+        package = mkPackageOption pkgs "ryubing" {};
         extraPackages = mkOption {
           type = types.listOf types.package;
           default = [];
