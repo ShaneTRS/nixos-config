@@ -79,7 +79,7 @@ pkgs.writeShellApplication {
     track add machine.json "''${SKIP[@]}"
     if [ "$1" != "copy" ]; then
     	if $AS_ROOT; then
-      	with_nom as_root nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default"
+      	with_nom nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default" --sudo
       else
       	with_nom nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default"
       fi

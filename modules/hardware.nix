@@ -98,9 +98,14 @@ in {
     (mkIf (cfg.graphics == "virtualbox") {virtualisation.virtualbox.guest.enable = true;})
 
     (mkIf (cfg.graphics == "intel") {
+      environment.sessionVariables = {
+        LIBVA_DRIVERS_PATH = "/run/opengl-driver/lib/dri";
+        LIBVA_DRIVER_NAME = "iHD";
+      };
       hardware.graphics.extraPackages = with pkgs; [
         intel-media-driver
         intel-compute-runtime
+        vpl-gpu-rt
       ];
     })
   ]);

@@ -253,7 +253,14 @@ in {
     })
 
     (mkIf (cfg.role == "host") {
-      services.xserver.enable = true;
+      services = {
+        xserver.enable = true;
+        sunshine = {
+          enable = true;
+          capSysAdmin = true;
+          package = pkgs.shanetrs.sunshine;
+        };
+      };
       user = {
         xdg.configFile = let
           input = {
@@ -310,15 +317,6 @@ in {
               in "${getExe pkgs.shanetrs.not-nice} x0vncserver Geometry=2732x1536 ${
                 optionalString (attempt != null) ''-rfbauth "${attempt}"''
               } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
-              Restart = "on-failure";
-              StartLimitBurst = 32;
-            };
-            Install.WantedBy = ["graphical-session.target"];
-          };
-          sunshine = {
-            Unit.Description = "Self-hosted game stream host for Moonlight";
-            Service = {
-              ExecStart = with pkgs; "${getExe shanetrs.not-nice} ${getExe shanetrs.sunshine}";
               Restart = "on-failure";
               StartLimitBurst = 32;
             };

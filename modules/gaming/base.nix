@@ -69,7 +69,7 @@ in {
       package = mkPackageOption pkgs "prismlauncher" {};
       java = mkOption {
         type = types.listOf types.package;
-        default = with pkgs; [temurin-jre-bin temurin-jre-bin-8];
+        default = with pkgs; [temurin-jre-bin-17 temurin-jre-bin temurin-jre-bin-8];
       };
       extraPackages = mkOption {
         type = types.listOf types.package;

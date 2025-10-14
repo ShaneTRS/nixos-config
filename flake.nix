@@ -29,7 +29,10 @@
     nixosConfiguration = self.outputs.nixosConfigurations.default;
     pkgs = importRepo base;
 
-    config.allowUnfree = true;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = [ "mbedtls-2.28.10" ];
+    };
     system = "x86_64-linux";
 
     pkgs-self = nixosConfiguration.pkgs;
