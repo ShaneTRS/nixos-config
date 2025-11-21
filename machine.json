@@ -1,7 +1,7 @@
 {
-	"$schema": "schema.json",
-	"hostname": "persephone",
-	"serial": "230925799001945",
-	"source": "/home/${USER}/.config/nixos/",
-	"user": "shane"
+  "$schema": "schema.json",
+  "hostname": "persephone",
+  "serial": "",
+  "source": "/home/${USER}/.config/nixos/",
+  "user": "shane"
 }

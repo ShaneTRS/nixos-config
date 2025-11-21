@@ -6,31 +6,44 @@
 // To see all of Zed's default settings without changing your
 // custom settings, run the `open default settings` command
 // from the command palette or from `Zed` application menu.
-
 {
+	"minimap": {
+		"show": "always"
+	},
+	"terminal": {
+		"working_directory": "current_project_directory"
+	},
+	"prettier": {
+		"allowed": false
+	},
 	"tab_size": 2,
 	"hard_tabs": true,
 	"ensure_final_newline_on_save": false,
 	"remove_trailing_whitespace_on_save": false,
-
 	"expand_excerpt_lines": 12,
 	"use_system_path_prompts": false,
 	"vim_mode": false,
 	"extend_comment_on_newline": false,
 	"middle_click_paste": false,
-
 	"theme": "Ayu Dark",
-	"experimental.theme_overrides": { "editor.invisible": "#fff" },
-	"buffer_line_height": { "custom": 1.5 },
-	"project_panel": { "indent_size": 15 },
-	"outline_panel": { "indent_size": 15 },
+	"experimental.theme_overrides": {
+		"editor.invisible": "#fff"
+	},
+	"buffer_line_height": {
+		"custom": 1.5
+	},
+	"project_panel": {
+		"indent_size": 15
+	},
+	"outline_panel": {
+		"indent_size": 15
+	},
 	// "unstable.ui_density": "compact",
-
-	"indent_guides": { "coloring": "indent_aware" },
+	"indent_guides": {
+		"coloring": "indent_aware"
+	},
 	"preferred_line_length": 120,
 	"soft_wrap": "editor_width",
-
-	"selection_highlight_debounce": 0,
 	"diagnostics": {
 		"inline": {
 			"enabled": true,
@@ -45,8 +58,11 @@
 		"show_other_hints": true,
 		"edit_debounce_ms": 15
 	},
-	"git": { "inline_blame": { "show_commit_summary": true } },
-
+	"git": {
+		"inline_blame": {
+			"show_commit_summary": true
+		}
+	},
 	"auto_update": false,
 	"auto_install_extensions": {
 		"csv": true,
@@ -60,22 +76,32 @@
 		"toml": true,
 		"xml": true
 	},
-
 	"show_edit_predictions": false,
 	"agent": {
 		"inline_assistant_model": {
 			"provider": "google",
-			"model": "gemini-2.0-flash"
+			"model": "gemini-2.5-flash"
 		},
 		"default_width": 360,
-		"default_model": { "model": "gemini-2.0-flash", "provider": "google" },
-		"version": "2"
+		"default_model": {
+			"model": "gemini-2.5-flash",
+			"provider": "google"
+		}
 	},
-	"features": { "edit_prediction_provider": "zed" },
-	"file_types": { "JSONC": ["*.json"] },
+	"features": {
+		"edit_prediction_provider": "zed"
+	},
+	"file_types": {
+		"JSONC": [
+			"*.json"
+		]
+	},
 	"languages": {
 		"Nix": {
-			"language_servers": ["nixd", "!nil"],
+			"language_servers": [
+				"nixd",
+				"!nil"
+			],
 			"hard_tabs": false
 		},
 		"Rust": {
@@ -83,16 +109,35 @@
 			"formatter": {
 				"external": {
 					"command": "rustfmt",
-					"arguments": ["--config", "hard_tabs=true", "--edition", "2021"]
+					"arguments": [
+						"--config",
+						"hard_tabs=true",
+						"--edition",
+						"2021"
+					]
 				}
 			}
+		},
+		"Kotlin": {
+			"language_servers": [
+				"kotlin-lsp"
+			]
 		}
 	},
 	"lsp": {
 		"nixd": {
 			"settings": {
-				"diagnostic": { "suppress": ["sema-escaping-with"] },
-				"formatting": { "command": ["nix", "fmt", "--", "-w120"] },
+				"diagnostic": {
+					"suppress": [
+						"sema-escaping-with"
+					]
+				},
+				"formatting": {
+					"command": [
+						"nix",
+						"fmt"
+					]
+				},
 				"nixpkgs": {
 					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.pkgs"
 				},
@@ -109,14 +154,22 @@
 		"rust-analyzer": {
 			"initialization_options": {
 				"inlayHints": {
-					"lifetimeElisionHints": { "enable": "skip_trivial" },
-					"implicitSizedBoundHints": { "enable": true },
+					"lifetimeElisionHints": {
+						"enable": "skip_trivial"
+					},
+					"implicitSizedBoundHints": {
+						"enable": true
+					},
 					"expressionAdjustmentHints": {
 						"enable": "always",
 						"hideOutsideUnsafe": true
 					},
-					"implicitDrops": { "enable": true },
-					"closureCaptureHints": { "enable": true }
+					"implicitDrops": {
+						"enable": true
+					},
+					"closureCaptureHints": {
+						"enable": true
+					}
 				},
 				"checkOnSave": true
 			}

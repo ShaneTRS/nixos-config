@@ -92,7 +92,7 @@ in rec {
     else nix.default;
   importRepo = repo: import repo pkgsConfig;
   resolveList = list: map (i: i.content or i) (filter (i: i.condition or true) list);
-  toYAML = {pkgs, ...}: attrs: "${pkgs.runCommandNoCC "toYAML" {
+  toYAML = {pkgs, ...}: attrs: "${pkgs.runCommand "toYAML" {
       buildInputs = [pkgs.yj];
       attrs = toJSON attrs;
       passAsFile = ["attrs"];

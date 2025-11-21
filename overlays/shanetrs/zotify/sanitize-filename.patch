@@ -1,12 +1,12 @@
-diff --git a/zotify/track.py b/zotify/track.py
-index 503a84c..8260c6a 100644
---- a/zotify/track.py
-+++ b/zotify/track.py
-@@ -174,6 +174,7 @@ def download_track(mode: str, track_id: str, extra_keys=None, disable_progressba
-         output_template = output_template.replace("{track_id}", fix_filename(track_id))
-         output_template = output_template.replace("{ext}", ext)
- 
-+        output_template = output_template.replace("?", "_")
-         filename = PurePath(Zotify.CONFIG.get_root_path()).joinpath(output_template)
-         filedir = PurePath(filename).parent
- 
+diff --git a/zotify/collections.py b/zotify/collections.py
+index a41e5fb..32d1f01 100644
+--- a/zotify/collections.py
++++ b/zotify/collections.py
+@@ -177,6 +177,7 @@ class Collection:
+                 filename = Path(self.playables[0].output_template).name
+                 filename = filename.replace("{episode_number}", "*")
+                 filename = filename.replace("{track_number}", "*")
++                filename = filename.replace("?", "_")
+                 for meta in metadata[count % API_MAX_REQUEST_LIMIT]:
+                     filename = filename.replace(
+                         "{" + meta.name + "}", fix_filename(meta.string)

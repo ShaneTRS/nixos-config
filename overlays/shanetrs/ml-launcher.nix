@@ -23,7 +23,7 @@ in
       RESOLUTION="''${RESOLUTION:-$(ml_res)}"
       TARGET="''${TARGET:-${targetHost}}"
       PORT="''${PORT:-47989}"
-      BITRATE="''${BITRATE:-45000}"
+      BITRATE="''${BITRATE:-65000}"
       FPS="''${FPS:-62}"
       APPLICATION="''${APPLICATION:-desktop}"
 
@@ -36,9 +36,16 @@ in
         read -rt2
       fi
       while true; do
-      	eval "$COMMAND" & pid=$!
-        wait $pid
-       	sleep .6
+        eval "$COMMAND & pid=\$!"
+        # shellcheck disable=SC2154
+        until [[ "$(awk '{print $20}' "/proc/$pid/stat")" -gt 18 ]]; do
+          sleep .6
+        done
+        until [[ "$(awk '{print $20}' "/proc/$pid/stat")" -lt 18 ]]; do
+          sleep .6
+        done
+        kill -9 "$pid"
+        sleep .6
       done
     '';
   }

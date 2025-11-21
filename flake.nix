@@ -31,7 +31,7 @@
 
     config = {
       allowUnfree = true;
-      permittedInsecurePackages = [ "mbedtls-2.28.10" ];
+      permittedInsecurePackages = [];
     };
     system = "x86_64-linux";
 

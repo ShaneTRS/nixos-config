@@ -36,7 +36,6 @@
     home.packages = with pkgs; [
       gimp3-with-plugins
       helvum
-      jellyfin-media-player
       shanetrs.moonlight-qt
       shanetrs.spotify
       vlc

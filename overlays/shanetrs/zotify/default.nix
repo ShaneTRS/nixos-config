@@ -1,21 +1,24 @@
-{pkgs, ...}:
+{
+  pkgs,
+  fork ? "DraftKinner",
+  ...
+}:
 with pkgs;
-  python3Packages.buildPythonApplication {
+  python3Packages.buildPythonApplication rec {
     pname = "zotify";
-    version = "0.6.13";
+    version = "1.1.1";
 
     pyproject = true;
 
     src = fetchFromGitHub {
-      owner = "zotify-dev";
-      repo = "zotify";
-      # repository has no version tags
-      # https://github.com/zotify-dev/zotify/issues/124
-      rev = "5da27d32a1f522e80a3129c61f939b1934a0824a";
-      hash = "sha256-KA+Q4sk+riaFTybRQ3aO5lgPg4ECZE6G+By+x2uP/VM=";
+      owner = fork;
+      repo = pname;
+      rev = "v${version}";
+      hash = "sha256-VkYJsYVig/XDB7vyGHpv+61gIpgl3M+uz+/5SVQxEfw=";
     };
 
-    patches = [./ffmpeg-args.patch ./sanitize-filename.patch];
+    patches = [./sanitize-filename.patch];
+    postPatch = "export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python";
     postFixup = ''
       wrapProgram "$out/bin/zotify" --set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION python
     '';
@@ -26,7 +29,14 @@ with pkgs;
 
     dependencies = with python3Packages; [
       ffmpy
-      music-tag
+      (music-tag.overrideAttrs (_: {
+        src = fetchFromGitHub {
+          owner = fork;
+          repo = "music-tag";
+          rev = "v0.4.7";
+          hash = "sha256-FXyHqz9tHEdtkYNtmr/HdbSyR6DrQYgnWjxrqQ2prZ0=";
+        };
+      }))
       pillow
       tabulate
       tqdm
@@ -34,43 +44,22 @@ with pkgs;
         src = fetchFromGitHub {
           owner = "kokarare1212";
           repo = "librespot-python";
-          rev = "3a6ce32d0d1aa69a3f6f957ad2e35cdd7ddbc278";
-          hash = "sha256-AsMEHb/WNLVNIVoCyOaBytG8p4QoZwRamk87BoNO1EY=";
+          rev = "3b46fe560ad829b976ce63e85012cff95b1e0bf3";
+          hash = "sha256-h34BNjaMeDzUeK0scyKoCpJHl9Hvvx/RZN7UWE0DMu0=";
         };
       }))
       pwinput
       protobuf
+      limits
+      pkce
     ];
 
     pythonImportsCheck = ["zotify"];
 
     meta = {
       description = "Fast and customizable music and podcast downloader";
-      homepage = "https://github.com/zotify-dev/zotify";
-      changelog = "https://github.com/zotify-dev/zotify/blob/main/CHANGELOG.md";
-      license = lib.licenses.zlib;
+      homepage = "https://github.com/${fork}/zotify";
+      changelog = "https://github.com/${fork}/zotify/blob/main/CHANGELOG.md";
       mainProgram = "zotify";
-      maintainers = with lib.maintainers; [bwkam];
     };
   }
-# zotify.overrideAttrs (old: {
-#   patches = [./ffmpeg-args.patch ./sanitize-filename.patch];
-#   dependencies =
-#     old.passthru.dependencies
-#     ++ [
-#       (python3Packages.librespot.overrideAttrs (_: {
-#         src = fetchFromGitHub {
-#           owner = "kokarare1212";
-#           repo = "librespot-python";
-#           rev = "3a6ce32d0d1aa69a3f6f957ad2e35cdd7ddbc278";
-#           hash = "sha256-AsMEHb/WNLVNIVoCyOaBytG8p4QoZwRamk87BoNO1EY=";
-#         };
-#       }))
-#     ];
-#   postFixup =
-#     old.postFixup
-#     + ''
-#       wrapProgram "$out/bin/zotify" --set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION python
-#     '';
-# })
-

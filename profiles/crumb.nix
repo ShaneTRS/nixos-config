@@ -43,7 +43,6 @@ in {
         gimp3
         helvum
         krita
-        jellyfin-media-player
         protontricks
         r2modman
         shanetrs.spotify

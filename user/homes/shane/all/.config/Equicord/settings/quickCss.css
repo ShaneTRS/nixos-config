@@ -1,0 +1,17 @@
+.theme-dark .messagelogger-edited {
+	visibility: hidden;
+	position: absolute;
+}
+
+/* .messagelogger-deleted :is(div, h1, h2, h3, p) {
+    visibility: hidden;
+    position: absolute;
+} */
+
+svg.vc-trans-icon {
+	width: 0;
+}
+
+.botTag_c19a55 {
+	display: none;
+}

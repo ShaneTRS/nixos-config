@@ -19,9 +19,19 @@ in {
         type = types.enum ["stable" "canary" "ptb"];
         default = "canary";
       };
-      openasar.enable = mkOption {
-        type = types.bool;
-        default = true;
+      mods = {
+        enable = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        openasar = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        provider = mkOption {
+          type = types.enum ["equicord" "moonlight" "vencord"];
+          default = "equicord";
+        };
       };
       package = mkOption {
         type = types.package;
@@ -31,8 +41,12 @@ in {
             canary = discord-canary;
             ptb = discord-ptb;
           };
+          m = cfg.discord.mods;
         in (branches.${cfg.discord.branch}.override {
-          withOpenASAR = cfg.discord.openasar.enable;
+          withOpenASAR = m.enable && m.openasar;
+          withEquicord = m.enable && m.provider == "equicord";
+          withMoonlight = m.enable && m.provider == "moonlight";
+          withVencord = m.enable && m.provider == "vencord";
         });
       };
     };

@@ -88,7 +88,10 @@ in {
 
     users = {
       mutableUsers = mkStrongDefault false;
-      groups.realtime.members = [machine.user];
+      groups = {
+        docker.members = [machine.user];
+        realtime.members = [machine.user];
+      };
       users.${machine.user} = {
         isNormalUser = mkStrongDefault true;
         hashedPasswordFile = mkStrongDefault (configs "passwd");
@@ -126,16 +129,19 @@ in {
       programs = {
         git = mkStrongDefault {
           enable = true;
-          userEmail = "${machine.user}@${machine.hostname}";
-          userName = machine.user;
-          extraConfig = {
-            safe.directory = "/etc/nixos";
-            credential.helper = "store";
+          settings = {
+            user.email = "${machine.user}@${machine.hostname}";
+            user.name = machine.user;
+            extraConfig = {
+              safe.directory = "/etc/nixos";
+              credential.helper = "store";
+            };
           };
         };
         home-manager.enable = mkStrongDefault true;
         ssh = mkStrongDefault {
           enable = true;
+          enableDefaultConfig = false;
           matchBlocks."*" = {
             controlMaster = "auto";
             controlPersist = "5m";
