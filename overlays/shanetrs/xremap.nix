@@ -1,8 +1,8 @@
 {
   pkgs,
   wm ? "x11",
-  version ? "0.10.8",
-  hash ? "sha256-WbRYxzdUFErkVuHfXlYRl04FnY4b7Kl1OGnC/gYtlRk=",
+  version ? "0.14.7",
+  hash ? "sha256-X8yVua9O2gXxNWsrbZV8J2V0AZxXBOXYBM117i6Yvqc=",
   ...
 }:
 with pkgs;

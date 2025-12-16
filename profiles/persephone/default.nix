@@ -60,9 +60,6 @@ in {
                 [ ''${ps[2]} == 'T' ] && ((s-=1))
                 kill -1$s $p
               '';
-              "super-linefeed" = launch ''
-                ${pkgs.kdePackages.qttools}/bin/qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut Overview
-              '';
             };
           }
         ];
@@ -71,8 +68,14 @@ in {
             name = "menu";
             remap = {
               "leftmeta" = {
-                "held" = ["leftmeta"];
-                "alone" = ["leftmeta" "linefeed"];
+                "press" = launch ''
+                  exec -a xremap.menu coreutils --coreutils-prog=sleep 0.15
+                '';
+                "release" = launch ''
+                  pgrep -f xremap.menu &&
+                    ${pkgs.kdePackages.qttools}/bin/qdbus org.kde.kglobalaccel /component/kwin \
+                    org.kde.kglobalaccel.Component.invokeShortcut Overview
+                '';
               };
             };
           }

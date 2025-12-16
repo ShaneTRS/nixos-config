@@ -132,10 +132,8 @@ in {
           settings = {
             user.email = "${machine.user}@${machine.hostname}";
             user.name = machine.user;
-            extraConfig = {
-              safe.directory = "/etc/nixos";
-              credential.helper = "store";
-            };
+            safe.directory = "/etc/nixos";
+            credential.helper = "store";
           };
         };
         home-manager.enable = mkStrongDefault true;
