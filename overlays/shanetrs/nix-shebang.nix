@@ -7,5 +7,6 @@ writeShellScriptBin "nix-shebang" ''
     exit 2
   fi
   cd "$(dirname "''${*: -1}")" || exit
+  set -- "''${@:1:$#-1}" "$(basename "''${*: -1}")"
   exec /usr/bin/env -S nix "$@"
 ''
