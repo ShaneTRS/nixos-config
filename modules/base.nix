@@ -96,6 +96,7 @@ in {
         isNormalUser = mkStrongDefault true;
         hashedPasswordFile = mkStrongDefault (configs "passwd");
         extraGroups = ["networkmanager" "wheel"];
+        autoSubUidGidRange = true;
       };
     };
 

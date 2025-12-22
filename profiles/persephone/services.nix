@@ -64,8 +64,23 @@ in {
       secretKeyFile = "/var/cache-priv-key.pem";
     };
   };
+
+  security.wrappers.vuinputd = {
+    owner = "root";
+    group = "root";
+    capabilities = "cap_sys_admin,cap_mknod,cap_dac_override,cap_fowner+eip";
+    source = getExe pkgs.shanetrs.vuinputd;
+  };
+
   systemd = {
     services = {
+      vuinputd = {
+        script = "${config.security.wrapperDir}/vuinputd --major 120 --minor 414795";
+        after = ["systemd-udevd.service"];
+        requires = ["systemd-udevd.service"];
+        wantedBy = ["multi-user.target"];
+        serviceConfig.DeviceAllow = "char-* rwm";
+      };
       podman-autostart = {
         environment.LOGGING = "--log-level=info";
         serviceConfig = {
@@ -142,19 +157,18 @@ in {
         };
       };
     };
-  };
-
-  systemd.user.services = {
-    keynav = {
-      serviceConfig.ExecStart = "${getExe pkgs.keynav}";
-      wantedBy = ["graphical-session.target"];
-    };
-    jfa-go = {
-      script = ''
-        sleep 15
-        ${getExe pkgs.shanetrs.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.sops.templates.jfa-go.path}'"}
-      '';
-      wantedBy = ["graphical-session.target"];
+    user.services = {
+      keynav = {
+        serviceConfig.ExecStart = "${getExe pkgs.keynav}";
+        wantedBy = ["graphical-session.target"];
+      };
+      jfa-go = {
+        script = ''
+          sleep 15
+          ${getExe pkgs.shanetrs.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.sops.templates.jfa-go.path}'"}
+        '';
+        wantedBy = ["graphical-session.target"];
+      };
     };
   };
 }

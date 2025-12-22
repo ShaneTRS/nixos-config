@@ -17,12 +17,39 @@ in {
     noisetorch.enable = true;
     adb.enable = true; # Adds udev rules, adb, and creates group
   };
-  users.users.${machine.user}.extraGroups = ["adbusers" "vboxusers"];
+  users = {
+    groups.uinput.gid = 990;
+    users.${machine.user} = {
+    extraGroups = ["adbusers" "vboxusers"];
+    subGidRanges = [
+      {
+        count = 1;
+        startGid = config.users.groups.input.gid;
+      }
+      {
+        count = 1;
+        startGid = config.users.groups.uinput.gid;
+      }
+    ];
+  };
+  };
 
   services = {
     ddclient.enable = true;
     zerotierone.enable = true;
+    udev = {
+      enable = true;
+      packages = [pkgs.shanetrs.vuinputd];
+      extraHwdb = ''
+        evdev:input:b0003v1209p5020e????-*
+         ID_VUINPUT=1
+
+        input:b0003v1209p5020e????-*
+         ID_VUINPUT=1
+      '';
+    };
   };
+
   systemd.user.services = {
     keynav.enable = true;
     jfa-go.enable = true;

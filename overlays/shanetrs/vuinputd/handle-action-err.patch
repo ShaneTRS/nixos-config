@@ -1,0 +1,22 @@
+diff --git a/vuinputd/src/actions/handle_action.rs b/vuinputd/src/actions/handle_action.rs
+index 61d6947..69569c0 100644
+--- a/vuinputd/src/actions/handle_action.rs
++++ b/vuinputd/src/actions/handle_action.rs
+@@ -2,6 +2,8 @@
+ //
+ // Author: Johannes Leupolz <dev@leupolz.eu>
+ 
++use std::fs;
++
+ use super::action::Action;
+ use super::input_device;
+ use super::netlink_message;
+@@ -10,7 +12,7 @@ use super::runtime_data;
+ pub fn handle_cli_action(json: String) -> i32 {
+     let action: Action = serde_json::from_str(&json).expect("invalid action JSON");
+     handle_action(action).unwrap_or_else(|err| {
+-        panic!("Error handling action: {}", err);
++        panic!("Error handling action: {err} {json} on {}", fs::read_to_string("/etc/hostname").unwrap());
+     });
+     0
+ }

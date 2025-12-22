@@ -1,0 +1,13 @@
+diff --git a/cuse-lowlevel/build.rs b/cuse-lowlevel/build.rs
+index 9813c1b..5d2c202 100644
+--- a/cuse-lowlevel/build.rs
++++ b/cuse-lowlevel/build.rs
+@@ -104,7 +104,7 @@ fn main() {
+     // Find libfuse
+     let fuse3_lib = pkgcfg
+         .cargo_metadata(true)
+-        .probe("fuse3")
++        .probe("fuse")
+         .expect("Failed to find pkg-config module fuse3");
+ 
+     // Generate lowlevel bindings
