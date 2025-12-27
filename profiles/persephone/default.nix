@@ -20,18 +20,18 @@ in {
   users = {
     groups.uinput.gid = 990;
     users.${machine.user} = {
-    extraGroups = ["adbusers" "vboxusers"];
-    subGidRanges = [
-      {
-        count = 1;
-        startGid = config.users.groups.input.gid;
-      }
-      {
-        count = 1;
-        startGid = config.users.groups.uinput.gid;
-      }
-    ];
-  };
+      extraGroups = ["adbusers" "vboxusers"];
+      subGidRanges = [
+        {
+          count = 1;
+          startGid = config.users.groups.input.gid;
+        }
+        {
+          count = 1;
+          startGid = config.users.groups.uinput.gid;
+        }
+      ];
+    };
   };
 
   services = {
@@ -96,12 +96,14 @@ in {
             remap = {
               "leftmeta" = {
                 "press" = launch ''
-                  exec -a xremap.menu coreutils --coreutils-prog=sleep 0.15
+                  date +%s%N > /tmp/xremap.menu
                 '';
                 "release" = launch ''
-                  pgrep -f xremap.menu &&
+                  since=$(( ( $(date +%s%N) - $(cat /tmp/xremap.menu || echo 0) ) / 1000000 ))
+                  if [[ $since -lt 150 || $since -gt 12500 ]]; then
                     ${pkgs.kdePackages.qttools}/bin/qdbus org.kde.kglobalaccel /component/kwin \
-                    org.kde.kglobalaccel.Component.invokeShortcut Overview
+                      org.kde.kglobalaccel.Component.invokeShortcut Overview
+                  fi
                 '';
               };
             };
@@ -152,6 +154,7 @@ in {
       krita # drawing
       inkscape-with-extensions # vector editor
       libreoffice-still # office suite
+      equibop # discord client
 
       helvum # patchbay
       spicetify-cli # spotify mods
