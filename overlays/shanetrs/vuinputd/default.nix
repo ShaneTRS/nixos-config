@@ -1,20 +1,25 @@
-{pkgs, ...}:
+{
+  pkgs,
+  version ? "0.3.2",
+  hash ? "sha256-X9uGLz86k0RveCasi/sjBwCy5xZAcGAOQWnOYD1VZWE=",
+  ...
+}:
 with pkgs;
   rustPlatform.buildRustPackage (finalAttrs: {
     pname = "vuinputd";
-    version = "0.3.0";
+    inherit version;
 
     src = fetchFromGitHub {
       owner = "joleuger";
       repo = "vuinputd";
       tag = finalAttrs.version;
-      hash = "sha256-vtCftg5DZYoYm8RBy/zjOv/zDRXLZBbpjUMf/8MiXPw=";
+      inherit hash;
     };
 
     nativeBuildInputs = [pkg-config rustPlatform.bindgenHook];
     buildInputs = [udev fuse libclang];
 
-    patches = [./fuse2.patch ./handle-action-err.patch];
+    patches = [./fuse2.patch ./always-debug.patch];
     cargoLock.lockFile = ./Cargo.lock;
     postPatch = ''
       ln -s ${./Cargo.lock} Cargo.lock

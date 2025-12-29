@@ -1,5 +1,5 @@
 diff --git a/app/streaming/input/keyboard.cpp b/app/streaming/input/keyboard.cpp
-index e1fcdc1..a6fd12c 100644
+index 273816f..684f8ac 100644
 --- a/app/streaming/input/keyboard.cpp
 +++ b/app/streaming/input/keyboard.cpp
 @@ -3,15 +3,141 @@
@@ -166,7 +166,7 @@ index e1fcdc1..a6fd12c 100644
          // First we test the SDLK combos for matches,
          // that way we ensure that latin keyboard users
          // can match to the key they see on their keyboards.
-@@ -221,230 +345,23 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
+@@ -221,232 +345,23 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
      // Set keycode. We explicitly use scancode here because GFE will try to correct
      // for AZERTY layouts on the host but it depends on receiving VK_ values matching
      // a QWERTY layout to work.
@@ -370,6 +370,7 @@ index e1fcdc1..a6fd12c 100644
 -                break;
 -            case SDL_SCANCODE_INTERNATIONAL3:
 -                shouldNotConvertToScanCodeOnServer = true;
+-                Q_FALLTHROUGH();
 -            case SDL_SCANCODE_BACKSLASH:
 -                keyCode = 0xDC;
 -                break;
@@ -381,6 +382,7 @@ index e1fcdc1..a6fd12c 100644
 -                break;
 -            case SDL_SCANCODE_INTERNATIONAL1:
 -                shouldNotConvertToScanCodeOnServer = true;
+-                Q_FALLTHROUGH();
 -            case SDL_SCANCODE_NONUSBACKSLASH:
 -                keyCode = 0xE2;
 -                break;

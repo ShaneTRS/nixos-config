@@ -189,22 +189,15 @@ in {
 
     (mkIf cfg.zed-editor.enable {
       user.home.packages = [
-        (pkgs.symlinkJoin {
-          name = "zed-editor-wrapped";
-          paths = [cfg.zed-editor.package];
-          preferLocalBuild = true;
-          nativeBuildInputs = with pkgs; [makeWrapper];
-          postBuild = ''
-            wrapProgram $out/bin/zeditor \
-            --suffix PATH : ${lib.makeBinPath (cfg.zed-editor.extraPackages
-              ++ (with pkgs;
-                resolveList [
-                  (mkIf (elem "nix" cfg.zed-editor.features) nixd)
-                  (mkIf (elem "nix" cfg.zed-editor.features) alejandra)
-                  (mkIf (elem "rust" cfg.zed-editor.features) rustup)
-                ]))}
-          '';
-        })
+        (cfg.zed-editor.package.fhsWithPackages (pkgs:
+          with pkgs;
+            resolveList [
+              gcc
+              clang-tools
+              (mkIf (elem "nix" cfg.zed-editor.features) nixd)
+              (mkIf (elem "nix" cfg.zed-editor.features) alejandra)
+              (mkIf (elem "rust" cfg.zed-editor.features) rustup)
+            ]))
       ];
     })
   ];

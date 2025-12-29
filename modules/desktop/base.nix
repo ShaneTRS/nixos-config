@@ -114,7 +114,7 @@ in {
             ["enable" "virtualModifiers"];
         in {
           Unit.Description = "Key remapper for X11 and Wayland";
-          Service.ExecStart = "${getExe pkgs.shanetrs.xremap} ${fn.toYAML {inherit pkgs;} yaml}";
+          Service.ExecStart = "${getExe pkgs.xremap} ${fn.toYAML {inherit pkgs;} yaml}";
           Install.WantedBy = ["graphical-session.target"];
         };
       };

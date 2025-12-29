@@ -1,20 +1,22 @@
 {
   pkgs,
   fork ? "DraftKinner",
+  version ? "acde75fa4935bb90ef43b4b29b9e2a25ab6636f3",
+  hash ? "sha256-/BeePdA6/1oyxf2F4K5iQDWK5qy1eTipiTvHcMVWmgU=",
   ...
 }:
 with pkgs;
   python3Packages.buildPythonApplication rec {
     pname = "zotify";
-    version = "1.1.1";
+    inherit version;
 
     pyproject = true;
 
     src = fetchFromGitHub {
       owner = fork;
       repo = pname;
-      rev = "v${version}";
-      hash = "sha256-VkYJsYVig/XDB7vyGHpv+61gIpgl3M+uz+/5SVQxEfw=";
+      rev = "${version}";
+      inherit hash;
     };
 
     patches = [./sanitize-filename.patch];
@@ -40,14 +42,16 @@ with pkgs;
       pillow
       tabulate
       tqdm
-      (librespot.overrideAttrs (_: {
-        src = fetchFromGitHub {
-          owner = "kokarare1212";
-          repo = "librespot-python";
-          rev = "3b46fe560ad829b976ce63e85012cff95b1e0bf3";
-          hash = "sha256-h34BNjaMeDzUeK0scyKoCpJHl9Hvvx/RZN7UWE0DMu0=";
-        };
-      }))
+      librespot
+      # (librespot.overrideAttrs (_: {
+      #   src = fetchFromGitHub {
+      #     owner = "kokarare1212";
+      #     repo = "librespot-python";
+      #     rev = "3b46fe560ad829b976ce63e85012cff95b1e0bf3";
+      #     hash = "sha256-h34BNjaMeDzUeK0scyKoCpJHl9Hvvx/RZN7UWE0DMu0=";
+      #   };
+      #  # pythonRelaxDeps = ["protobuf"];
+      # }))
       pwinput
       protobuf
       limits

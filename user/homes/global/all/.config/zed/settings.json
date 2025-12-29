@@ -125,6 +125,11 @@
 		}
 	},
 	"lsp": {
+		"clangd": {
+			"binary": {
+				"path": "clangd"
+			}
+		},
 		"nixd": {
 			"settings": {
 				"diagnostic": {
@@ -152,6 +157,9 @@
 			}
 		},
 		"rust-analyzer": {
+			"binary": {
+				"path": "rust-analyzer"
+			},
 			"initialization_options": {
 				"inlayHints": {
 					"lifetimeElisionHints": {

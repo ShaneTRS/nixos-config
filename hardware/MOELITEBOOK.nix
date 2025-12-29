@@ -28,7 +28,8 @@
   };
   fileSystems."/" = {
     device = "/dev/disk/by-label/Nix";
-    fsType = "ext4";
+    fsType = "btrfs";
+    options = ["compress-force=zstd:6"];
     neededForBoot = true;
   };
   hardware.cpu.intel.updateMicrocode = true;

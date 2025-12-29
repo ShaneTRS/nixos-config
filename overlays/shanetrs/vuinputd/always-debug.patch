@@ -1,0 +1,13 @@
+diff --git a/vuinputd/src/process_tools/mod.rs b/vuinputd/src/process_tools/mod.rs
+index 5330ac3..e2df26e 100644
+--- a/vuinputd/src/process_tools/mod.rs
++++ b/vuinputd/src/process_tools/mod.rs
+@@ -263,7 +263,7 @@ fn print_debug_string(action: &str, ns: &RequestingProcess) {
+     debugstring.push_str(" --action-base64 ");
+     debugstring.push_str(action_base64.as_str());
+     debugstring.push_str("`");
+-    debug!("{}", debugstring);
++    println!("{}", debugstring);
+ }
+ 
+ /// Runs a function inside the given network and mount namespaces.

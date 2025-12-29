@@ -164,7 +164,7 @@ in {
       scrcpy # android-to-pc casting
       vlc # media player
 
-      jetbrains.idea-community-bin # java dev
+      jetbrains.idea-oss # java dev
       podman-desktop # container management
       podman-compose # declarative containers
       distrobox # incompetence
