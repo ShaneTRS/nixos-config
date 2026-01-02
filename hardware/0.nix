@@ -27,7 +27,6 @@ in {
     hashedPasswordFile = null;
   };
   shanetrs.remote = {
-    package = pkgs.tigervnc; # Don't compile patched version
     usb = {
       devices = "/sys/bus/pci/devices/0000:00:06.0/usb2/";
       ports = ["2-1"];

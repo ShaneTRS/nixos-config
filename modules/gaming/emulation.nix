@@ -36,9 +36,11 @@ in {
         package = mkOption {
           type = types.package;
           default = pkgs.libretro.citra.overrideAttrs (old: {
-            postPatch = (old.postPatch or "") + ''
-              sed -i '1i#include <cstdint>' externals/glslang/SPIRV/SpvBuilder.h
-            '';
+            postPatch =
+              (old.postPatch or "")
+              + ''
+                sed -i '1i#include <cstdint>' externals/glslang/SPIRV/SpvBuilder.h
+              '';
           });
         };
       };

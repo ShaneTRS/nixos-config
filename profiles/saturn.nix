@@ -16,7 +16,6 @@
     };
     remote = {
       enable = true;
-      package = pkgs.tigervnc;
       role = "host";
     };
     programs = {

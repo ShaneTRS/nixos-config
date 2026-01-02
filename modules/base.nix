@@ -24,7 +24,7 @@ in {
       tmp.useTmpfs = mkStrongDefault true;
     };
 
-    environment.systemPackages = with pkgs; [git shanetrs.nix-shebang];
+    environment.systemPackages = with pkgs; [git];
 
     hardware.graphics = mkStrongDefault {
       enable = true;

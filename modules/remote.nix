@@ -2,14 +2,12 @@
   config,
   lib,
   pkgs,
-  fn,
   machine,
   ...
 }: let
-  inherit (fn) configs;
-  inherit (lib) concatStringsSep getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString types;
-  inherit (pkgs) makeDesktopItem writeShellApplication writeShellScriptBin;
-  inherit (builtins) attrNames listToAttrs toJSON;
+  inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString types;
+  inherit (pkgs) writeShellApplication;
+  inherit (builtins) attrNames concatStringsSep listToAttrs toJSON;
   cfg = config.shanetrs.remote;
 in {
   options.shanetrs.remote = {
@@ -18,7 +16,7 @@ in {
       type = types.enum ["host" "client"];
       example = "host";
     };
-    package = mkPackageOption pkgs.shanetrs "tigervnc" {};
+    package = mkPackageOption pkgs.shanetrs "ml-launcher" {};
     addresses = {
       client = mkOption {
         type = types.str;
@@ -81,7 +79,7 @@ in {
           cmd = "usbip";
         }
       ];
-      environment.systemPackages = [cfg.package (mkIf cfg.usb.enable config.boot.kernelPackages.usbip)];
+      environment.systemPackages = [(mkIf cfg.usb.enable config.boot.kernelPackages.usbip)];
       systemd.services.usbipd = mkIf cfg.usb.enable {
         script = "${config.boot.kernelPackages.usbip}/bin/usbipd";
         wantedBy = ["default.target"];
@@ -106,7 +104,6 @@ in {
             runtimeInputs = with pkgs; [procps];
             text = ''
               pkill usbip.service -USR1
-              pkill -f loop-vncviewer.child
               pkill -P "$(pgrep ml-launcher)" -KILL
             '';
           })}";
@@ -114,28 +111,7 @@ in {
         };
       };
       user = {
-        home.packages = [
-          pkgs.shanetrs.ml-launcher
-          (makeDesktopItem {
-            name = "loop-vncviewer";
-            desktopName = "loop-vncviewer";
-            exec = let
-              attempt = configs ".vnc/passwd";
-            in
-              getExe (writeShellScriptBin "loop-vncviewer" ''
-                TARGET="''${TARGET:-shanetrs.remote.host}"
-                while true; do
-                  ping "$TARGET" -c1 &&
-                    (exec -a "loop-vncviewer.child" "vncviewer" -RemoteResize=1 -PointerEventInterval=0 -AlertOnFatalError=0 \
-                     		${optionalString (attempt != null) ''-passwd="${attempt}"''} <(sed "s:\$TARGET:$TARGET:g" /home/${machine.user}/.vnc/loop.tigervnc))
-                  sleep .6
-                done
-              '');
-            terminal = false;
-            type = "Application";
-            icon = "krdc";
-          })
-        ];
+        home.packages = [cfg.package];
         systemd.user.services = {
           usbip = mkIf cfg.usb.enable {
             Unit.Description = "Low-latency USB devices over ethernet";
@@ -307,22 +283,6 @@ in {
               value = {text = toJSON input.${k};};
             })
             (attrNames input)));
-        systemd.user.services = {
-          x0vncserver = {
-            Unit.Description = "Low-latency VNC display server";
-            Service = {
-              Environment = "DISPLAY=:0";
-              ExecStart = let
-                attempt = configs ".vnc/passwd";
-              in "${getExe pkgs.shanetrs.not-nice} x0vncserver Geometry=2732x1536 ${
-                optionalString (attempt != null) ''-rfbauth "${attempt}"''
-              } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
-              Restart = "on-failure";
-              StartLimitBurst = 32;
-            };
-            Install.WantedBy = ["graphical-session.target"];
-          };
-        };
       };
     })
   ]);
