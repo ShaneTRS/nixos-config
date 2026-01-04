@@ -1,11 +1,13 @@
-{
-  pkgs,
-  shellDeps,
-  ...
-}:
+{pkgs, ...}:
 pkgs.writeShellApplication {
   name = "flake-rebuild";
-  runtimeInputs = shellDeps;
+  runtimeInputs = with pkgs; [
+    coreutils
+    gawk
+    git
+    nixos-rebuild
+    nix-output-monitor
+  ];
   text = ''
     set +uo errexit
 

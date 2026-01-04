@@ -29,41 +29,29 @@
     fn = (import ./functions.nix).pure;
     tree = fileTree self;
 
-    pkgs = import base pkgsConfig;
-    pkgsConfig = {inherit config system;};
-    config = {
-      allowUnfree = true;
-      permittedInsecurePackages = [];
-    };
     system = "x86_64-linux";
-
-    specialArgs = {
-      inherit self fn pkgsConfig tree;
-      pkgs = self.legacyPackages.${system};
+    pkgs = import base {
+      inherit system;
+      config = {
+        allowUnfree = true;
+        permittedInsecurePackages = [];
+        inherit system;
+      };
     };
 
     overlayArgs = args: map (x: x args) (filter isFunction (attrValues tree.overlays));
-
-    shellDeps = with pkgs; [
-      coreutils
-      gawk
-      git
-      jq
-      nixd
-      nixos-rebuild
-      nix-output-monitor
-      ssh-to-age
-      sops
-    ];
+    specialArgs = {
+      inherit self fn tree;
+      pkgs = self.legacyPackages.${system};
+    };
   in {
     devShells.${system} = with pkgs; rec {
       default = repl;
       repl = mkShellNoCC {
         shellHook = ''
-          system=''${TUNDRA_SERIAL:-230925799001945}
           exec nix repl --expr "let
             self = builtins.getFlake \"\${self}\";
-            nixosConfiguration = self.nixosConfigurations.\"$system\"; # default
+            nixosConfiguration = self.nixosConfigurations.\"''${TUNDRA_SERIAL:-230925799001945}\";
             eval = nixosConfiguration.config.system.build.toplevel;
           in
           	{ inherit nixosConfiguration eval; }
@@ -74,15 +62,16 @@
         '';
       };
       sops = mkShellNoCC {
-        buildInputs = shellDeps;
+        buildInputs = [pkgs.sops pkgs.ssh-to-age];
         shellHook = ''
-          export NIX_SHELL_PACKAGES=impure
           if [ -z "$SOPS_AGE_KEY" ]; then
           	export SOPS_AGE_KEY="$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)"
             [ -z "$SOPS_AGE_KEY" ] &&
             	echo warning: ssh key was not found\; keys will need to be provided
           fi
-          type zsh &> /dev/null && exec zsh
+          for i in zsh fish bash sh; do
+          	type -P $i >/dev/null && exec $i
+          done
         '';
       };
     };
@@ -92,7 +81,7 @@
       default = rebuild;
       rebuild = {
         type = "app";
-        program = pkgs.lib.getExe (tree.rebuild {inherit pkgs shellDeps;});
+        program = pkgs.lib.getExe (tree.rebuild {inherit pkgs;});
       };
     };
 
@@ -119,7 +108,7 @@
             base.nixosModules.readOnlyPkgs
 
             {
-              environment.etc."nix/inputs/pkgs".source = inputs.pkgs-unstable;
+              environment.etc."nix/inputs/pkgs".source = base;
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;

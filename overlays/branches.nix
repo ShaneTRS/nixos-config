@@ -1,10 +1,10 @@
 {
   self,
-  pkgsConfig,
+  pkgs,
   ...
 }: new: old:
 with self.inputs; {
-  stable = import nixpkgs pkgsConfig;
-  pinned = import pkgs-pinned pkgsConfig;
-  unstable = import pkgs-unstable pkgsConfig;
+  stable = import nixpkgs pkgs.config;
+  pinned = import pkgs-pinned pkgs.config;
+  unstable = import pkgs-unstable pkgs.config;
 }
