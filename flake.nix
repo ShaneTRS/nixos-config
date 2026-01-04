@@ -2,9 +2,10 @@
   description = "My 2nd generation system configuration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    self.submodules = true;
+    pkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     pkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    pkgs-pinned.url = "github:nixos/nixpkgs/698214a32beb4f4c8e3942372c694f40848b360d";
+    pkgs-pinned.url = "github:nixos/nixpkgs/3e2499d5539c16d0d173ba53552a4ff8547f4539";
 
     home-manager = {
       url = "github:nix-community/home-manager";
@@ -95,7 +96,7 @@
             fn = systemFn;
             pkgs = pkgs.appendOverlays overlays;
           };
-        systemFn = tree.functions.tundra systemArgs // fn;
+        systemFn = fn // (tree.functions.tundra systemArgs);
       in
         nixosSystem {
           specialArgs = systemArgs;
@@ -132,7 +133,15 @@
             (importItem tree.hardware.${machine.serial})
           ];
         };
-      systems = {
+    in
+      mapAttrs (serial: machine:
+        tundraSystem ({
+            profile = machine.hostname;
+            inherit serial;
+            source = "/home/${machine.user}/.config/nixos/";
+          }
+          // machine))
+      {
         "230925799001945" = {
           hostname = "persephone";
           user = "shane";
@@ -155,15 +164,6 @@
           user = "vm";
         };
       };
-    in
-      mapAttrs (serial: machine:
-        tundraSystem ({
-            profile = machine.hostname;
-            inherit serial;
-            source = "/home/${machine.user}/.config/nixos/";
-          }
-          // machine))
-      systems;
 
     nixosModules.default.imports = collect isFunction tree.modules;
   };

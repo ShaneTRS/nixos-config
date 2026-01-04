@@ -40,11 +40,11 @@ pkgs.writeShellApplication {
 
     $UPDATE && nix flake update
     if [ "$1" != "copy" ]; then
-    	with_nom nixos-rebuild "$@" --flake "git+file://$TUNDRA_SOURCE?submodules=1#$TUNDRA_SERIAL" -S
+    	with_nom nixos-rebuild "$@" --flake "$TUNDRA_SOURCE#$TUNDRA_SERIAL" -S
     else
     	TARGET_SERIAL="''${TARGET_SERIAL:-$3}"
       TARGET="''${TARGET:-$2}"
-      with_nom nix build "git+file://$TUNDRA_SOURCE?submodules=1#nixosConfigurations.\"$TARGET_SERIAL\".config.system.build.toplevel"
+      with_nom nix build "$TUNDRA_SOURCE#nixosConfigurations.$TARGET_SERIAL.config.system.build.toplevel"
       [[ $BUILD && -n "$TARGET" ]] && with_nom nix-copy-closure --to "$TARGET" ./result
     fi
 

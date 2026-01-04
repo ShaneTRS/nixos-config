@@ -1,50 +1,32 @@
 {
-    "nix.enableLanguageServer": true,
-    "nix.serverPath": "nixd",
-    "nix.serverSettings": {
-        "nil": {
-            "formatting": {
-                "command": [
-                    "nix",
-                    "fmt",
-                    "--",
-                    "-w120"
-                ]
-            }
-        },
-        "nixd": {
-            "diagnostic": {
-                "suppress": [
-                    "sema-escaping-with"
-                ]
-            },
-            "formatting": {
-                "command": [
-                    "nix",
-                    "fmt",
-                    "--",
-                    "-w120"
-                ]
-            },
-            "nixpkgs": {
-                "expr": "(builtins.getFlake \"${builtins.getEnv \"HOME\"}/.config/nixos?submodules=1\").nixosConfigurations.default.pkgs"
-            },
-            "options": {
-                "nixos": {
-                    "expr": "(builtins.getFlake \"${builtins.getEnv \"HOME\"}/.config/nixos?submodules=1\").nixosConfigurations.default.options"
-                }
-            }
-        }
-    },
-    "editor.formatOnSave": true,
-    "terminal.integrated.enableMultiLinePasteWarning": "never",
-    "task.problemMatchers.neverPrompt": {
-        "shell": true
-    },
-    "editor.stickyScroll.enabled": false,
-    "diffEditor.ignoreTrimWhitespace": false,
-    "editor.tabSize": 2,
-    "Lua.codeLens.enable": true,
-    "Lua.completion.autoRequire": false,
-    "Lua.format.enable": false,
+	"nix.enableLanguageServer": true,
+	"nix.serverPath": "nixd",
+	"nix.serverSettings": {
+		"nixd": {
+			"diagnostic": {
+				"suppress": [
+					"sema-escaping-with"
+				]
+			},
+			"formatting": {
+				"command": [
+					"nix",
+					"fmt",
+					"--",
+					"-"
+				]
+			}
+		}
+	},
+	"editor.formatOnSave": true,
+	"terminal.integrated.enableMultiLinePasteWarning": "never",
+	"task.problemMatchers.neverPrompt": {
+		"shell": true
+	},
+	"editor.stickyScroll.enabled": false,
+	"diffEditor.ignoreTrimWhitespace": false,
+	"editor.tabSize": 2,
+	"Lua.codeLens.enable": true,
+	"Lua.completion.autoRequire": false,
+	"Lua.format.enable": false,
 }

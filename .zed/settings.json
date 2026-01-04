@@ -12,16 +12,23 @@
 	"lsp": {
 		"nixd": {
 			"settings": {
-				"formatting": { "command": ["nix", "fmt", "--", "-"] },
+				"formatting": {
+					"command": [
+						"nix",
+						"fmt",
+						"--",
+						"-"
+					]
+				},
 				"nixpkgs": {
-					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.pkgs"
+					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").legacyPackages.x86_64-linux"
 				},
 				"options": {
 					"nixos": {
-						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.options"
+						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_SERIAL\" or \"230925799001945\"}\".options"
 					},
 					"home-manager": {
-						"expr": "{user = (builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.options.home-manager.users.type.getSubOptions [];}"
+						"expr": "{user = (builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_SERIAL\" or \"230925799001945\"}\".options.home-manager.users.type.getSubOptions [];}"
 					}
 				}
 			}

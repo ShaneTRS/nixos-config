@@ -63,8 +63,4 @@ export COMMIT INTERACTIVE NOTIFY_DELAY NOTIFY_ICON UPDATE TIME
 cd "$TUNDRA_SOURCE" || exit 1
 
 [ -z "$*" ] && help
-if grep -q nix <<< "$@"; then
-  "${@//\#/git+file://$TUNDRA_SOURCE?submodules=1#}"
-else
-  "$@"
-fi
+"$@"

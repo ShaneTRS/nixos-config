@@ -140,20 +140,11 @@
 				"formatting": {
 					"command": [
 						"nix",
-						"fmt"
+						"fmt",
+						"--",
+						"-"
 					]
 				},
-				"nixpkgs": {
-					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.pkgs"
-				},
-				"options": {
-					"nixos": {
-						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.options"
-					},
-					"home-manager": {
-						"expr": "{ user = (builtins.getFlake \"${builtins.getEnv \"PWD\"}?submodules=1\").nixosConfigurations.default.options.home-manager.users.type.getSubOptions []; }"
-					}
-				}
 			}
 		},
 		"rust-analyzer": {

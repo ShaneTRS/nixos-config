@@ -123,7 +123,7 @@ in {
           WorkingDirectory = "/home/${machine.user}/Containers/.shanetrs/.podman-autostart";
         };
         wants = ["network-online.target"];
-        after = ["network-online.target"];
+        after = ["network-online.target" "run-media-${machine.user}-Felix\\x2dPP.mount"];
         wantedBy = ["graphical.target"];
       };
       podman-autostart-check = {
