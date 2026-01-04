@@ -2,9 +2,11 @@
   config,
   lib,
   pkgs,
+  fn,
   machine,
   ...
 }: let
+  inherit (fn) configs;
   inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString types;
   inherit (pkgs) writeShellApplication;
   inherit (builtins) attrNames concatStringsSep listToAttrs toJSON;
@@ -283,6 +285,22 @@ in {
               value = {text = toJSON input.${k};};
             })
             (attrNames input)));
+        systemd.user.services = {
+          x0vncserver = {
+            Unit.Description = "Low-latency VNC display server";
+            Service = {
+              Environment = "DISPLAY=:0";
+              ExecStart = let
+                attempt = configs ".vnc/passwd";
+              in "${getExe pkgs.shanetrs.not-nice} ${pkgs.tigervnc}/bin/x0vncserver Geometry=2732x1536 ${
+                optionalString (attempt != null) ''-rfbauth "${attempt}"''
+              } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+              Restart = "on-failure";
+              StartLimitBurst = 32;
+            };
+            Install.WantedBy = ["graphical-session.target"];
+          };
+        };
       };
     })
   ]);
