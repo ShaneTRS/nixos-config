@@ -21,37 +21,28 @@
   };
 
   outputs = {self, ...} @ inputs: let
-    inherit (builtins) attrValues filter isFunction map replaceStrings;
-    inherit (base.lib) collect getExe mkAliasOptionModule nixosSystem optionalAttrs;
-    inherit (fn) importItem importRepo fileTree;
+    inherit (builtins) attrValues filter isFunction mapAttrs;
+    inherit (base.lib) collect mkAliasOptionModule nixosSystem;
+    inherit (fn) importItem fileTree;
 
     base = inputs.pkgs-unstable;
-    nixosConfiguration = self.outputs.nixosConfigurations.default;
-    pkgs = importRepo base;
+    fn = (import ./functions.nix).pure;
+    tree = fileTree self;
 
+    pkgs = import base pkgsConfig;
+    pkgsConfig = {inherit config system;};
     config = {
       allowUnfree = true;
       permittedInsecurePackages = [];
     };
     system = "x86_64-linux";
 
-    pkgs-self = nixosConfiguration.pkgs;
-
-    fn = import ./functions.nix {
-      inherit self machine pkgs;
-      inherit (nixosConfiguration.config.sops) secrets;
-      pkgsConfig = {inherit config system;};
+    specialArgs = {
+      inherit self fn pkgsConfig tree;
+      pkgs = self.legacyPackages.${system};
     };
-    tree = fileTree self;
 
-    machine = let
-      x = tree.machine;
-    in
-      x
-      // {
-        source = replaceStrings ["\${user}"] [x.user] x.source;
-        profile = x.profile or x.hostname;
-      };
+    overlayArgs = args: map (x: x args) (filter isFunction (attrValues tree.overlays));
 
     shellDeps = with pkgs; [
       coreutils
@@ -64,16 +55,15 @@
       ssh-to-age
       sops
     ];
-
-    specialArgs = {inherit self fn machine tree;};
   in {
     devShells.${system} = with pkgs; rec {
       default = repl;
       repl = mkShellNoCC {
         shellHook = ''
+          system=''${TUNDRA_SERIAL:-230925799001945}
           exec nix repl --expr "let
-            self = builtins.getFlake \"${machine.source}\";
-            nixosConfiguration = self.nixosConfigurations.default;
+            self = builtins.getFlake \"\${self}\";
+            nixosConfiguration = self.nixosConfigurations.\"$system\"; # default
             eval = nixosConfiguration.config.system.build.toplevel;
           in
           	{ inherit nixosConfiguration eval; }
@@ -97,68 +87,94 @@
       };
     };
     formatter.${system} = pkgs.alejandra;
-    legacyPackages.${system} = pkgs-self;
-    apps.${system}.default = {
-      type = "app";
-      program = getExe (import ./rebuild.nix {inherit machine pkgs shellDeps;});
+    legacyPackages.${system} = pkgs.appendOverlays (overlayArgs specialArgs);
+    apps.${system} = rec {
+      default = rebuild;
+      rebuild = {
+        type = "app";
+        program = pkgs.lib.getExe (tree.rebuild {inherit pkgs shellDeps;});
+      };
     };
 
-    nixosConfigurations.default = nixosSystem {
-      inherit specialArgs;
-      modules = [
-        inputs.home-manager.nixosModules.default
-        inputs.sops.nixosModules.default
-        self.outputs.nixosModules.default
-
-        (mkAliasOptionModule ["user"] ["home-manager" "users" machine.user])
-
-        {
-          environment.etc."nix/inputs/pkgs".source = inputs.pkgs-unstable;
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
+    nixosConfigurations = let
+      tundraSystem = machine: let
+        overlays = overlayArgs systemArgs;
+        systemArgs =
+          specialArgs
+          // {
+            inherit machine;
+            fn = systemFn;
+            pkgs = pkgs.appendOverlays overlays;
           };
-          nixpkgs = {
-            inherit config;
-            hostPlatform = system;
-            overlays =
-              map (x: x (specialArgs // {pkgs = pkgs-self;}))
-              (filter isFunction (attrValues tree.overlays));
-          };
-          nix = {
-            registry.pkgs.flake = self;
-            settings = {
-              auto-optimise-store = true;
-              experimental-features = ["nix-command" "flakes"];
-              nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
-              trusted-users = [machine.user];
-              substituters = ["https://nix-community.cachix.org"];
-              trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
-              use-xdg-base-directories = true;
-            };
-          };
-        }
+        systemFn = tree.functions.tundra systemArgs // fn;
+      in
+        nixosSystem {
+          specialArgs = systemArgs;
+          modules = [
+            inputs.home-manager.nixosModules.default
+            inputs.sops.nixosModules.default
+            self.outputs.nixosModules.default
 
-        (importItem tree.profiles.${machine.profile})
-        (optionalAttrs
-          (tree.hardware ? "${machine.serial}")
-          (importItem tree.hardware.${machine.serial}))
-      ];
-    };
-    homeConfigurations.default = inputs.home-manager.lib.homeManagerConfiguration {
-      extraSpecialArgs = specialArgs;
-      modules =
-        nixosConfiguration.options.user.definitions
-        ++ [
-          {
-            home = {
-              username = machine.user;
-              homeDirectory = nixosConfiguration.config.users.users.${machine.user}.home;
-            };
+            (mkAliasOptionModule ["user"] ["home-manager" "users" machine.user])
+            base.nixosModules.readOnlyPkgs
+
+            {
+              environment.etc."nix/inputs/pkgs".source = inputs.pkgs-unstable;
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+              };
+              nixpkgs.pkgs = systemArgs.pkgs;
+              nix = {
+                registry.pkgs.flake = self;
+                settings = {
+                  auto-optimise-store = true;
+                  experimental-features = ["nix-command" "flakes"];
+                  nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
+                  trusted-users = [machine.user];
+                  substituters = ["https://nix-community.cachix.org"];
+                  trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
+                  use-xdg-base-directories = true;
+                };
+              };
+            }
+
+            (importItem tree.profiles.${machine.profile})
+            (importItem tree.hardware.${machine.serial})
+          ];
+        };
+      systems = {
+        "230925799001945" = {
+          hostname = "persephone";
+          user = "shane";
+        };
+        "H1XH7F3CNCMC0015F0243" = {
+          hostname = "lachesis";
+          user = "shane";
+        };
+        "MXL0265298" = {
+          hostname = "dionysus";
+          user = "shane";
+        };
+        "MOELITEBOOK" = {
+          hostname = "lachesis";
+          user = "mo";
+        };
+        "0" = {
+          hostname = "vm";
+          profile = "bolillo";
+          user = "vm";
+        };
+      };
+    in
+      mapAttrs (serial: machine:
+        tundraSystem ({
+            profile = machine.hostname;
+            inherit serial;
+            source = "/home/${machine.user}/.config/nixos/";
           }
-        ];
-      pkgs = pkgs-self;
-    };
+          // machine))
+      systems;
 
     nixosModules.default.imports = collect isFunction tree.modules;
   };

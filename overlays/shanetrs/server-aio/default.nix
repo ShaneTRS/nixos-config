@@ -1,6 +1,6 @@
 {pkgs, ...}:
 with pkgs;
-  rustPlatform.buildRustPackage {
+  rustPlatform.buildRustPackage rec {
     pname = "aio";
     version = "0.2.0";
     meta.mainProgram = pname;

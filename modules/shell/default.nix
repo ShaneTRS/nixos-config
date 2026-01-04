@@ -100,7 +100,7 @@ in {
       package = mkPackageOption pkgs "doas" {};
       noPassCmds = mkOption {
         type = types.listOf types.str;
-        default = ["ionice" "nixos-rebuild" "nix-collect-garbage" "true"];
+        default = ["ionice" "nix-collect-garbage" "true"];
       };
       extraRules = mkOption {
         type = types.listOf types.attrs;

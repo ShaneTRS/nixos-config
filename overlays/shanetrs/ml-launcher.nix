@@ -1,6 +1,7 @@
 {
   pkgs,
-  targetHost ? self.outputs.nixosConfigurations.default.config.shanetrs.remote.addresses.host,
+  machine ? {},
+  targetHost ? self.outputs.nixosConfigurations.${machine.serial}.config.shanetrs.remote.addresses.host,
   self,
   ...
 }:

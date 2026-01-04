@@ -1,7 +1,6 @@
 # VirtualBox (1.2)
 {
   machine,
-  pkgs,
   lib,
   ...
 }: let
@@ -32,7 +31,7 @@ in {
       ports = ["2-1"];
     };
   };
-  boot.kernelPackages = pkgs.linuxPackages_6_11;
+  # boot.kernelPackages = pkgs.linuxPackages_6_11;
   # shanetrs.hardware = {
   #   enable = true;
   #   graphics = "virtualbox";

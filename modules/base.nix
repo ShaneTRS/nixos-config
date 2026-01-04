@@ -24,7 +24,13 @@ in {
       tmp.useTmpfs = mkStrongDefault true;
     };
 
-    environment.systemPackages = with pkgs; [git];
+    environment = {
+      sessionVariables = {
+        TUNDRA_SERIAL = machine.serial;
+        TUNDRA_SOURCE = machine.source;
+      };
+      systemPackages = with pkgs; [git];
+    };
 
     hardware.graphics = mkStrongDefault {
       enable = true;

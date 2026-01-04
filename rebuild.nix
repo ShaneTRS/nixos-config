@@ -1,7 +1,6 @@
 {
   pkgs,
   shellDeps,
-  machine,
   ...
 }:
 pkgs.writeShellApplication {
@@ -10,53 +9,16 @@ pkgs.writeShellApplication {
   text = ''
     set +uo errexit
 
-    SRC="${machine.source}"
     INTERACTIVE=''${INTERACTIVE:-true}
     COMMIT=''${COMMIT:-true}
     UPDATE=''${UPDATE:-false}
-    AS_ROOT=''${AS_ROOT:-true}
 
-    cd "$SRC"
+    input() { $INTERACTIVE || exit 1; [ -z "''${!1}" ] && read -rp "$1: " "$1"; }
 
-    # shellcheck disable=SC2094 disable=SC2317
-    jq_write() { jq ".''${*:2}" <<< "$(cat "$1")" > "$1"; }
-    # shellcheck disable=SC2317
-    try_exe() { type "$1" &> /dev/null && exec "$@"; }
+    input TUNDRA_SOURCE
+    input TUNDRA_SERIAL
 
-    # shellcheck disable=SC2317
-    as_root() {
-    	try_exe doas "$@" ||
-     	try_exe sudo "$@" ||
-      try_exe su root -c "$@"
-    }
-
-    if [ -z "$(jq .serial machine.json -r)" ]; then
-    	echo Serial number is missing! Grabbing from system..
-      SERIAL=$(as_root cat /sys/devices/virtual/dmi/id/board_serial || exit)
-      SERIAL=''${SERIAL//\//}
-      jq_write machine.json serial = "\"$SERIAL\""
-      # shellcheck disable=SC2016 disable=SC2091
-      $(jq '."$defs".serials.enum|any(.=="'"$SERIAL"'")' schema.json) ||
-      	jq_write schema.json '"$defs".serials.enum' += "[\"$SERIAL\"]"
-      HW_CONF="hardware/$SERIAL.nix"
-      if ! [[ -f "$HW_CONF" || -d "hardware/$SERIAL" ]]; then
-        printf "# %s (%s)\n{ }\n" \
-          "$(cat /sys/devices/virtual/dmi/id/product_name)" \
-          "$(cat /sys/devices/virtual/dmi/id/product_version)" > "$HW_CONF"
-        echo "Hardware config is missing! The build will fail."
-        exit 1
-      fi
-      "''${EDITOR:-nano}" "$SRC/machine.json"
-    fi
-
-    track() {
-      if [ "$1" == "add" ]; then
-        git update-index --really-refresh "''${@:2}"
-      elif [ "$1" == "rm" ]; then
-        git restore --staged "''${@:2}"
-        git update-index --assume-unchanged --skip-worktree "''${@:2}"
-      fi
-    }
+    cd "$TUNDRA_SOURCE" || exit
 
     update-repo() {
       git add -A; git update-index --refresh >/dev/null
@@ -75,23 +37,14 @@ pkgs.writeShellApplication {
     with_nom() { "$@" --log-format internal-json 2>&1 | nom --json && BUILD=true; }
 
     $UPDATE && nix flake update
-    IFS=: read -ra SKIP <<< "$SKIP"
-    track add machine.json "''${SKIP[@]}"
     if [ "$1" != "copy" ]; then
-    	if $AS_ROOT; then
-      	with_nom nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default" --sudo
-      else
-      	with_nom nixos-rebuild "$@" --flake "git+file://$SRC?submodules=1#default"
-      fi
+    	with_nom nixos-rebuild "$@" --flake "git+file://$TUNDRA_SOURCE?submodules=1#$TUNDRA_SERIAL" -S
     else
-      "''${EDITOR:-nano}" machine.json
+    	TARGET_SERIAL="''${TARGET_SERIAL:-$3}"
       TARGET="''${TARGET:-$2}"
-      with_nom nix build "git+file://$SRC?submodules=1#nixosConfigurations.default.config.system.build.toplevel"
-      [[ $BUILD && -n "$TARGET" ]] &&
-      nix-copy-closure --to "$TARGET" ./result \
-      	--log-format internal-json 2>&1 | nom --json
+      with_nom nix build "git+file://$TUNDRA_SOURCE?submodules=1#nixosConfigurations.\"$TARGET_SERIAL\".config.system.build.toplevel"
+      [[ $BUILD && -n "$TARGET" ]] && with_nom nix-copy-closure --to "$TARGET" ./result
     fi
-    track rm machine.json "''${SKIP[@]}"
 
     $COMMIT && $BUILD && [ ! "$1" = "test" ] && update-repo
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-SRC="${SRC:-$HOME/.config/nixos}"
 SUDO="${SUDO:-$(which doas &>/dev/null && echo doas || echo sudo)}"
 
 check() {(
@@ -60,12 +59,12 @@ notify() {(
   -A "update"="Install update in background" -A "sleep $((${NOTIFY_DELAY:-1200} * NOTIFY_COUNT)); notify"="Ask me later" -A "exit"="Ignore")"
 )}
 
-export COMMIT INTERACTIVE MACHINE NOTIFY_DELAY NOTIFY_ICON SRC UPDATE TIME
-cd "$SRC" || exit 1
+export COMMIT INTERACTIVE NOTIFY_DELAY NOTIFY_ICON UPDATE TIME
+cd "$TUNDRA_SOURCE" || exit 1
 
 [ -z "$*" ] && help
 if grep -q nix <<< "$@"; then
-  "${@//\#/git+file://$SRC?submodules=1#}"
+  "${@//\#/git+file://$TUNDRA_SOURCE?submodules=1#}"
 else
   "$@"
 fi

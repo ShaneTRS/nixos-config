@@ -1,12 +1,10 @@
 {
   self,
-  fn,
+  pkgsConfig,
   ...
 }: new: old:
-with self.inputs; let
-  inherit (fn) importRepo;
-in {
-  stable = importRepo nixpkgs;
-  pinned = importRepo pkgs-pinned;
-  unstable = importRepo pkgs-unstable;
+with self.inputs; {
+  stable = import nixpkgs pkgsConfig;
+  pinned = import pkgs-pinned pkgsConfig;
+  unstable = import pkgs-unstable pkgsConfig;
 }

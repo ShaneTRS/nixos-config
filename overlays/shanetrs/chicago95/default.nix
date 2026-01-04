@@ -4,7 +4,7 @@
   ...
 }:
 with pkgs;
-  stdenvNoCC.mkDerivation {
+  stdenvNoCC.mkDerivation rec {
     pname = "chicago95";
     version = "3.1.0";
 

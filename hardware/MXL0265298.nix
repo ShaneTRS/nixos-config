@@ -15,10 +15,6 @@
   };
   hardware = {
     cpu.amd.updateMicrocode = true;
-    graphics = {
-      extraPackages = [pkgs.amdvlk];
-      extraPackages32 = [pkgs.driversi686Linux.amdvlk];
-    };
   };
   nix.settings = {
     substituters = ["http://shanetrs.remote.host:5698"];
