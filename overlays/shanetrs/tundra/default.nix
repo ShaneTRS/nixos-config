@@ -1,5 +1,12 @@
-{pkgs, ...}:
-with pkgs; let
+{
+  stdenv,
+  lib,
+  makeWrapper,
+  dbus,
+  git,
+  libnotify,
+  ...
+}: let
   inherit (lib) makeBinPath;
 in
   stdenv.mkDerivation rec {

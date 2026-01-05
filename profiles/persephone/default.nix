@@ -177,6 +177,7 @@ in {
       shanetrs.alchemy-viewer # metaverse client
       shanetrs.jfa-go # jellyfin temp. accounts
       shanetrs.wlx-overlay-s # vr desktops
+      shanetrs.schud # controller overlay
     ];
     xdg.configFile."keynav/keynavrc" = let
       attempt = configs "keynavrc";

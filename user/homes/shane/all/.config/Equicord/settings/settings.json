@@ -1543,6 +1543,18 @@
         },
         "QuickThemeSwitcher": {
             "enabled": false
+        },
+        "IdleAutoRestart": {
+            "enabled": false
+        },
+        "ScheduledMessages": {
+            "enabled": false
+        },
+        "UrlHighlighter": {
+            "enabled": false
+        },
+        "UserAreaAPI": {
+            "enabled": true
         }
     },
     "notifications": {
@@ -1556,7 +1568,7 @@
         "authenticated": false,
         "url": "https://api.vencord.dev/",
         "settingsSync": false,
-        "settingsSyncVersion": 1765742097569
+        "settingsSyncVersion": 1767564822593
     },
     "enabledThemeLinks": [],
     "userCssVars": {},
@@ -1567,5 +1579,7 @@
     "uiElements": {
         "chatBarButtons": {},
         "messagePopoverButtons": {}
-    }
+    },
+    "enableOnlineThemes": true,
+    "pinnedThemes": []
 }

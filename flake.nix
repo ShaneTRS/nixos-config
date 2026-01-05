@@ -116,7 +116,10 @@
               };
               nixpkgs.pkgs = systemArgs.pkgs;
               nix = {
-                registry.pkgs.flake = self;
+                registry.pkgs.to = {
+                  type = "git";
+                  url = "file:" + machine.source;
+                };
                 settings = {
                   auto-optimise-store = true;
                   experimental-features = ["nix-command" "flakes"];

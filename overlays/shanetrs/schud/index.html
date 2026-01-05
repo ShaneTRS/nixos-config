@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SCHUD</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <style>
+        canvas, .inputs {
+            position: absolute;
+            display: block;
+            transform-origin: center;
+            /* border: 1px solid white; */
+        }
+        
+        img#base {
+            width: 100%;
+            /* position: absolute; */
+        }
+
+        body,
+        html {
+            width: 100%;
+            padding: 0;
+            margin: 6.5% 0 0 0;
+            background-color: rgb(255, 0, 255);
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+		<input type="text" id="hid" style="position: absolute;">
+		
+    <img src="./theme/base.png" id="base" alt=""></img>
+    <canvas class="inputs" id="pads_left" width="200" height="200"></canvas>
+    <img src="./theme/pads_lclick.svg" class="inputs" id="pads_lclick"></img>
+    <canvas class="inputs" id="pads_right" width="200" height="200"></canvas>
+    <img src="./theme/pads_rclick.svg" class="inputs" id="pads_rclick"></img>
+    
+    <img src="./theme/buttons.svg" class="inputs" id="buttons"></img>
+    <img src="./theme/buttons_a.svg" class="inputs" id="buttons_a"></img>
+    <img src="./theme/buttons_b.svg" class="inputs" id="buttons_b"></img>
+    <img src="./theme/buttons_x.svg" class="inputs" id="buttons_x"></img>
+    <img src="./theme/buttons_y.svg" class="inputs" id="buttons_y"></img>
+    
+    <img src="./theme/stick.svg" class="inputs" id="stick"></img>
+    <img src="./theme/stick_click.svg" class="inputs" id="stick_click"></img>
+    
+    <img src="./theme/bumpers.svg" class="inputs" id="bumpers"></img>
+    <img src="./theme/bumpers_left.svg" class="inputs" id="bumpers_left"></img>
+    <img src="./theme/bumpers_right.svg" class="inputs" id="bumpers_right"></img>
+    
+    <img src="./theme/grips.svg" class="inputs" id="grips"></img>
+    <img src="./theme/grips_left.svg" class="inputs" id="grips_left"></img>
+    <img src="./theme/grips_right.svg" class="inputs" id="grips_right"></img>
+    
+    <img src="./theme/triggers.svg" class="inputs" id="triggers"></img>
+    <img src="./theme/triggers_left.svg" class="inputs" id="triggers_left"></img>
+    <img src="./theme/triggers_right.svg" class="inputs" id="triggers_right"></img>
+    
+    <img src="./theme/system.svg" class="inputs" id="system"></img>
+    <img src="./theme/system_select.svg" class="inputs" id="system_select"></img>
+    <img src="./theme/system_steam.svg" class="inputs" id="system_steam"></img>
+    <img src="./theme/system_start.svg" class="inputs" id="system_start"></img>
+
+    <script>
+      document.getElementById('hid').addEventListener('input', () => {
+       	const script = document.createElement('script');
+        script.src = './src/script.js';
+        document.body.appendChild(script);
+      });
+    </script>
+    
+    <!--<script src="./src/script.js"></script>-->
+</body>
+
+</html>
