@@ -23,7 +23,7 @@
 
   outputs = {self, ...} @ inputs: let
     inherit (builtins) attrValues filter isFunction mapAttrs;
-    inherit (base.lib) collect mkAliasOptionModule nixosSystem;
+    inherit (base.lib) collect getExe mkAliasOptionModule nixosSystem;
     inherit (fn) importItem fileTree;
 
     base = inputs.pkgs-unstable;
@@ -45,7 +45,19 @@
       inherit self fn tree;
       pkgs = self.legacyPackages.${system};
     };
+
+    systemHelper = machine: let
+      this =
+        specialArgs
+        // {
+          inherit machine;
+          fn = fn // (tree.functions.tundra this);
+          pkgs = pkgs.appendOverlays (overlayArgs this);
+        };
+    in
+      this;
   in {
+    nixosModules.default.imports = collect isFunction tree.modules;
     devShells.${system} = with pkgs; rec {
       default = repl;
       repl = mkShellNoCC {
@@ -65,11 +77,9 @@
       sops = mkShellNoCC {
         buildInputs = [pkgs.sops pkgs.ssh-to-age];
         shellHook = ''
-          if [ -z "$SOPS_AGE_KEY" ]; then
-          	export SOPS_AGE_KEY="$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)"
-            [ -z "$SOPS_AGE_KEY" ] &&
-            	echo warning: ssh key was not found\; keys will need to be provided
-          fi
+          export SOPS_AGE_KEY="''${SOPS_AGE_KEY:-$(ssh-to-age -i "$HOME/.ssh/id_ed25519" -private-key 2>/dev/null)}"
+          [ -z "$SOPS_AGE_KEY" ] &&
+          	echo warning: ssh key was not found\; keys will need to be provided
           for i in zsh fish bash sh; do
           	type -P $i >/dev/null && exec $i
           done
@@ -82,21 +92,20 @@
       default = rebuild;
       rebuild = {
         type = "app";
-        program = pkgs.lib.getExe (tree.rebuild {inherit pkgs;});
+        program = getExe (tree.rebuild {inherit pkgs;});
       };
     };
 
     nixosConfigurations = let
-      tundraSystem = machine: let
-        overlays = overlayArgs systemArgs;
-        systemArgs =
-          specialArgs
-          // {
-            inherit machine;
-            fn = systemFn;
-            pkgs = pkgs.appendOverlays overlays;
-          };
-        systemFn = fn // (tree.functions.tundra systemArgs);
+      tundraSystem = key: value: let
+        machine =
+          {
+            profile = value.hostname;
+            serial = key;
+            source = "/home/${value.user}/.config/nixos/";
+          }
+          // value;
+        systemArgs = systemHelper machine;
       in
         nixosSystem {
           specialArgs = systemArgs;
@@ -110,10 +119,6 @@
 
             {
               environment.etc."nix/inputs/pkgs".source = base;
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-              };
               nixpkgs.pkgs = systemArgs.pkgs;
               nix = {
                 registry.pkgs.to = {
@@ -121,13 +126,8 @@
                   url = "file:" + machine.source;
                 };
                 settings = {
-                  auto-optimise-store = true;
                   experimental-features = ["nix-command" "flakes"];
                   nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
-                  trusted-users = [machine.user];
-                  substituters = ["https://nix-community.cachix.org"];
-                  trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
-                  use-xdg-base-directories = true;
                 };
               };
             }
@@ -137,14 +137,7 @@
           ];
         };
     in
-      mapAttrs (serial: machine:
-        tundraSystem ({
-            profile = machine.hostname;
-            inherit serial;
-            source = "/home/${machine.user}/.config/nixos/";
-          }
-          // machine))
-      {
+      mapAttrs tundraSystem {
         "230925799001945" = {
           hostname = "persephone";
           user = "shane";
@@ -158,7 +151,7 @@
           user = "shane";
         };
         "MOELITEBOOK" = {
-          hostname = "lachesis";
+          hostname = "mo-elitebook";
           user = "mo";
         };
         "0" = {
@@ -168,6 +161,51 @@
         };
       };
 
-    nixosModules.default.imports = collect isFunction tree.modules;
+    homeConfigurations = let
+      tundraHome = key: value: let
+        machine =
+          {
+            user = key;
+            hostname = value.profile;
+            source = "/home/${key}/.config/nixos/";
+          }
+          // value;
+        systemArgs = systemHelper machine;
+        shim = nixosSystem {
+          specialArgs = systemArgs;
+          modules = [
+            inputs.home-manager.nixosModules.default
+            inputs.sops.nixosModules.default
+            self.outputs.nixosModules.default
+            (mkAliasOptionModule ["user"] ["home-manager" "users" machine.user])
+            base.nixosModules.readOnlyPkgs
+            ({
+              config,
+              lib,
+              ...
+            }: {
+              nixpkgs.pkgs = systemArgs.pkgs;
+              user.home = {
+                username = machine.user;
+                homeDirectory =
+                  if machine ? home
+                  then lib.mkForce machine.home
+                  else config.users.users.${machine.user}.home;
+              };
+            })
+            (importItem tree.profiles.${machine.profile})
+          ];
+        };
+      in
+        inputs.home-manager.lib.homeManagerConfiguration {
+          extraSpecialArgs = systemArgs;
+          pkgs = systemArgs.pkgs;
+          modules = shim.options.user.definitions;
+        };
+    in
+      mapAttrs tundraHome {
+        "shane".profile = "persephone";
+        "mo".profile = "crumb";
+      };
   };
 }

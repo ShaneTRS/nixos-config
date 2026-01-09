@@ -28,7 +28,7 @@
       pop = {extraPackages = with pkgs.gnomeExtensions; [pop-shell];};
     };
     xfce = rec {
-      default = {extraPackages = with pkgs.xfce; [xfce4-panel-profiles];};
+      default = {extraPackages = with pkgs; [xfce4-panel-profiles];};
       win95 = {extraPackages = with pkgs; [palemoon-bin];} // default;
     };
   };

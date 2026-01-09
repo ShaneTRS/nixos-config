@@ -1,5 +1,9 @@
 # Persephone
-{...}: {
+{
+  pkgs,
+  lib,
+  ...
+}: {
   boot = {
     kernelModules = ["kvm-amd"];
     # blacklistedKernelModules = [ "amdgpu" ];
@@ -50,14 +54,37 @@
       graphics = "intel";
     };
   };
-  user.xdg.configFile.
-    "wireplumber/wireplumber.conf.d/doqaus-priority.conf".text = builtins.toJSON {
-    "monitor.alsa.rules" = [
-      {
-        matches = [{"node.name" = "bluez_output.F4_4E_FC_DA_61_E5.1";}];
-        actions.update-props = {"priority.session" = 1500;};
-      }
-    ];
+  user.systemd.user.services = {
+    bluetooth-switch = {
+      Unit = {
+        After = "pipewire.service";
+        Description = "Switch to specified device automatically on connection";
+      };
+      Service = {
+        Environment = ["DEVICE=bluez_output.F4:4E:FC:DA:61:E5"];
+        ExecStart = let
+          inherit (pkgs) writeShellApplication;
+          inherit (lib) getExe;
+        in "${getExe (writeShellApplication {
+          name = "bluetooth-switch.service";
+          runtimeInputs = with pkgs; [pipewire wireplumber];
+          text = ''
+            set +o errexit
+            while true; do
+            	SINK="$(pw-cli ls "$DEVICE" | awk -F'[ ,]+' 'NR==1 {print $2; exit}')"
+            	if [ -n "$SINK" ]; then
+             		wpctl set-default "$SINK"
+               	until [ -z "$(pw-cli ls "$DEVICE")" ]; do
+                	sleep 10
+                done
+              fi
+             	sleep 1
+            done
+          '';
+        })}";
+      };
+      Install.WantedBy = ["graphical-session.target"];
+    };
   };
   swapDevices = [
     {

@@ -82,7 +82,10 @@ in rec {
     self,
     pkgs,
     machine,
-    secrets ? self.nixosConfigurations.${machine.serial}.config.sops.secrets,
+    secrets ?
+      if machine ? serial
+      then self.nixosConfigurations.${machine.serial}.config.sops.secrets
+      else {},
     ...
   }: {
     configs = file:

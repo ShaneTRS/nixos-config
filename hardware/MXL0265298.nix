@@ -1,5 +1,5 @@
 # HP t530 Thin Client
-{pkgs, ...}: {
+{...}: {
   boot = {
     kernelModules = ["kvm-amd"];
     kernelParams = ["radeon.si_support=0" "amdgpu.si_support=1" "radeon.cik_support=0" "amdgpu.cik_support=1"];
@@ -29,9 +29,12 @@
       };
       firmware = "redist";
     };
-    remote.usb = {
-      devices = "/sys/bus/pci/devices/0000:00:12.0/usb";
-      ports = ["1-1.1" "1-1.2"];
+    remote = {
+      addresses.client = "192.168.1.13";
+      usb = {
+        devices = "/sys/bus/pci/devices/0000:00:12.0/usb";
+        ports = ["1-1.1" "1-1.2"];
+      };
     };
   };
 }

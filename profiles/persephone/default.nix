@@ -15,7 +15,6 @@ in {
   programs = {
     dconf.enable = true; # Enable dconf for GTK apps
     noisetorch.enable = true;
-    adb.enable = true; # Adds udev rules, adb, and creates group
   };
   users = {
     groups.uinput.gid = 990;

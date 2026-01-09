@@ -32,15 +32,23 @@ in {
       systemPackages = with pkgs; [git];
     };
 
-    hardware.graphics = mkStrongDefault {
-      enable = true;
-      enable32Bit = true;
+    hardware.graphics = {
+      enable = mkStrongDefault true;
+      enable32Bit = mkStrongDefault true;
     };
 
     networking = {
       firewall.enable = mkStrongDefault false;
       networkmanager.enable = mkStrongDefault true;
       hostName = mkStrongDefault machine.hostname;
+    };
+
+    nix.settings = {
+      auto-optimise-store = mkStrongDefault true;
+      substituters = ["https://nix-community.cachix.org"];
+      trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
+      trusted-users = [machine.user];
+      use-xdg-base-directories = mkStrongDefault true;
     };
 
     programs.command-not-found.enable = mkStrongDefault false;
@@ -102,19 +110,31 @@ in {
         isNormalUser = mkStrongDefault true;
         hashedPasswordFile = mkStrongDefault (configs "passwd");
         extraGroups = ["networkmanager" "wheel"];
-        autoSubUidGidRange = true;
+        autoSubUidGidRange = mkStrongDefault true;
       };
     };
 
+    home-manager = {
+      useGlobalPkgs = mkStrongDefault true;
+      useUserPackages = mkStrongDefault true;
+    };
     user = {
       home = {
         stateVersion = "23.11";
         activation = {
-          # TODO: Add clean up before `rm last`
           symlinkFarmHomes = with machine;
             self.inputs.home-manager.lib.hm.dag.entryAfter ["writeBoundary"] ''
               set +o errexit
               cd "${source}/user/homes" || exit 1
+
+              [ -f "$PWD/last" ] && while read -r FILE; do
+                TARGET="$(realpath "$FILE")"
+                FILE="''${FILE#*/}" # Strip target profile
+                FILE="''${FILE#*/}" # Strip target user
+                if [ -L "$HOME/$FILE" ]; then
+                  run rm "$HOME/$FILE"
+                fi
+              done < "$PWD/last"
               rm last
 
               for i in "${user}/${profile}" "${user}/all" "global/${profile}" "global/all"; do
@@ -123,7 +143,7 @@ in {
 
               [ -f "$PWD/last" ] && while read -r FILE; do
                 TARGET="$(realpath "$FILE")"
-                FILE="''${FILE#*/}" # Strip target profile"
+                FILE="''${FILE#*/}" # Strip target profile
                 FILE="''${FILE#*/}" # Strip target user
                 if [ ! -L "$HOME/$FILE" ]; then
                   run mkdir -p "$HOME/$(dirname "$FILE")"
@@ -134,32 +154,31 @@ in {
         };
       };
       programs = {
-        git = mkStrongDefault {
-          enable = true;
+        git = {
+          enable = mkStrongDefault true;
           settings = {
-            user.email = "${machine.user}@${machine.hostname}";
-            user.name = machine.user;
-            safe.directory = "/etc/nixos";
-            credential.helper = "store";
+            user.email = mkStrongDefault "${machine.user}@${machine.hostname}";
+            user.name = mkStrongDefault machine.user;
+            credential.helper = mkStrongDefault "store";
           };
         };
         home-manager.enable = mkStrongDefault true;
-        ssh = mkStrongDefault {
-          enable = true;
-          enableDefaultConfig = false;
+        ssh = {
+          enable = mkStrongDefault true;
+          enableDefaultConfig = mkStrongDefault false;
           matchBlocks."*" = {
-            controlMaster = "auto";
-            controlPersist = "5m";
-            serverAliveCountMax = 3000;
-            serverAliveInterval = 15;
+            controlMaster = mkStrongDefault "auto";
+            controlPersist = mkStrongDefault "5m";
+            serverAliveCountMax = mkStrongDefault 3000;
+            serverAliveInterval = mkStrongDefault 15;
           };
         };
       };
     };
 
-    zramSwap = mkStrongDefault {
-      enable = true;
-      memoryPercent = 70;
+    zramSwap = {
+      enable = mkStrongDefault true;
+      memoryPercent = mkStrongDefault 70;
     };
   };
 }

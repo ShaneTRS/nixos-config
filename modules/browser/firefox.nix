@@ -46,7 +46,7 @@ in {
                   }
                   {
                     name = "release";
-                    value = "release-23.11";
+                    value = "master";
                   }
                 ];
               }
@@ -70,7 +70,6 @@ in {
             definedAliases = ["!mynix" "!mynixos"];
           };
           "NixOS Wiki" = {
-            # Temporary fix
             urls = [
               {
                 template = "https://wiki.nixos.org/w/index.php";
@@ -86,7 +85,6 @@ in {
             definedAliases = ["!nix" "!nixos"];
           };
           "NixOS Options" = {
-            # Temporary fix
             urls = [
               {
                 template = "https://search.nixos.org/options";
@@ -101,6 +99,21 @@ in {
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
             definedAliases = ["!nixopt" "!nixopts"];
           };
+          "NixOS Packages" = {
+            urls = [
+              {
+                template = "https://search.nixos.org/packages";
+                params = [
+                  {
+                    name = "query";
+                    value = "{searchTerms}";
+                  }
+                ];
+              }
+            ];
+            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            definedAliases = ["!nixpkgs"];
+          };
         };
       };
     };
@@ -109,6 +122,9 @@ in {
       default = {
         "widget.use-xdg-desktop-portal.file-picker" = 1;
         "general.autoScroll" = 1;
+        "sidebar.revamp" = true;
+        "sidebar.verticalTabs" = true;
+        "sidebar.visibility" = "expand-on-hover";
       };
     };
     _ = {

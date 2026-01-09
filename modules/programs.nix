@@ -201,6 +201,7 @@ in {
                 resolveList [
                   gcc
                   clang-tools
+                  package-version-server
                   (mkIf (elem "nix" cfg.zed-editor.features) nixd)
                   (mkIf (elem "nix" cfg.zed-editor.features) alejandra)
                   (mkIf (elem "rust" cfg.zed-editor.features) rustup)
