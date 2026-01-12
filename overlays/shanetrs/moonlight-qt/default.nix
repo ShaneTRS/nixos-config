@@ -12,5 +12,5 @@ moonlight-qt.overrideAttrs (old: {
     inherit hash rev;
     fetchSubmodules = true;
   };
-  patches = [./always-quit.patch ./full-keyboard.patch];
+  patches = [./full-keyboard.patch];
 })

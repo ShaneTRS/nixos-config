@@ -114,6 +114,25 @@ in {
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
             definedAliases = ["!nixpkgs"];
           };
+          "Nixpkgs Repo" = {
+            urls = [
+              {
+                template = "https://github.com/search";
+                params = [
+                  {
+                    name = "q";
+                    value = "repo%3ANixOS%2Fnixpkgs+{searchTerms}";
+                  }
+                  {
+                    name = "type";
+                    value = "issues";
+                  }
+                ];
+              }
+            ];
+            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            definedAliases = ["!nixrepo"];
+          };
         };
       };
     };
