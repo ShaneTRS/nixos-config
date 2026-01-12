@@ -60,7 +60,7 @@ in {
     keymap = {
       enable = mkOption {
         type = types.bool;
-        default = true;
+        default = length cfg.keymap.keymap + length cfg.keymap.modmap != 0;
       };
       keymap = mkOption {
         type = types.listOf types.attrs;

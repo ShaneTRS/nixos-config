@@ -48,6 +48,7 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     (mkIf cfg.drivers.g710.enable {
+      warnings = mkIf (config.shanetrs.desktop.keymap.enable) [ "sidewinderd doesn't properly record macros when xremap is running!" ];
       environment.etc."sidewinderd.conf".text = with cfg.drivers.g710; ''
         user = "${user}";
         capture_delays = ${
