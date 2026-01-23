@@ -11,6 +11,7 @@ image/jpeg=gimp.desktop;
 image/png=gimp.desktop;
 image/svg+xml=org.inkscape.Inkscape.desktop;
 image/webp=gimp.desktop;
+image/x-xcf=gimp.desktop;
 inode/directory=org.kde.dolphin.desktop;
 text/html=firefox.desktop;
 text/plain=dev.zed.Zed.desktop

@@ -459,6 +459,7 @@ mod server {
 		if guard.signal != 0
 			&& guard.count == 0
 			&& Instant::now() - guard.timestamp > guard.keep_alive
+			&& unsafe { STARTUP } != 0
 		{
 			let _ = Command::new("kill")
 				.args([format!("-{}", guard.signal), unsafe { STARTUP }.to_string()])
