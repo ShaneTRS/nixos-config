@@ -5,7 +5,7 @@
     self.submodules = true;
     pkgs-stable.url = "github:nixos/nixpkgs/nixos-25.11";
     pkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    pkgs-pinned.url = "github:nixos/nixpkgs/3e2499d5539c16d0d173ba53552a4ff8547f4539";
+    pkgs-pinned.url = "github:nixos/nixpkgs/5912c1772a44e31bf1c63c0390b90501e5026886";
 
     home-manager = {
       url = "github:nix-community/home-manager";

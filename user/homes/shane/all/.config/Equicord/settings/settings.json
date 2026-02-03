@@ -96,7 +96,12 @@
         },
         "CallTimer": {
             "enabled": true,
-            "format": "human"
+            "format": "human",
+            "allCallTimers": true,
+            "showWithoutHover": true,
+            "showRoleColor": true,
+            "showSeconds": true,
+            "watchLargeGuilds": false
         },
         "ClearURLs": {
             "enabled": true
@@ -607,11 +612,7 @@
         },
         "AllCallTimers": {
             "enabled": true,
-            "showWithoutHover": true,
-            "watchLargeGuilds": false,
-            "format": "stopwatch",
-            "showSeconds": true,
-            "showRoleColor": true
+            "format": "stopwatch"
         },
         "AmITyping": {
             "enabled": false
@@ -807,9 +808,6 @@
             "enabled": false
         },
         "ThemeLibrary": {
-            "enabled": false
-        },
-        "Oneko": {
             "enabled": false
         },
         "StreamerModeOn": {
@@ -1555,6 +1553,9 @@
         },
         "UserAreaAPI": {
             "enabled": true
+        },
+        "CursorBuddy": {
+            "enabled": false
         }
     },
     "notifications": {
@@ -1568,7 +1569,7 @@
         "authenticated": false,
         "url": "https://api.vencord.dev/",
         "settingsSync": false,
-        "settingsSyncVersion": 1767564822593
+        "settingsSyncVersion": 1770087184157
     },
     "enabledThemeLinks": [],
     "userCssVars": {},
