@@ -170,6 +170,14 @@
 						"enable": true
 					}
 				},
+				"cachePriming": {
+					"enable": false
+				},
+				"cargo": {
+					"buildScripts": {
+						"enable": false
+					}
+				},
 				"checkOnSave": true
 			}
 		}

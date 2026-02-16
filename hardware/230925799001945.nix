@@ -2,6 +2,7 @@
 {
   pkgs,
   lib,
+  machine,
   ...
 }: {
   boot = {
@@ -42,6 +43,7 @@
       options = ["compress-force=zstd:12,nofail"];
     };
   };
+  systemd.services.podman-autostart.after = ["run-media-${machine.user}-Felix\\x2dPP.mount"];
   hardware.cpu.amd.updateMicrocode = true;
   shanetrs = {
     hardware = {

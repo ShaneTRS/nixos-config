@@ -4,7 +4,7 @@
   writeShellApplication,
   coreutils,
   shanetrs,
-  xorg,
+  xdpyinfo,
   machine ? {},
   targetHost ? self.outputs.nixosConfigurations.${machine.serial}.config.shanetrs.remote.addresses.host,
   self,
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
   };
   src = writeShellApplication {
     inherit name;
-    runtimeInputs = [coreutils shanetrs.moonlight-qt shanetrs.not-nice xorg.xdpyinfo];
+    runtimeInputs = [coreutils shanetrs.moonlight-qt shanetrs.not-nice xdpyinfo];
     text = ''
       ml_res() { xdpyinfo | awk '/dimensions/{print $2}'; }
       ml_args() {

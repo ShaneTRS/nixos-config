@@ -199,6 +199,7 @@ in {
             --suffix PATH : ${lib.makeBinPath (cfg.zed-editor.extraPackages
               ++ (with pkgs;
                 resolveList [
+                  shanetrs.devcontainer
                   gcc
                   clang-tools
                   package-version-server

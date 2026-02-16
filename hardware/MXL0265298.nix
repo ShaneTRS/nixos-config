@@ -23,10 +23,7 @@
   shanetrs = {
     hardware = {
       enable = true;
-      drivers.g710 = {
-        enable = true;
-        captureDelays = false;
-      };
+      drivers.g710.enable = true;
       firmware = "redist";
     };
     remote = {

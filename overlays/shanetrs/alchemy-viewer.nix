@@ -21,7 +21,11 @@
   pango,
   pulseaudio,
   systemd,
-  xorg,
+  libxcomposite,
+  libxdamage,
+  libxext,
+  libxfixes,
+  libxrandr,
   stdenvNoCC,
   makeWrapper,
   zstd,
@@ -57,11 +61,11 @@
       pango
       pulseaudio
       systemd
-      xorg.libXcomposite
-      xorg.libXdamage
-      xorg.libXext
-      xorg.libXfixes
-      xorg.libXrandr
+      libxcomposite
+      libxdamage
+      libxext
+      libxfixes
+      libxrandr
     ];
     multiPkgs = pkgs: [];
   };

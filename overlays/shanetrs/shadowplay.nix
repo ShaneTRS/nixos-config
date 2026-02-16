@@ -5,7 +5,7 @@
   libnotify,
   losslesscut-bin,
   pulseaudio,
-  xorg,
+  xdpyinfo,
   ...
 }:
 writeShellApplication {
@@ -16,7 +16,7 @@ writeShellApplication {
     libnotify
     losslesscut-bin
     pulseaudio
-    xorg.xdpyinfo
+    xdpyinfo
   ];
   text = ''
     set +o errexit
