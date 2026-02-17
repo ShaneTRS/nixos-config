@@ -138,6 +138,7 @@ in {
       easyeffects.enable = true;
       vscode.enable = true;
       zed-editor.enable = true;
+      gimp.enable = true;
     };
     shell = {
       zsh.enable = true;
@@ -149,7 +150,6 @@ in {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
       audacity # audio editor
-      gimp3 # image editor
       krita # drawing
       inkscape-with-extensions # vector editor
       libreoffice-still # office suite

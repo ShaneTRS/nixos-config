@@ -31,6 +31,7 @@ in {
         enable = true;
         features = ["nix"];
       };
+      gimp.enable = true;
     };
     shell.zsh.enable = true;
   };
@@ -40,7 +41,6 @@ in {
     home = {
       packages = with pkgs; [
         audacity
-        gimp3
         helvum
         krita
         protontricks

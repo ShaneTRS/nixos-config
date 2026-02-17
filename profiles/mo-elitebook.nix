@@ -18,13 +18,13 @@
         enable = true;
         features = ["nix"];
       };
+      gimp.enable = true;
     };
     shell.zsh.enable = true;
   };
 
   user = {
     home.packages = with pkgs; [
-      gimp3-with-plugins
       krita
       helvum
       shanetrs.moonlight-qt

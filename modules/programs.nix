@@ -7,7 +7,7 @@
 }: let
   inherit (builtins) attrNames elem listToAttrs toJSON;
   inherit (fn) configs resolveList;
-  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption mkPackageOption types;
   inherit (pkgs) makeDesktopItem writeShellApplication;
   cfg = config.shanetrs.programs;
 in {
@@ -52,10 +52,7 @@ in {
     };
     easyeffects = {
       enable = mkEnableOption "EasyEffects configuration and installation";
-      package = mkOption {
-        type = types.package;
-        default = pkgs.easyeffects;
-      };
+      package = mkPackageOption pkgs "easyeffects" {};
       extraPresets = mkOption {
         type = types.attrs;
         default = {};
@@ -67,10 +64,7 @@ in {
         type = types.listOf (types.enum ["nix" "rust"]);
         default = ["nix" "rust"];
       };
-      package = mkOption {
-        type = types.package;
-        default = pkgs.vscodium;
-      };
+      package = mkPackageOption pkgs "vscodium" {};
       extensions = mkOption {
         type = types.listOf types.package;
         default = with pkgs.vscode-extensions;
@@ -91,13 +85,24 @@ in {
         type = types.listOf (types.enum ["nix" "rust"]);
         default = ["nix" "rust"];
       };
-      package = mkOption {
-        type = types.package;
-        default = pkgs.zed-editor;
-      };
+      package = mkPackageOption pkgs "zed-editor" {};
       extraPackages = mkOption {
         type = types.listOf types.package;
         default = [];
+      };
+    };
+    gimp = {
+      enable = mkEnableOption "GIMP configuration and services";
+      package = mkPackageOption pkgs "gimp3-with-plugins" {};
+      gvfs = {
+        enable = mkOption {
+          type = types.bool;
+          default = true;
+        };
+        package = mkOption {
+          type = types.package;
+          default = pkgs.gnome.gvfs;
+        };
       };
     };
   };
@@ -210,6 +215,14 @@ in {
           '';
         })
       ];
+    })
+
+    (mkIf cfg.gimp.enable {
+      services.gvfs = {
+        enable = true; # virtual mounts daemon
+        package = cfg.gimp.gvfs.package;
+      };
+      user.home.packages = [cfg.gimp.package];
     })
   ];
 }

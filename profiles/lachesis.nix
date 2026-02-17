@@ -27,6 +27,7 @@
         enable = true;
         features = ["nix"];
       };
+      gimp.enable = true;
     };
     shell.zsh.enable = true;
   };
@@ -34,7 +35,6 @@
   user = {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
-      gimp3-with-plugins
       helvum
       shanetrs.moonlight-qt
       shanetrs.spotify

@@ -14,8 +14,11 @@ in {
       session = "plasma";
       extraPackages = with pkgs; mkOptionDefault [libsForQt5.kcalc];
     };
-    programs.vscode.enable = true;
+    programs = {
+      vscode.enable = true;
+      gimp.enable = true;
+    };
   };
 
-  user.home.packages = with pkgs; [flatpak gimp3 libreoffice-still vlc];
+  user.home.packages = with pkgs; [flatpak libreoffice-still vlc];
 }

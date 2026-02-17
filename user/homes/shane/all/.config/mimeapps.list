@@ -6,6 +6,7 @@ application/java-archive=org.kde.ark.desktop;
 application/json=dev.zed.Zed.desktop
 application/vnd.debian.binary-package=org.kde.ark.desktop;
 application/xhtml+xml=firefox.desktop;
+application/xml=dev.zed.Zed.desktop;
 audio/ogg=vlc.desktop;
 image/jpeg=gimp.desktop;
 image/png=gimp.desktop;
