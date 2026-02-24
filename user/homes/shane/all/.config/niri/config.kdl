@@ -81,6 +81,7 @@ prefer-no-csd
 
 // spawn-at-startup "waybar"
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
+spawn-sh-at-startup "systemctl --user restart xremap"
 
 animations {
 	// https://yalter.github.io/niri/Configuration:-Animations
@@ -106,6 +107,11 @@ window-rule {
 
 	block-out-from "screen-capture"
 	// block-out-from "screencast" // allow visibility on third-party screenshotters
+}
+
+window-rule {
+	match app-id=r#"^com.moonlight_stream.Moonlight$"#
+	open-fullscreen true
 }
 
 hotkey-overlay { skip-at-startup; }
@@ -198,6 +204,17 @@ input {
   
 	// warp-mouse-to-focus
 	// focus-follows-mouse max-scroll-amount="0%"
+}
+
+recent-windows {
+	open-delay-ms 0;
+	debounce-ms 10;
+	highlight {
+		corner-radius 8
+		padding 16
+		active-color "hsl(205, 0.6, 0.4)" // "hsl(205, 1.0, 0.55)"
+		urgent-color "hsl(0, 0.5, 0.5)"
+	}
 }
 
 // this will be ready soon

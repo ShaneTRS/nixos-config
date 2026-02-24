@@ -109,6 +109,10 @@ in {
 
     (mkIf cfg.keymap.enable {
       hardware.uinput.enable = true;
+      users.groups = {
+        input.members = [machine.user];
+        uinput.members = [machine.user];
+      };
       users.users.${machine.user}.extraGroups = ["input" "uinput"];
       user.systemd.user.services = {
         xremap = let
@@ -150,6 +154,7 @@ in {
 
     (mkIf (cfg.type == "wayland") {
       user = {
+        home.sessionVariables.QT_QPA_PLATFORM = "wayland";
         xdg.configFile."XCompose" = let
           attempt = configs ".XCompose";
         in

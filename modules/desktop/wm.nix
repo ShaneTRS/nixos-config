@@ -55,9 +55,10 @@ in {
           {
             name = "programs";
             remap = {
-              super-t = launch "\"\${TERMINAL[@]}\" || true";
-              super-e = launch "\"\${FILE_MANAGER[@]}\" || true";
-              super-shift-s = launch "\"\${SCREENSHOT[@]}\" || true";
+              super-t = launch "eval \"\${TERMINAL}\"";
+              super-d = launch "eval \"\${LAUNCHER}\"";
+              super-e = launch "eval \"\${FILE_MANAGER}\"";
+              super-shift-s = launch "eval \"\${SCREENSHOT}\"";
             };
           }
         ];
@@ -74,13 +75,16 @@ in {
       };
     in
       mkIf (cfg.session == "wm" && cfg.preset == "niri") {
-        systemd.services."getty@tty1".serviceConfig.ExecStart = [
-          ""
-          "/sbin/agetty --noreset --noclear --autologin ${machine.user} --keep-baud tty1 38400 linux"
-        ];
+        systemd.services."getty@tty1" = {
+          overrideStrategy = "asDropin";
+          serviceConfig.ExecStart = [
+            ""
+            "${pkgs.util-linux}/sbin/agetty --login-program ${config.services.getty.loginProgram} --autologin ${machine.user} --noclear %I $TERM"
+          ];
+        };
         shanetrs.shell.extraRc = ''
           case "$(tty)" in
-            /dev/tty1|/dev/tty7) exec niri-session -l ;;
+            /dev/tty1|/dev/tty7) niri-session -l && exit ;;
           esac
         '';
         xdg.portal = xdgPortalConf;
@@ -90,8 +94,12 @@ in {
             packages = with pkgs; [
               niri
               xwayland-satellite
+              adwaita-icon-theme
             ];
-            sessionVariables = {SCREENSHOT = "niri msg action screenshot";};
+            sessionVariables = {
+              SCREENSHOT = "niri msg action screenshot";
+              LAUNCHER = "${getExe pkgs.rofi} -show drun";
+            };
           };
           xdg.portal = xdgPortalConf;
           services.gnome-keyring.enable = true;

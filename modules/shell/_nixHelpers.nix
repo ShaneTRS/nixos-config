@@ -15,7 +15,7 @@
       done
       IN_NIX_SHELL=impure NIXPKGS_ALLOW_UNFREE=1 nix shell --impure "''${ARGS[@]}"
     )}
-    nix-inspect() { cd $(
+    nix-inspect() { (cd $(
       PARSE='$(
         DIRS=(''${(s/:/)PATH}) PKGS=()
         for i in "''${DIRS[@]}"; do
@@ -36,7 +36,7 @@
       PS3=""; select PKG in ''${PKGS[@]}; do
         exec echo $PKG
       done
-    ); }
+    ) && exec "$SHELL"); }
     where() { readlink -f "$(which "$@")"; }
   '';
 

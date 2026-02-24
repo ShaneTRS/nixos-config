@@ -17,9 +17,12 @@ in {
     noisetorch.enable = true;
   };
   users = {
-    groups.uinput.gid = 990;
+    groups = {
+      uinput.gid = 990;
+      adbusers.members = [machine.user];
+      vboxusers.members = [machine.user];
+    };
     users.${machine.user} = {
-      extraGroups = ["adbusers" "vboxusers"];
       subGidRanges = [
         {
           count = 1;

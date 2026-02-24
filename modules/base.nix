@@ -105,11 +105,13 @@ in {
       groups = {
         docker.members = [machine.user];
         realtime.members = [machine.user];
+        video.members = [machine.user];
+        networkmanager.members = [machine.user];
       };
       users.${machine.user} = {
         isNormalUser = mkStrongDefault true;
         hashedPasswordFile = mkStrongDefault (configs "passwd");
-        extraGroups = ["networkmanager" "wheel"];
+        extraGroups = ["wheel"];
         autoSubUidGidRange = mkStrongDefault true;
       };
     };
