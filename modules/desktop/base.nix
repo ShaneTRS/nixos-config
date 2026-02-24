@@ -6,7 +6,7 @@
   pkgs,
   ...
 }: let
-  inherit (builtins) attrNames length;
+  inherit (builtins) attrNames concatStringsSep length;
   inherit (fn) configs transformAttrs;
   inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types;
 
@@ -65,6 +65,10 @@ in {
       enable = mkOption {
         type = types.bool;
         default = length cfg.keymap.keymap + length cfg.keymap.modmap != 0;
+      };
+      devices = mkOption {
+        type = types.listOf types.str;
+        default = [];
       };
       defaultMode = mkOption {
         type = types.str;
@@ -132,11 +136,12 @@ in {
                 virtual_modifiers = cfg.keymap.virtualModifiers;
                 default_mode = cfg.keymap.defaultMode;
               })
-            ["defaultMode" "enable" "transforms" "virtualModifiers"];
+            ["defaultMode" "devices" "enable" "transforms" "virtualModifiers"];
           transformedYaml = transformAttrs cfg.keymap.transforms yaml;
+          deviceString = concatStringsSep " " (map (x: "--device " + x) cfg.keymap.devices);
         in {
           Unit.Description = "Key remapper for X11 and Wayland";
-          Service.ExecStart = "${getExe pkgs.xremap} ${fn.toYAML transformedYaml}";
+          Service.ExecStart = "${getExe pkgs.xremap} --mouse ${deviceString} ${fn.toYAML transformedYaml}";
           Install.WantedBy = ["graphical-session.target"];
         };
       };

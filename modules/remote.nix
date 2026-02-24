@@ -100,15 +100,7 @@ in {
           then
             map (x:
               if isAttrs x && x.name != machine.serial
-              then
-                x
-                // {
-                  application =
-                    x.application or {}
-                    // {
-                      not = (toList x.application.not or []) ++ ["/moonlight_stream/"];
-                    };
-                }
+              then x // {application = x.application or {} // {not = (toList x.application.not or []) ++ ["/moonlight_stream/"];};}
               else x)
             v
           else v)

@@ -1,9 +1,5 @@
 # Inspiron 3501
-{
-  pkgs,
-  machine,
-  ...
-}: {
+{machine, ...}: {
   boot.loader = {
     efi = {
       canTouchEfiVariables = true;
@@ -34,17 +30,20 @@
     trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
   };
   shanetrs = {
-    desktop.keymap.keymap = [
-      {
-        "name" = machine.serial;
-        "remap" = {
-          "pageup" = "home";
-          "pagedown" = "end";
-          "home" = "pageup";
-          "end" = "pagedown";
-        };
-      }
-    ];
+    desktop.keymap = {
+      devices = ["keyboard" "Video"];
+      keymap = [
+        {
+          name = machine.serial;
+          remap = {
+            pageup = "home";
+            pagedown = "end";
+            home = "pageup";
+            end = "pagedown";
+          };
+        }
+      ];
+    };
     hardware = {
       enable = true;
       graphics = "intel";

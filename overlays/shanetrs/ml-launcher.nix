@@ -27,7 +27,7 @@ stdenv.mkDerivation rec {
       ml_args() {
         echo "$APPLICATION" --resolution "$RESOLUTION" --fps "$FPS" --bitrate "$BITRATE" \
           --audio-on-host --quit-after --game-optimization --multi-controller \
-          --background-gamepad --capture-system-keys fullscreen \
+          --background-gamepad --capture-system-keys always \
           --video-codec HEVC --video-decoder hardware --no-vsync
       }
       RESOLUTION="''${RESOLUTION:-$(ml_res)}"

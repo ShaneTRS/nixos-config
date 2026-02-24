@@ -217,6 +217,11 @@ recent-windows {
 	}
 }
 
+cursor {
+	xcursor-theme "Adwaita"
+	// xcursor-size 24
+}
+
 // this will be ready soon
 // include optional=true "system.kdl"
 // include optional=true "nix.kdl"

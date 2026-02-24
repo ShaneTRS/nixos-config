@@ -74,8 +74,8 @@ in {
           {
             name = "global";
             remap = {
-              "super-p" = launch "ssh shanetrs.remote.client systemctl --user restart audio-fix";
-              "super-shift-s" = launch ''
+              super-p = launch "ssh shanetrs.remote.client systemctl --user restart audio-fix";
+              super-shift-s = launch ''
                 [[ "$(ls /tmp/clipboard-*.png | wc -l)" -gt 24 ]] && rm /tmp/clipboard-*.png
                 file="/tmp/clipboard-$RANDOM.png"
                 spectacle -brno "$file"
@@ -83,7 +83,7 @@ in {
                 [ ! -f "$file" ] && exit 1
                 ${getExe pkgs.xclip} -sel c -t image/png -i < "$file"
               '';
-              "super-space" = launch ''
+              super-space = launch ''
                 p=$(${xdotool} getwindowpid $(${xdotool} getactivewindow))
                 ps=($(cat /proc/$p/stat)); s=9
                 [ ''${ps[2]} == 'T' ] && ((s-=1))
@@ -96,11 +96,11 @@ in {
           {
             name = "menu";
             remap = {
-              "leftmeta" = {
-                "press" = launch ''
+              leftmeta = {
+                press = launch ''
                   date +%s%N > /tmp/xremap.menu
                 '';
-                "release" = launch ''
+                release = launch ''
                   since=$(( ( $(date +%s%N) - $(cat /tmp/xremap.menu || echo 0) ) / 1000000 ))
                   if [[ $since -lt 150 || $since -gt 12500 ]]; then
                     ${pkgs.kdePackages.qttools}/bin/qdbus org.kde.kglobalaccel /component/kwin \
