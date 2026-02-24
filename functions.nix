@@ -77,6 +77,8 @@ in rec {
       else nix.default;
 
     resolveList = list: map (i: i.content or i) (filter (i: i.condition or true) list);
+
+    transformAttrs = rules: attrs: mapAttrs (k: v: builtins.foldl' (acc: f: f k acc) v rules) attrs;
   };
   tundra = {
     self,
