@@ -9,7 +9,7 @@
   inherit (fn) configs;
   inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString toList types;
   inherit (pkgs) writeShellApplication;
-  inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs toJSON;
+  inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs match toJSON;
   cfg = config.shanetrs.remote;
 in {
   options.shanetrs.remote = {
@@ -99,7 +99,7 @@ in {
           if k == "keymap" || k == "modmap"
           then
             map (x:
-              if isAttrs x && x.name != machine.serial
+              if isAttrs x && match ".*-ungrab" x.name == null
               then x // {application = x.application or {} // {not = (toList x.application.not or []) ++ ["/moonlight_stream/"];};}
               else x)
             v

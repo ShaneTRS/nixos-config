@@ -34,7 +34,7 @@
       devices = ["keyboard" "Video"];
       keymap = [
         {
-          name = machine.serial;
+          name = machine.serial + "-ungrab";
           remap = {
             pageup = "home";
             pagedown = "end";

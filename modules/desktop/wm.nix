@@ -32,7 +32,14 @@ in {
 
         wpctl = "${pkgs.wireplumber}/bin/wpctl";
         playerctl = getExe pkgs.playerctl;
-        brightnessctl = getExe pkgs.brightnessctl;
+        brightness = getExe (pkgs.writeShellApplication {
+          name = "brightness-8b501";
+          runtimeInputs = with pkgs; [brightnessctl procps];
+          text = ''
+            brightnessctl --class=backlight set "$(( ''${1:-1} * $(pgrep -fc "$0") ))%''${2:-+}"
+            sleep 1
+          '';
+        });
       in {
         keymap = [
           {
@@ -47,9 +54,13 @@ in {
               stopcd = launch "${playerctl} -a stop";
               previoussong = launch "${playerctl} -a previous";
               nextsong = launch "${playerctl} -a next";
-
-              brightnessup = launch "${brightnessctl} --class=backlight set 1%+";
-              brightnessdown = launch "${brightnessctl} --class=backlight set 1%-";
+            };
+          }
+          {
+            name = "system-ungrab";
+            remap = {
+              brightnessup = launch "${brightness} 1 +";
+              brightnessdown = launch "${brightness} 1 -";
             };
           }
           {
