@@ -7,9 +7,9 @@
   ...
 }: let
   inherit (fn) configs;
-  inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString types;
+  inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString toList types;
   inherit (pkgs) writeShellApplication;
-  inherit (builtins) attrNames concatStringsSep listToAttrs toJSON;
+  inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs toJSON;
   cfg = config.shanetrs.remote;
 in {
   options.shanetrs.remote = {
@@ -94,6 +94,25 @@ in {
     }
 
     (mkIf (cfg.role == "client") {
+      shanetrs.desktop.keymap.transforms = [
+        (k: v:
+          if k == "keymap" || k == "modmap"
+          then
+            map (x:
+              if isAttrs x && x.name != machine.serial
+              then
+                x
+                // {
+                  application =
+                    x.application or {}
+                    // {
+                      not = (toList x.application.not or []) ++ ["/moonlight_stream/"];
+                    };
+                }
+              else x)
+            v
+          else v)
+      ];
       systemd.services = mkIf cfg.usb.enable {
         usbip-resume = {
           after = ["suspend.target"];

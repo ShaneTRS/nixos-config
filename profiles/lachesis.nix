@@ -15,17 +15,6 @@
       session = "wm";
       type = "wayland";
       preset = "niri";
-      keymap.transforms = [
-        (k: v:
-          if k == "keymap" || k == "modmap"
-          then
-            map (x:
-              if builtins.isAttrs x
-              then x // {application = x.application or {not = "/Moonlight/";};}
-              else x)
-            v
-          else v)
-      ];
     };
     remote = {
       enable = true;

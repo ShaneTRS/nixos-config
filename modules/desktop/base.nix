@@ -98,10 +98,15 @@ in {
     {
       hardware.bluetooth.enable = true;
       security.rtkit.enable = true; # Interactive privilege escalation
+      services.udev.packages = [pkgs.brightnessctl];
       xdg.portal.enable = mkIf (length config.xdg.portal.extraPortals != 0) true;
       user = {
         home.packages = cfg.extraPackages;
         xdg.portal.enable = mkIf (length config.user.xdg.portal.extraPortals != 0) true;
+      };
+      users.groups = {
+        video.members = [machine.user];
+        input.members = [machine.user];
       };
     }
 
@@ -117,11 +122,7 @@ in {
 
     (mkIf cfg.keymap.enable {
       hardware.uinput.enable = true;
-      users.groups = {
-        input.members = [machine.user];
-        uinput.members = [machine.user];
-      };
-      users.users.${machine.user}.extraGroups = ["input" "uinput"];
+      users.groups.uinput.members = [machine.user];
       user.systemd.user.services = {
         xremap = let
           yaml =
