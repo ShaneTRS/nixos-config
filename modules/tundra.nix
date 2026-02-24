@@ -25,7 +25,7 @@ in {
       };
       checkInterval = mkOption {
         type = types.enum ["daily" "weekly" "monthly"];
-        default = "daily";
+        default = "weekly";
       };
       push = {
         enable = mkOption {
@@ -36,19 +36,9 @@ in {
       };
     };
     appStores = mkOption {
-      type = types.listOf (types.enum ["flatpak" "nix"]);
+      type = types.listOf (types.enum ["flatpak"]);
       default = ["flatpak"];
     };
-    # appStore = {
-    #   nix = mkOption {
-    #     type = types.bool;
-    #     default = false;
-    #   };
-    #   flatpak = mkOption {
-    #     type = types.bool;
-    #     default = true;
-    #   };
-    # };
   };
 
   config = mkIf cfg.enable (mkMerge [
@@ -97,20 +87,13 @@ in {
       };
     })
 
-    (mkIf (builtins.elem "nix" cfg.appStores) {
-      # TODO: Make this functional
-      # environment.systemPackages = with pkgs; [
-      #   local.nix-software-center
-      # ];
-    })
-
     (mkIf (builtins.elem "flatpak" cfg.appStores) {
       services.flatpak.enable = true;
       environment.systemPackages = with pkgs; [
         (
           if config.shanetrs.desktop.session == "plasma"
           then kdePackages.discover
-          else gnome.gnome-software
+          else gnome-software
         )
       ];
     })

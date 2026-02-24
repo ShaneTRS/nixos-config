@@ -1,0 +1,86 @@
+binds {
+	// `niri msg action do-something`
+	Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
+	Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
+	
+	// Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+	
+	XF86AudioRaiseVolume  allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+ -l 1.0"; }
+	XF86AudioLowerVolume  allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
+	XF86AudioMute         allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+	XF86AudioMicMute      allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+
+	XF86AudioPlay         allow-when-locked=true { spawn-sh "playerctl play-pause"; }
+	XF86AudioStop         allow-when-locked=true { spawn-sh "playerctl stop"; }
+	XF86AudioPrev         allow-when-locked=true { spawn-sh "playerctl previous"; }
+	XF86AudioNext         allow-when-locked=true { spawn-sh "playerctl next"; }
+
+	XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
+	XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
+	
+	
+	Print        { screenshot; }
+	Ctrl+Print   { screenshot-screen; }
+	Alt+Print    { screenshot-window; }
+}
+
+
+input {
+  // https://yalter.github.io/niri/Configuration:-Input
+  
+	keyboard {
+		xkb {
+		    // For more information, see xkeyboard-config(7).
+		    options "compose:menu"
+		}
+		// numlock
+	}
+
+	touchpad {
+		// off
+		tap
+		// dwt
+		// dwtp
+		// drag false
+		// drag-lock
+		natural-scroll
+		// accel-speed 0.2
+		accel-profile "flat"
+		scroll-method "two-finger"
+		// disabled-on-external-mouse
+	}
+
+	mouse {
+		// off
+		// natural-scroll
+		// accel-speed 0.2
+		accel-profile "flat"
+		// scroll-method "no-scroll"
+	}
+
+	trackpoint {
+		// off
+		// natural-scroll
+		// accel-speed 0.2
+		// accel-profile "flat"
+		// scroll-method "on-button-down"
+		// scroll-button 273
+		// scroll-button-lock
+		// middle-emulation
+	}
+}
+
+
+// https://yalter.github.io/niri/Configuration:-Outputs
+output "DP-1" {
+	// off
+	mode "1920x1080@60.000"
+	scale 1
+	// transform "normal" // normal, 90, 180, 270, flipped, flipped-90, flipped-180 and flipped-270.
+	// position x=0 y=0 // 3840 at 2x scale means 1920
+}
+
+cursor {
+	xcursor-theme "Adwaita"
+	// xcursor-size 24
+}

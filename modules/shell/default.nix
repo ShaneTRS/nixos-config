@@ -117,6 +117,10 @@ in {
       type = types.listOf types.package;
       default = [];
     };
+    extraRc = mkOption {
+      type = types.lines;
+      default = "";
+    };
   };
 
   config = mkMerge [
@@ -197,6 +201,7 @@ in {
             (optionalString (elem "nix-index" cfg._.features)
               (nixHelpers.nixIndex {inherit config pkgs;}))
           ])
+        + cfg.extraRc
         + cfg.bash.extraRc;
     in
       mkIf cfg.bash.enable {
@@ -224,6 +229,7 @@ in {
             (optionalString (elem "nix-index" cfg._.features)
               (nixHelpers.nixIndex {inherit config pkgs;}))
           ])
+        + cfg.extraRc
         + cfg.zsh.extraRc;
     in
       mkIf cfg.zsh.enable {

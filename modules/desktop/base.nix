@@ -31,6 +31,10 @@
       default = {extraPackages = with pkgs; [xfce4-panel-profiles];};
       win95 = {extraPackages = with pkgs; [palemoon-bin];} // default;
     };
+    wm = {
+      default = {};
+      niri = {};
+    };
   };
   this =
     if cfg.enable && cfg.session != null
@@ -151,7 +155,7 @@ in {
         in
           mkIf (attempt != null) {
             text =
-              builtins.readFile "${pkgs.xorg.libX11}/share/X11/locale/en_US.UTF-8/Compose"
+              builtins.readFile "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
               + builtins.readFile attempt;
           };
       };

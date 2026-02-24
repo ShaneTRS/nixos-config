@@ -12,7 +12,10 @@
     browser.firefox.enable = true;
     desktop = {
       enable = true;
-      session = "plasma";
+      # session = "plasma";
+      session = "wm";
+      type = "wayland";
+      preset = "niri";
     };
     remote = {
       enable = true;
