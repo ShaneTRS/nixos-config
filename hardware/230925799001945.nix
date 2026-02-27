@@ -8,7 +8,7 @@
   boot = {
     kernelModules = ["kvm-amd"];
     # blacklistedKernelModules = [ "amdgpu" ];
-    # kernelParams = ["i915.force_probe=!56a0" "xe.force_probe=56a0"];
+    kernelParams = ["i915.force_probe=!56a0" "xe.force_probe=56a0"];
     loader = {
       efi = {
         canTouchEfiVariables = true;

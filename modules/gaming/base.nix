@@ -103,8 +103,8 @@ in {
         default = [];
       };
       features = mkOption {
-        type = types.listOf (types.enum ["wlx-overlay" "sst" "camera-fbt" "sidequest"]);
-        default = ["wlx-overlay" "sst"];
+        type = types.listOf (types.enum ["sst" "camera-fbt" "sidequest"]);
+        default = ["sst"];
       };
       extraPackages = mkOption {
         type = types.listOf types.package;
@@ -160,7 +160,6 @@ in {
           # (mkIf (elem "camera-fbt" cfg.vr.features) shanetrs.camera-fbt)
           (mkIf (elem "sidequest" cfg.vr.features) sidequest)
           # (mkIf (elem "sst" cfg.vr.features) shanetrs.shanetrs-sst)
-          (mkIf (elem "wlx-overlay" cfg.vr.features) shanetrs.wlx-overlay-s)
         ];
       programs.alvr.enable = mkIf (cfg.vr.headsets == "oculus") true; # TODO: declarative configuration
     })

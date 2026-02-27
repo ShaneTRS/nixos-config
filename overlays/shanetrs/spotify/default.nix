@@ -1,8 +1,7 @@
 {spotify, ...}:
 spotify.overrideAttrs (old: {
   postInstall =
-    old.postInstall
-      or ""
+    old.postInstall or ""
     + ''
       ln -s "${./adblock.so}" "$libdir/adblock.so"
       ln -s "${./config.toml}" "$out/share/spotify/config.toml"

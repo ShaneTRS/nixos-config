@@ -161,7 +161,6 @@ in {
       helvum # patchbay
       spicetify-cli # spotify mods
       shanetrs.spotify # music player
-      shanetrs.zotify # music downloader
 
       scrcpy # android-to-pc casting
       vlc # media player
@@ -178,7 +177,6 @@ in {
 
       shanetrs.alchemy-viewer # metaverse client
       shanetrs.jfa-go # jellyfin temp. accounts
-      shanetrs.wlx-overlay-s # vr desktops
       shanetrs.schud # controller overlay
     ];
     xdg.configFile."keynav/keynavrc" = let

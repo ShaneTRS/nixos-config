@@ -6,19 +6,18 @@
   fuse,
   libclang,
   lib,
-  version ? "0.3.2",
-  hash ? "sha256-X9uGLz86k0RveCasi/sjBwCy5xZAcGAOQWnOYD1VZWE=",
+  rev ? "4c4fefb0c6590ec1f273fa80e82d090539033523",
+  hash ? "sha256-zqMLi0sHozb4oMS4lndCOzFB+wuX8ehvjDOaQx8wraU=",
   ...
 }:
 rustPlatform.buildRustPackage (finalAttrs: rec {
   pname = "vuinputd";
-  inherit version;
+  version = rev;
 
   src = fetchFromGitHub {
     owner = "joleuger";
     repo = pname;
-    tag = finalAttrs.version;
-    inherit hash;
+    inherit rev hash;
   };
 
   nativeBuildInputs = [pkg-config rustPlatform.bindgenHook];

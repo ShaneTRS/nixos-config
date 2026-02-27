@@ -1,1 +1,1 @@
-{pkgs, ...}: new: old: {}
+{...}: new: old: {}

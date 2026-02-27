@@ -7,7 +7,10 @@
 // custom settings, run the `open default settings` command
 // from the command palette or from `Zed` application menu.
 {
-	"minimap": {
+	"git_panel": {
+  "tree_view": true
+ },
+ "minimap": {
 		"show": "always"
 	},
 	"terminal": {

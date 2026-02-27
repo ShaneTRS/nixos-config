@@ -2,8 +2,8 @@
   stdenvNoCC,
   unzip,
   fetchurl,
-  version ? "0.5.1",
-  hash ? "sha256-YAaAqQMJJZUpV72P+n6cDdp4ZufUoosHcpk7DCQgi3I=",
+  version ? "0.6.0",
+  hash ? "sha256-FedQI4AWlFfsbD93ew4b1rfmWwHBM7L0wfsppky7xZE=",
   ...
 }:
 stdenvNoCC.mkDerivation rec {

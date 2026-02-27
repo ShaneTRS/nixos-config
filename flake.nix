@@ -12,7 +12,7 @@
       inputs.nixpkgs.follows = "pkgs-unstable";
     };
     nixgl = {
-      url = "github:nix-community/nixGL";
+      url = "github:nix-community/nixgl";
       inputs.nixpkgs.follows = "pkgs-unstable";
     };
     sops = {
