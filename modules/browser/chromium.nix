@@ -27,7 +27,7 @@ in {
     user.programs.chromium = {
       enable = true;
       extensions = map (id: {inherit id;}) cfg.extensions;
-      package = cfg.package;
+      inherit (cfg) package;
     };
   };
 }

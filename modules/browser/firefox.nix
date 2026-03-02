@@ -2,10 +2,11 @@
   config,
   lib,
   pkgs,
+  machine,
   ...
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkIf mkOption types;
-  inherit (builtins) elemAt listToAttrs;
+  inherit (builtins) elemAt listToAttrs split;
 
   cfg = config.shanetrs.browser.firefox;
 in {
@@ -93,6 +94,10 @@ in {
                     name = "query";
                     value = "{searchTerms}";
                   }
+                  {
+                    name = "channel";
+                    value = "unstable";
+                  }
                 ];
               }
             ];
@@ -139,11 +144,19 @@ in {
     settings = mkOption {
       type = types.attrs;
       default = {
-        "widget.use-xdg-desktop-portal.file-picker" = 1;
+        "browser.download.dir" = "/home/${machine.user}/Downloads/Firefox";
+        "browser.download.always_ask_before_handling_new_types" = true;
+        "browser.shell.checkDefaultBrowser" = false;
+        "browser.newtabpage.enabled" = false;
+        "browser.urlbar.suggest.quicksuggest.all" = false;
+        "browser.urlbar.suggest.quicksuggest.nonsponsored" = false;
+        "browser.urlbar.suggest.quicksuggest.sponsored" = false;
         "general.autoScroll" = 1;
         "sidebar.revamp" = true;
         "sidebar.verticalTabs" = true;
         "sidebar.visibility" = "expand-on-hover";
+        "widget.use-xdg-desktop-portal.file-picker" = 1;
+        "xpinstall.signatures.required" = false;
       };
     };
     _ = {
@@ -156,23 +169,26 @@ in {
 
   config = mkIf cfg.enable {
     environment.systemPackages = mkIf cfg.pwa.enable [cfg.pwa.package];
+    user.systemd.user.tmpfiles.rules = [
+      "L /home/${machine.user}/Downloads/Firefox - - - - /tmp/firefox_${machine.user}"
+      "d /tmp/firefox_${machine.user} 1700 ${machine.user} users -"
+    ];
     user.programs.firefox = {
       enable = true;
       package = cfg.package.override {inherit (cfg._) nativeMessagingHosts;};
       profiles.default = {
         search = {
           force = true;
-          default = cfg.search.default;
-          engines = cfg.search.engines;
+          inherit (cfg.search) default engines;
         };
-        settings = cfg.settings;
+        inherit (cfg) settings;
       };
-      policies.ExtensionSettings = listToAttrs (map (addon: let
-          split = lib.splitString ":" addon;
+      policies.ExtensionSettings = listToAttrs (map (x: let
+          addon = split ":" x;
         in {
-          name = elemAt split 0;
+          name = elemAt addon 0;
           value = {
-            install_url = "https://addons.mozilla.org/firefox/downloads/latest/${elemAt split 1}.xpi";
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/${elemAt addon 2}.xpi";
             installation_mode = "force_installed"; # Prevents uninstalling without config
           };
         })

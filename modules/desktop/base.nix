@@ -93,7 +93,7 @@ in {
     };
     extraPackages = mkOption {
       type = types.listOf types.package;
-      default = this.extraPackages or [];
+      default = with pkgs; (this.extraPackages or []) ++ [shanetrs.xdg-open];
       example = with pkgs; [flite];
     };
   };
