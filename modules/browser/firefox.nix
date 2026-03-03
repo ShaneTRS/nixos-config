@@ -7,7 +7,6 @@
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkIf mkOption types;
   inherit (builtins) elemAt listToAttrs split;
-
   cfg = config.shanetrs.browser.firefox;
 in {
   options.shanetrs.browser.firefox = {
@@ -144,7 +143,7 @@ in {
     settings = mkOption {
       type = types.attrs;
       default = {
-        "browser.download.dir" = "/home/${machine.user}/Downloads/Firefox";
+        "browser.download.dir" = "${config.home.homeDirectory}/Downloads/Firefox";
         "browser.download.always_ask_before_handling_new_types" = true;
         "browser.shell.checkDefaultBrowser" = false;
         "browser.newtabpage.enabled" = false;
@@ -167,13 +166,13 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
-    environment.systemPackages = mkIf cfg.pwa.enable [cfg.pwa.package];
-    user.systemd.user.tmpfiles.rules = [
-      "L /home/${machine.user}/Downloads/Firefox - - - - /tmp/firefox_${machine.user}"
+  home = mkIf cfg.enable {
+    home.packages = mkIf cfg.pwa.enable [cfg.pwa.package]; # environment.systemPackages
+    systemd.user.tmpfiles.rules = [
+      "L ${config.home.homeDirectory}/Downloads/Firefox - - - - /tmp/firefox_${machine.user}"
       "d /tmp/firefox_${machine.user} 1700 ${machine.user} users -"
     ];
-    user.programs.firefox = {
+    programs.firefox = {
       enable = true;
       package = cfg.package.override {inherit (cfg._) nativeMessagingHosts;};
       profiles.default = {

@@ -6,7 +6,6 @@
 }: let
   inherit (builtins) elem;
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf mkMerge;
-
   cfg = config.shanetrs.gaming;
 in {
   options.shanetrs.gaming = {
@@ -112,35 +111,13 @@ in {
       };
     };
   };
-  config = mkMerge [
-    (mkIf cfg.epic.enable {user.home.packages = cfg.epic.extraPackages ++ [cfg.epic.package];})
 
+  nixos = mkMerge [
     (mkIf cfg.gamescope.enable {
       programs.gamescope = {
         inherit (cfg.gamescope) enable args env package;
-        capSysNice = true; # security wrapper
+        capSysNice = false; # doesn't work in fhs when true
       };
-    })
-
-    (mkIf cfg.lutris.enable {
-      user.home.packages = [
-        (cfg.lutris.package.override {
-          extraLibraries = pkgs: cfg.lutris.extraLibraries;
-          extraPkgs = pkgs: cfg.lutris.extraPackages;
-        })
-      ];
-    })
-
-    (mkIf cfg.mangohud.enable {
-      user.programs.mangohud = {
-        inherit (cfg.mangohud) enable package settings;
-      };
-    })
-
-    (mkIf cfg.minecraft.enable {
-      user.home.packages =
-        cfg.minecraft.extraPackages
-        ++ [(cfg.minecraft.package.override {jdks = cfg.minecraft.java;})];
     })
 
     (mkIf cfg.steam.enable {
@@ -154,14 +131,42 @@ in {
     })
 
     (mkIf cfg.vr.enable {
-      user.home.packages = with pkgs;
+      programs.alvr.enable = mkIf (cfg.vr.headsets == "oculus") true; # TODO: declarative configuration
+    })
+  ];
+
+  home = mkMerge [
+    (mkIf cfg.epic.enable {home.packages = cfg.epic.extraPackages ++ [cfg.epic.package];})
+
+    (mkIf cfg.lutris.enable {
+      home.packages = [
+        (cfg.lutris.package.override {
+          extraLibraries = pkgs: cfg.lutris.extraLibraries;
+          extraPkgs = pkgs: cfg.lutris.extraPackages;
+        })
+      ];
+    })
+
+    (mkIf cfg.mangohud.enable {
+      programs.mangohud = {
+        inherit (cfg.mangohud) enable package settings;
+      };
+    })
+
+    (mkIf cfg.minecraft.enable {
+      home.packages =
+        cfg.minecraft.extraPackages
+        ++ [(cfg.minecraft.package.override {jdks = cfg.minecraft.java;})];
+    })
+
+    (mkIf cfg.vr.enable {
+      home.packages = with pkgs;
         cfg.vr.extraPackages
         ++ [
           # (mkIf (elem "camera-fbt" cfg.vr.features) shanetrs.camera-fbt)
           (mkIf (elem "sidequest" cfg.vr.features) sidequest)
           # (mkIf (elem "sst" cfg.vr.features) shanetrs.shanetrs-sst)
         ];
-      programs.alvr.enable = mkIf (cfg.vr.headsets == "oculus") true; # TODO: declarative configuration
     })
   ];
 }

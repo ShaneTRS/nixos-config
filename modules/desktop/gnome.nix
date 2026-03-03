@@ -7,7 +7,7 @@
   inherit (lib) mkIf mkMerge;
   cfg = config.shanetrs.desktop;
 in {
-  config = mkIf cfg.enable (mkMerge [
+  nixos = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.session == "gnome") {
       environment.gnome.excludePackages = with pkgs; [
         gnome-contacts
@@ -16,12 +16,6 @@ in {
         gnome-tour
         yelp
       ];
-      user = {
-        dconf = {
-          enable = true;
-          settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-        };
-      };
       services.xserver = {
         displayManager.gdm.enable = true;
         desktopManager.gnome.enable = true;
@@ -32,12 +26,19 @@ in {
         "autovt@tty1".enable = false;
       };
     })
+  ]);
+
+  home = mkIf cfg.enable (mkMerge [
+    (mkIf (cfg.session == "gnome") {
+      dconf = {
+        enable = true;
+        settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+      };
+    })
 
     (mkIf (cfg.session == "gnome" && cfg.preset == "pop") {
-      user = {
-        dconf.settings = {"org/gnome/shell".enabled-extensions = ["pop-shell@system76.com"];};
-        home.packages = with pkgs; [gnomeExtensions.pop-shell];
-      };
+      dconf.settings = {"org/gnome/shell".enabled-extensions = ["pop-shell@system76.com"];};
+      home.packages = with pkgs; [gnomeExtensions.pop-shell];
     })
   ]);
 }

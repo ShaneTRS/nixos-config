@@ -1,63 +1,14 @@
 {
   config,
-  fn,
   machine,
   pkgs,
   lib,
   ...
 }: let
-  inherit (fn) configs;
   inherit (lib) getExe mkIf mkOptionDefault;
+  inherit (lib.tundra) configs;
 in {
-  imports = [./services.nix];
-
-  environment.systemPackages = with pkgs; [shanetrs.not-nice iptables];
-  programs = {
-    dconf.enable = true; # Enable dconf for GTK apps
-    noisetorch.enable = true;
-  };
-  users = {
-    groups = {
-      uinput.gid = 990;
-      adbusers.members = [machine.user];
-      vboxusers.members = [machine.user];
-    };
-    users.${machine.user} = {
-      subGidRanges = [
-        {
-          count = 1;
-          startGid = config.users.groups.input.gid;
-        }
-        {
-          count = 1;
-          startGid = config.users.groups.uinput.gid;
-        }
-      ];
-    };
-  };
-
-  services = {
-    ddclient.enable = true;
-    zerotierone.enable = true;
-    udev = {
-      enable = true;
-      packages = [pkgs.shanetrs.vuinputd];
-      extraHwdb = ''
-        evdev:input:b0003v1209p5020e????-*
-         ID_VUINPUT=1
-
-        input:b0003v1209p5020e????-*
-         ID_VUINPUT=1
-      '';
-    };
-  };
-
-  systemd.user.services = {
-    keynav.enable = true;
-    jfa-go.enable = true;
-  };
-
-  shanetrs = {
+  config.shanetrs = {
     enable = true;
     browser.firefox = {
       enable = true;
@@ -149,7 +100,70 @@ in {
     };
   };
 
-  user = {
+  nixos = {
+    environment.systemPackages = with pkgs; [shanetrs.not-nice iptables];
+    programs = {
+      dconf.enable = true; # Enable dconf for GTK apps
+      noisetorch.enable = true;
+    };
+    users = {
+      groups = {
+        uinput.gid = 990;
+        adbusers.members = [machine.user];
+        vboxusers.members = [machine.user];
+      };
+      users.${machine.user} = {
+        subGidRanges = [
+          {
+            count = 1;
+            startGid = config.users.groups.input.gid;
+          }
+          {
+            count = 1;
+            startGid = config.users.groups.uinput.gid;
+          }
+        ];
+      };
+    };
+
+    services = {
+      ddclient.enable = true;
+      zerotierone.enable = true;
+      udev = {
+        enable = true;
+        packages = [pkgs.shanetrs.vuinputd];
+        extraHwdb = ''
+          evdev:input:b0003v1209p5020e????-*
+           ID_VUINPUT=1
+
+          input:b0003v1209p5020e????-*
+           ID_VUINPUT=1
+        '';
+      };
+    };
+
+    systemd.user.services = {
+      keynav.enable = true;
+      jfa-go.enable = true;
+    };
+
+    boot.kernelParams = ["kvm.enable_virt_at_load=0"];
+    virtualisation = {
+      virtualbox.host = {
+        enable = true;
+        enableExtensionPack = true;
+        enableHardening = false;
+      };
+      podman = {
+        enable = true;
+        dockerCompat = true;
+        defaultNetwork.settings.dns_enabled = true;
+        extraPackages = [pkgs.slirp4netns];
+      };
+    };
+  };
+
+  home = {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
       audacity # audio editor
@@ -183,20 +197,5 @@ in {
       attempt = configs "keynavrc";
     in
       mkIf (attempt != null) {source = attempt;};
-  };
-
-  boot.kernelParams = ["kvm.enable_virt_at_load=0"];
-  virtualisation = {
-    virtualbox.host = {
-      enable = true;
-      enableExtensionPack = true;
-      enableHardening = false;
-    };
-    podman = {
-      enable = true;
-      dockerCompat = true;
-      defaultNetwork.settings.dns_enabled = true;
-      extraPackages = [pkgs.slirp4netns];
-    };
   };
 }

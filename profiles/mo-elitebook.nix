@@ -1,9 +1,11 @@
 {pkgs, ...}: {
-  services.earlyoom.enable = false;
-  zramSwap.enable = false;
-  programs.noisetorch.enable = true;
+  nixos = {
+    services.earlyoom.enable = false;
+    zramSwap.enable = false;
+    programs.noisetorch.enable = true;
+  };
 
-  shanetrs = {
+  config.shanetrs = {
     enable = true;
     browser.firefox.enable = true;
     desktop = {
@@ -23,7 +25,7 @@
     shell.zsh.enable = true;
   };
 
-  user = {
+  home = {
     home.packages = with pkgs; [
       krita
       helvum

@@ -2,12 +2,10 @@
   config,
   pkgs,
   machine,
+  homeConfig,
   ...
 }: {
-  services.earlyoom.enable = false;
-  zramSwap.enable = false;
-
-  shanetrs = {
+  config.shanetrs = {
     enable = true;
     browser.firefox.enable = true;
     desktop = {
@@ -28,28 +26,33 @@
     tundra.appStores = [];
   };
 
-  networking.firewall = {
-    allowedTCPPorts = [8080];
-    allowedUDPPorts = [8080];
-  };
+  nixos = {
+    services.earlyoom.enable = false;
+    zramSwap.enable = false;
 
-  environment.sessionVariables = {inherit (config.user.home.sessionVariables) KODI_DATA;};
-  services.displayManager.autoLogin.user = machine.user;
-  services.xserver = {
-    enable = true;
-    desktopManager.kodi = {
-      package = config.user.programs.kodi.package;
-      enable = true;
+    networking.firewall = {
+      allowedTCPPorts = [8080];
+      allowedUDPPorts = [8080];
     };
-    # displayManager.lightdm.greeter.enable = false;
+
+    environment.sessionVariables = {inherit (homeConfig.home.sessionVariables) KODI_DATA;};
+    services.displayManager.autoLogin.user = machine.user;
+    services.xserver = {
+      enable = true;
+      desktopManager.kodi = {
+        package = homeConfig.programs.kodi.package;
+        enable = true;
+      };
+      # displayManager.lightdm.greeter.enable = false;
+    };
   };
 
-  user = let
-    datadir = "${config.user.xdg.dataHome}/kodi";
-    widevine = "${pkgs.stable.widevine-cdm}/share/google/chrome/WidevineCdm";
+  home = let
+    datadir = "${config.xdg.dataHome}/kodi";
+    widevine = "${pkgs.widevine-cdm}/share/google/chrome/WidevineCdm";
 
     third-party = let
-      inherit (pkgs.stable.kodiPackages) buildKodiAddon;
+      inherit (pkgs.kodiPackages) buildKodiAddon;
       src = pkgs.fetchFromGitHub {
         owner = "matthuisman";
         repo = "slyguy.addons";
@@ -135,7 +138,7 @@
     programs.kodi = {
       enable = true;
       inherit datadir;
-      package = pkgs.stable.kodi.withPackages (addons: [
+      package = pkgs.kodi.withPackages (addons: [
         third-party.disney_plus
         third-party.hulu
         addons.jellyfin

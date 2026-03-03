@@ -5,7 +5,6 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkIf mkOption types;
-
   cfg = config.shanetrs.browser.chromium;
 in {
   options.shanetrs.browser.chromium = {
@@ -22,9 +21,9 @@ in {
     };
   };
 
-  config = mkIf cfg.enable {
+  home = mkIf cfg.enable {
     # TODO: Implement search engines manually
-    user.programs.chromium = {
+    programs.chromium = {
       enable = true;
       extensions = map (id: {inherit id;}) cfg.extensions;
       inherit (cfg) package;

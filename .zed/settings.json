@@ -14,10 +14,7 @@
 			"settings": {
 				"formatting": {
 					"command": [
-						"nix",
-						"fmt",
-						"--",
-						"-"
+						"alejandra"
 					]
 				},
 				"nixpkgs": {

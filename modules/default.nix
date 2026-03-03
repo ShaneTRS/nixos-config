@@ -1,20 +1,25 @@
 {
-  self,
   config,
-  fn,
   lib,
   machine,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOverride;
-  inherit (fn) configs;
+  inherit (lib.tundra) configs;
   mkStrongDefault = x: mkOverride 900 x;
 in {
   options.shanetrs.enable =
     mkEnableOption "Set strong defaults, such as hostname and networking";
 
   config = mkIf config.shanetrs.enable {
+    shanetrs = {
+      shell.doas.enable = mkStrongDefault true;
+      tundra.enable = mkStrongDefault true;
+    };
+  };
+
+  nixos = mkIf config.shanetrs.enable {
     boot = {
       initrd.availableKernelModules = ["ahci" "ata_piix" "ehci_pci" "nvme" "ohci_pci" "sd_mod" "sr_mod" "usbhid"];
       kernelModules = ["v4l2loopback"];
@@ -86,11 +91,6 @@ in {
       }
     ];
 
-    shanetrs = {
-      shell.doas.enable = mkStrongDefault true;
-      tundra.enable = mkStrongDefault true;
-    };
-
     systemd.services.NetworkManager-wait-online.enable = mkStrongDefault false;
 
     system = {
@@ -119,67 +119,68 @@ in {
       useGlobalPkgs = mkStrongDefault true;
       useUserPackages = mkStrongDefault true;
     };
-    user = {
-      home = {
-        stateVersion = "23.11";
-        activation = {
-          symlinkFarmHomes = with machine;
-            self.inputs.home-manager.lib.hm.dag.entryAfter ["writeBoundary"] ''
-              set +o errexit
-              cd "${source}/user/homes" || exit 1
-
-              [ -f "$PWD/last" ] && while read -r FILE; do
-                TARGET="$(realpath "$FILE")"
-                FILE="''${FILE#*/}" # Strip target profile
-                FILE="''${FILE#*/}" # Strip target user
-                if [ -L "$HOME/$FILE" ]; then
-                  run rm "$HOME/$FILE"
-                fi
-              done < "$PWD/last"
-              rm last
-
-              for i in "${user}/${profile}" "${user}/all" "global/${profile}" "global/all"; do
-              	find "$i" -type f >> last
-              done
-
-              [ -f "$PWD/last" ] && while read -r FILE; do
-                TARGET="$(realpath "$FILE")"
-                FILE="''${FILE#*/}" # Strip target profile
-                FILE="''${FILE#*/}" # Strip target user
-                if [ ! -L "$HOME/$FILE" ]; then
-                  run mkdir -p "$HOME/$(dirname "$FILE")"
-                  run ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
-                fi
-              done < "$PWD/last"
-            '';
-        };
-      };
-      programs = {
-        git = {
-          enable = mkStrongDefault true;
-          settings = {
-            user.email = mkStrongDefault "${machine.user}@${machine.hostname}";
-            user.name = mkStrongDefault machine.user;
-            credential.helper = mkStrongDefault "store";
-          };
-        };
-        home-manager.enable = mkStrongDefault true;
-        ssh = {
-          enable = mkStrongDefault true;
-          enableDefaultConfig = mkStrongDefault false;
-          matchBlocks."*" = {
-            controlMaster = mkStrongDefault "auto";
-            controlPersist = mkStrongDefault "5m";
-            serverAliveCountMax = mkStrongDefault 3000;
-            serverAliveInterval = mkStrongDefault 15;
-          };
-        };
-      };
-    };
 
     zramSwap = {
       enable = mkStrongDefault true;
       memoryPercent = mkStrongDefault 70;
+    };
+  };
+
+  home = mkIf config.shanetrs.enable {
+    home = {
+      stateVersion = "23.11";
+      activation = {
+        symlinkFarmHomes = with machine;
+          lib.hm.dag.entryAfter ["writeBoundary"] ''
+            set +o errexit
+            cd "${source}/user/homes" || exit 1
+
+            [ -f "$PWD/last" ] && while read -r FILE; do
+              TARGET="$(realpath "$FILE")"
+              FILE="''${FILE#*/}" # Strip target profile
+              FILE="''${FILE#*/}" # Strip target user
+              if [ -L "$HOME/$FILE" ]; then
+                run rm "$HOME/$FILE"
+              fi
+            done < "$PWD/last"
+            rm last
+
+            for i in "${user}/${profile}" "${user}/all" "global/${profile}" "global/all"; do
+            	find "$i" -type f >> last
+            done
+
+            [ -f "$PWD/last" ] && while read -r FILE; do
+              TARGET="$(realpath "$FILE")"
+              FILE="''${FILE#*/}" # Strip target profile
+              FILE="''${FILE#*/}" # Strip target user
+              if [ ! -L "$HOME/$FILE" ]; then
+                run mkdir -p "$HOME/$(dirname "$FILE")"
+                run ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
+              fi
+            done < "$PWD/last"
+          '';
+      };
+    };
+    programs = {
+      git = {
+        enable = mkStrongDefault true;
+        settings = {
+          user.email = mkStrongDefault "${machine.user}@${machine.hostname}";
+          user.name = mkStrongDefault machine.user;
+          credential.helper = mkStrongDefault "store";
+        };
+      };
+      home-manager.enable = mkStrongDefault true;
+      ssh = {
+        enable = mkStrongDefault true;
+        enableDefaultConfig = mkStrongDefault false;
+        matchBlocks."*" = {
+          controlMaster = mkStrongDefault "auto";
+          controlPersist = mkStrongDefault "5m";
+          serverAliveCountMax = mkStrongDefault 3000;
+          serverAliveInterval = mkStrongDefault 15;
+        };
+      };
     };
   };
 }

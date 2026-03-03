@@ -5,47 +5,7 @@
   machine,
   ...
 }: {
-  boot = {
-    kernelModules = ["kvm-amd"];
-    # blacklistedKernelModules = [ "amdgpu" ];
-    kernelParams = ["i915.force_probe=!56a0" "xe.force_probe=56a0"];
-    loader = {
-      efi = {
-        canTouchEfiVariables = true;
-        efiSysMountPoint = "/boot/efi";
-      };
-      grub = {
-        enable = true;
-        efiSupport = true;
-        device = "nodev";
-        # useOSProber = true;
-      };
-    };
-  };
-  fileSystems = {
-    "/" = {
-      device = "/dev/disk/by-label/ROOT";
-      fsType = "ext4";
-    };
-    "/boot/efi" = {
-      device = "/dev/disk/by-label/BOOT";
-      fsType = "vfat";
-    };
-
-    "/run/media/shane/Eden" = {
-      device = "/dev/disk/by-label/Eden";
-      fsType = "btrfs";
-      options = ["compress-force=zstd:12,nofail"];
-    };
-    "/run/media/shane/Felix-PP" = {
-      device = "/dev/disk/by-label/Felix++";
-      fsType = "btrfs";
-      options = ["compress-force=zstd:12,nofail"];
-    };
-  };
-  systemd.services.podman-autostart.after = ["run-media-${machine.user}-Felix\\x2dPP.mount"];
-  hardware.cpu.amd.updateMicrocode = true;
-  shanetrs = {
+  config.shanetrs = {
     hardware = {
       enable = true;
       drivers.g710 = {
@@ -56,7 +16,58 @@
       graphics = "intel";
     };
   };
-  user.systemd.user.services = {
+
+  nixos = {
+    boot = {
+      kernelModules = ["kvm-amd"];
+      # blacklistedKernelModules = [ "amdgpu" ];
+      kernelParams = ["i915.force_probe=!56a0" "xe.force_probe=56a0"];
+      loader = {
+        efi = {
+          canTouchEfiVariables = true;
+          efiSysMountPoint = "/boot/efi";
+        };
+        grub = {
+          enable = true;
+          efiSupport = true;
+          device = "nodev";
+          # useOSProber = true;
+        };
+      };
+    };
+    fileSystems = {
+      "/" = {
+        device = "/dev/disk/by-label/ROOT";
+        fsType = "ext4";
+      };
+      "/boot/efi" = {
+        device = "/dev/disk/by-label/BOOT";
+        fsType = "vfat";
+      };
+
+      "/run/media/shane/Eden" = {
+        device = "/dev/disk/by-label/Eden";
+        fsType = "btrfs";
+        options = ["compress-force=zstd:12,nofail"];
+      };
+      "/run/media/shane/Felix-PP" = {
+        device = "/dev/disk/by-label/Felix++";
+        fsType = "btrfs";
+        options = ["compress-force=zstd:12,nofail"];
+      };
+    };
+    systemd.services.podman-autostart.after = ["run-media-${machine.user}-Felix\\x2dPP.mount"];
+    hardware.cpu.amd.updateMicrocode = true;
+
+    swapDevices = [
+      {
+        device = "/var/lib/swapfile";
+        size = 49152;
+      }
+    ];
+  };
+
+  home.systemd.user.services = {
     bluetooth-switch = {
       Unit = {
         After = "pipewire.service";
@@ -88,10 +99,4 @@
       Install.WantedBy = ["graphical-session.target"];
     };
   };
-  swapDevices = [
-    {
-      device = "/var/lib/swapfile";
-      size = 49152;
-    }
-  ];
 }

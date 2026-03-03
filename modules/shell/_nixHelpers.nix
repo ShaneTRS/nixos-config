@@ -40,12 +40,8 @@
     where() { readlink -f "$(which "$@")"; }
   '';
 
-  nixIndex = {
-    config,
-    pkgs,
-    ...
-  }: let
-    inherit (config.nixpkgs.hostPlatform) system;
+  nixIndex = {pkgs, ...}: let
+    inherit (pkgs.stdenv.hostPlatform) system;
   in ''
     FMT() { printf $(sed -zE 's:%([0-9][0-9]?):\x1b[\1m:g' <<< "$@") }
     nix-locate() {

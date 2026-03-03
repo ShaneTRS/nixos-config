@@ -5,9 +5,9 @@
 }: let
   inherit (lib) mkOptionDefault;
 in {
-  services.zerotierone.enable = true;
+  nixos.services.zerotierone.enable = true;
 
-  shanetrs = {
+  config.shanetrs = {
     enable = true;
     browser = {
       firefox.enable = true;
@@ -36,7 +36,7 @@ in {
     shell.zsh.enable = true;
   };
 
-  user = {
+  home = {
     programs.obs-studio.enable = true;
     home = {
       packages = with pkgs; [

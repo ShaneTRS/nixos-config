@@ -41,7 +41,7 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (mkMerge [
+  nixos = mkIf cfg.enable (mkMerge [
     {environment.systemPackages = with pkgs; [shanetrs.tundra];}
 
     (mkIf cfg.updates.enable {

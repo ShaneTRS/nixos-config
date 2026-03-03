@@ -1,14 +1,13 @@
 {
   config,
-  fn,
   lib,
   machine,
   pkgs,
   ...
 }: let
   inherit (builtins) attrNames concatStringsSep length;
-  inherit (fn) configs transformAttrs;
-  inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types transformAttrs;
+  inherit (lib.tundra) configs toYAML;
 
   sessions = {
     plasma = {
@@ -98,16 +97,12 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (mkMerge [
+  nixos = mkIf cfg.enable (mkMerge [
     {
       hardware.bluetooth.enable = true;
       security.rtkit.enable = true; # Interactive privilege escalation
       services.udev.packages = [pkgs.brightnessctl];
       xdg.portal.enable = mkIf (length config.xdg.portal.extraPortals != 0) true;
-      user = {
-        home.packages = cfg.extraPackages;
-        xdg.portal.enable = mkIf (length config.user.xdg.portal.extraPortals != 0) true;
-      };
       users.groups = {
         video.members = [machine.user];
         input.members = [machine.user];
@@ -127,24 +122,6 @@ in {
     (mkIf cfg.keymap.enable {
       hardware.uinput.enable = true;
       users.groups.uinput.members = [machine.user];
-      user.systemd.user.services = {
-        xremap = let
-          yaml =
-            removeAttrs
-            (cfg.keymap
-              // {
-                virtual_modifiers = cfg.keymap.virtualModifiers;
-                default_mode = cfg.keymap.defaultMode;
-              })
-            ["defaultMode" "devices" "enable" "transforms" "virtualModifiers"];
-          transformedYaml = transformAttrs cfg.keymap.transforms yaml;
-          deviceString = concatStringsSep " " (map (x: "--device " + x) cfg.keymap.devices);
-        in {
-          Unit.Description = "Key remapper for X11 and Wayland";
-          Service.ExecStart = "${getExe pkgs.xremap} --mouse ${deviceString} ${fn.toYAML transformedYaml}";
-          Install.WantedBy = ["graphical-session.target"];
-        };
-      };
     })
 
     # Or Plasma, because SDDM requires the X Server
@@ -159,30 +136,58 @@ in {
           xkb.options = "compose:menu";
         };
       };
-      user = {
-        home.sessionVariables = {
-          XCOMPOSEFILE = "${config.user.xdg.configHome}/XCompose";
-          XCOMPOSECACHE = "${config.user.xdg.cacheHome}/XCompose";
+    })
+  ]);
+
+  home = mkIf cfg.enable (mkMerge [
+    {
+      home.packages = cfg.extraPackages;
+      xdg.portal.enable = mkIf (length config.xdg.portal.extraPortals != 0) true;
+    }
+
+    (mkIf cfg.keymap.enable {
+      systemd.user.services = {
+        xremap = let
+          yaml =
+            removeAttrs
+            (cfg.keymap
+              // {
+                virtual_modifiers = cfg.keymap.virtualModifiers;
+                default_mode = cfg.keymap.defaultMode;
+              })
+            ["defaultMode" "devices" "enable" "transforms" "virtualModifiers"];
+          transformedYaml = transformAttrs cfg.keymap.transforms yaml;
+          deviceString = concatStringsSep " " (map (x: "--device " + x) cfg.keymap.devices);
+        in {
+          Unit.Description = "Key remapper for X11 and Wayland";
+          Service.ExecStart = "${getExe pkgs.xremap} --mouse ${deviceString} ${toYAML transformedYaml}";
+          Install.WantedBy = ["graphical-session.target"];
         };
-        xdg.configFile."XCompose" = let
-          attempt = configs ".XCompose";
-        in
-          mkIf (attempt != null) {source = attempt;};
       };
     })
 
-    (mkIf (cfg.type == "wayland") {
-      user = {
-        home.sessionVariables.QT_QPA_PLATFORM = "wayland";
-        xdg.configFile."XCompose" = let
-          attempt = configs ".XCompose";
-        in
-          mkIf (attempt != null) {
-            text =
-              builtins.readFile "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
-              + builtins.readFile attempt;
-          };
+    # Or Plasma, because SDDM requires the X Server
+    (mkIf (cfg.type == "x11" || cfg.session == "plasma") {
+      home.sessionVariables = {
+        XCOMPOSEFILE = "${config.xdg.configHome}/XCompose";
+        XCOMPOSECACHE = "${config.xdg.cacheHome}/XCompose";
       };
+      xdg.configFile."XCompose" = let
+        attempt = configs ".XCompose";
+      in
+        mkIf (attempt != null) {source = attempt;};
+    })
+
+    (mkIf (cfg.type == "wayland") {
+      home.sessionVariables.QT_QPA_PLATFORM = "wayland";
+      xdg.configFile."XCompose" = let
+        attempt = configs ".XCompose";
+      in
+        mkIf (attempt != null) {
+          text =
+            builtins.readFile "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
+            + builtins.readFile attempt;
+        };
     })
   ]);
 }

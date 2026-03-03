@@ -5,14 +5,14 @@
 }: let
   inherit (lib) mkOptionDefault;
 in {
-  services.printing.enable = true;
-  shanetrs = {
+  nixos.services.printing.enable = true;
+  config.shanetrs = {
     enable = true;
     browser.chromium.enable = true;
     desktop = {
       enable = true;
       session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [libsForQt5.kcalc];
+      extraPackages = with pkgs; mkOptionDefault [kdePackages.kcalc];
     };
     programs = {
       vscode.enable = true;
@@ -20,5 +20,5 @@ in {
     };
   };
 
-  user.home.packages = with pkgs; [flatpak libreoffice-still vlc];
+  home.home.packages = with pkgs; [flatpak libreoffice-still vlc];
 }

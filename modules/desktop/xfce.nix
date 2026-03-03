@@ -9,7 +9,7 @@
 
   cfg = config.shanetrs.desktop;
 in {
-  config = mkIf cfg.enable (mkMerge [
+  nixos = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.session == "xfce") {
       xdg.portal.extraPortals = with pkgs; [xdg-desktop-portal-gtk];
       services = {
@@ -24,37 +24,41 @@ in {
         fontconfig.allowBitmaps = true;
       };
       environment.systemPackages = with pkgs.xfce; [xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin];
-      systemd.user.services.chicago95 = {
-        serviceConfig.ExecStart = "${chicago95}/import/install.sh";
-        wantedBy = ["default.target"];
+    })
+  ]);
+
+  home = mkIf cfg.enable (mkMerge [
+    (mkIf (cfg.session == "xfce" && cfg.preset == "win95") {
+      xdg.configFile = {
+        "gtk-3.0" = {
+          recursive = true;
+          source = "${chicago95}/import/gtk-3.0/";
+        };
+        "xfce4" = {
+          recursive = true;
+          source = "${chicago95}/import/xfce4/";
+        };
       };
-      user = {
-        xdg.configFile = {
-          "gtk-3.0" = {
+      home = {
+        file = {
+          ".gtkrc-2.0".source = "${chicago95}/import/.gtkrc-2.0";
+          ".moonchild productions" = {
             recursive = true;
-            source = "${chicago95}/import/gtk-3.0/";
-          };
-          "xfce4" = {
-            recursive = true;
-            source = "${chicago95}/import/xfce4/";
+            source = "${chicago95}/import/.moonchild productions/";
           };
         };
-        home = {
-          file = {
-            ".gtkrc-2.0".source = "${chicago95}/import/.gtkrc-2.0";
-            ".moonchild productions" = {
-              recursive = true;
-              source = "${chicago95}/import/.moonchild productions/";
-            };
-          };
-          packages = [chicago95];
-        };
-        xsession = {
-          enable = true;
-          profileExtra = ''
-            pw-play "${chicago95}/share/sounds/Chicago95/startup.ogg" & true
-          '';
-        };
+        packages = [chicago95];
+      };
+      systemd.user.services.chicago95 = {
+        Unit.Description = "Chicago95 installer";
+        Service.ExecStart = "${chicago95}/import/install.sh";
+        Install.WantedBy = ["default.target"];
+      };
+      xsession = {
+        enable = true;
+        profileExtra = ''
+          pw-play "${chicago95}/share/sounds/Chicago95/startup.ogg" & true
+        '';
       };
     })
   ]);

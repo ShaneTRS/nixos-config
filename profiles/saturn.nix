@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  shanetrs = {
+  config.shanetrs = {
     enable = true;
     browser = {
       firefox.enable = true;
@@ -24,5 +24,5 @@
     };
   };
 
-  user.home.packages = with pkgs; [krita vlc];
+  home.home.packages = with pkgs; [krita vlc];
 }

@@ -1,6 +1,5 @@
 {
   config,
-  fn,
   lib,
   machine,
   pkgs,
@@ -8,7 +7,7 @@
 }: let
   inherit (builtins) attrValues elem fromJSON mapAttrs readFile;
   inherit (lib) concatLines mkEnableOption mkIf mkPackageOption mkMerge mkOption mkOverride optionalString types;
-  inherit (fn) configs;
+  inherit (lib.tundra) configs;
 
   nixHelpers = import ./_nixHelpers.nix;
   featureAliases = {
@@ -22,6 +21,29 @@
   };
 
   cfg = config.shanetrs.shell // {_.features = cfg.bash.features ++ cfg.zsh.features;};
+
+  bashExtraRc =
+    concatLines (attrValues
+      (mapAttrs (k: v: "bind '\"${k}\":\"${v}\"'") cfg.bash.binds)
+      ++ [
+        nixHelpers.extraRc
+        (let attempt = configs ".bashrc"; in optionalString (attempt != null) (readFile attempt))
+        (optionalString (elem "nix-index" cfg._.features)
+          (nixHelpers.nixIndex {inherit config pkgs;}))
+      ])
+    + cfg.extraRc
+    + cfg.bash.extraRc;
+
+  zshExtraRc =
+    concatLines (attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds)
+      ++ [
+        nixHelpers.extraRc
+        (let attempt = configs ".zshrc"; in optionalString (attempt != null) (readFile attempt))
+        (optionalString (elem "nix-index" cfg._.features)
+          (nixHelpers.nixIndex {inherit config pkgs;}))
+      ])
+    + cfg.extraRc
+    + cfg.zsh.extraRc;
 in {
   options.shanetrs.shell = let
     shellFeatures = ["bat" "eza" "fd" "fastfetch" "fzf" "highlight" "nix-index" "tldr" "ugrep" "zoxide"];
@@ -123,54 +145,8 @@ in {
     };
   };
 
-  config = mkMerge [
-    {
-      users.defaultUserShell = mkIf (cfg.default != null) cfg.default;
-      user = {
-        fonts.fontconfig.enable = true;
-        home = {
-          packages = with pkgs;
-            cfg.extraPackages
-            ++ [
-              (mkIf (elem "ugrep" cfg._.features) ugrep)
-              (mkIf (elem "fastfetch" cfg._.features) nerd-fonts.hack)
-            ];
-          sessionVariables = {
-            FZF_COMPLETION_TRIGGER = mkIf (elem "zoxide" cfg._.features) "#";
-            NIX_MISSING = mkIf (elem "nix-index" cfg._.features) "auto";
-          };
-        };
-        programs = {
-          bat.enable = mkIf (elem "bat" cfg._.features) true;
-          eza.enable = mkIf (elem "eza" cfg._.features) true;
-          fastfetch = mkIf (elem "fastfetch" cfg._.features) {
-            enable = true;
-            package = pkgs.fastfetch.overrideAttrs (old: {
-              cmakeFlags = ["-DENABLE_IMAGEMAGICK7=true"] ++ old.cmakeFlags or [];
-            });
-            settings = let
-              attempt = configs "fastfetch.jsonc";
-            in
-              mkIf (attempt != null) (lib.recursiveUpdate (fromJSON (readFile attempt)) {
-                logo.source = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-              });
-          };
-          fd = mkIf (elem "fd" cfg._.features) {
-            enable = true;
-            hidden = true;
-          };
-          fzf.enable = mkIf (elem "fzf" cfg._.features || elem "zoxide" cfg._.features) true;
-          tealdeer = mkIf (elem "tldr" cfg._.features) {
-            enable = true;
-            settings.updates.auto_update = true;
-          };
-          zoxide = mkIf (elem "zoxide" cfg._.features) {
-            enable = true;
-            options = ["--cmd cd"];
-          };
-        };
-      };
-    }
+  nixos = mkMerge [
+    {users.defaultUserShell = mkIf (cfg.default != null) cfg.default;}
 
     (mkIf cfg.doas.enable {
       environment.systemPackages = with pkgs; [doas-sudo-shim];
@@ -191,77 +167,104 @@ in {
       };
     })
 
-    (let
-      extraRc =
-        concatLines (attrValues
-          (mapAttrs (k: v: "bind '\"${k}\":\"${v}\"'") cfg.bash.binds)
-          ++ [
-            nixHelpers.extraRc
-            (readFile (configs ".bashrc"))
-            (optionalString (elem "nix-index" cfg._.features)
-              (nixHelpers.nixIndex {inherit config pkgs;}))
-          ])
-        + cfg.extraRc
-        + cfg.bash.extraRc;
-    in
-      mkIf cfg.bash.enable {
-        users.defaultUserShell = mkOverride 999 pkgs.bash;
-        programs.bash.promptInit = extraRc;
-        user.programs = {
-          bash = {
-            enable = true;
-            historyFile = "$HOME/.config/.bash_history";
-            historyControl = ["erasedups"];
-            initExtra = extraRc;
-            shellAliases = featureAliases // cfg.bash.aliases;
-          };
-          fzf.enableBashIntegration = true;
-          zoxide.enableBashIntegration = true;
-        };
-      })
+    (mkIf cfg.bash.enable {
+      users.defaultUserShell = mkOverride 999 pkgs.bash;
+      programs.bash.promptInit = bashExtraRc;
+    })
 
-    (let
-      extraRc =
-        concatLines (attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds)
+    (mkIf cfg.zsh.enable {
+      users.defaultUserShell = mkOverride 999 pkgs.zsh;
+      programs.zsh = {
+        inherit (cfg.zsh) enable;
+        autosuggestions.enable = true;
+        histSize = 16384;
+        promptInit = zshExtraRc;
+      };
+    })
+  ];
+
+  home = mkMerge [
+    {
+      fonts.fontconfig.enable = true;
+      home = {
+        packages = with pkgs;
+          cfg.extraPackages
           ++ [
-            nixHelpers.extraRc
-            (readFile (configs ".zshrc"))
-            (optionalString (elem "nix-index" cfg._.features)
-              (nixHelpers.nixIndex {inherit config pkgs;}))
-          ])
-        + cfg.extraRc
-        + cfg.zsh.extraRc;
-    in
-      mkIf cfg.zsh.enable {
-        users.defaultUserShell = mkOverride 999 pkgs.zsh;
-        programs.zsh = {
-          inherit (cfg.zsh) enable;
-          autosuggestions.enable = true;
-          histSize = config.user.programs.zsh.history.size;
-          promptInit = extraRc;
+            (mkIf (elem "ugrep" cfg._.features) ugrep)
+            (mkIf (elem "fastfetch" cfg._.features) nerd-fonts.hack)
+          ];
+        sessionVariables = {
+          FZF_COMPLETION_TRIGGER = mkIf (elem "zoxide" cfg._.features) "#";
+          NIX_MISSING = mkIf (elem "nix-index" cfg._.features) "auto";
         };
-        user = {
-          home.packages = with pkgs; [zsh-completions];
-          programs = {
-            fzf.enableZshIntegration = true;
-            zoxide.enableZshIntegration = true;
-            zsh = {
-              inherit (cfg.zsh) enable package;
-              dotDir = "${config.user.xdg.configHome}/zsh";
-              historySubstringSearch.enable = true;
-              history = {
-                path = "${config.user.xdg.configHome}/zsh/zsh_history";
-                ignorePatterns = ["exit"];
-              };
-              initContent = extraRc;
-              shellAliases = featureAliases // cfg.zsh.aliases;
-              syntaxHighlighting = mkIf (elem "highlight" cfg.zsh.features) {
-                enable = true;
-                highlighters = ["brackets"];
-              };
-            };
+      };
+      programs = {
+        bat.enable = mkIf (elem "bat" cfg._.features) true;
+        eza.enable = mkIf (elem "eza" cfg._.features) true;
+        fastfetch = mkIf (elem "fastfetch" cfg._.features) {
+          enable = true;
+          package = pkgs.fastfetch.overrideAttrs (old: {
+            cmakeFlags = ["-DENABLE_IMAGEMAGICK7=true"] ++ old.cmakeFlags or [];
+          });
+          settings = let
+            attempt = configs "fastfetch.jsonc";
+          in
+            mkIf (attempt != null) (lib.recursiveUpdate (fromJSON (readFile attempt)) {
+              logo.source = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            });
+        };
+        fd = mkIf (elem "fd" cfg._.features) {
+          enable = true;
+          hidden = true;
+        };
+        fzf.enable = mkIf (elem "fzf" cfg._.features || elem "zoxide" cfg._.features) true;
+        tealdeer = mkIf (elem "tldr" cfg._.features) {
+          enable = true;
+          settings.updates.auto_update = true;
+        };
+        zoxide = mkIf (elem "zoxide" cfg._.features) {
+          enable = true;
+          options = ["--cmd cd"];
+        };
+      };
+    }
+
+    (mkIf cfg.bash.enable {
+      programs = {
+        bash = {
+          enable = true;
+          historyFile = "$HOME/.config/.bash_history";
+          historyControl = ["erasedups"];
+          initExtra = bashExtraRc;
+          shellAliases = featureAliases // cfg.bash.aliases;
+        };
+        fzf.enableBashIntegration = true;
+        zoxide.enableBashIntegration = true;
+      };
+    })
+
+    (mkIf cfg.zsh.enable {
+      home.packages = with pkgs; [zsh-completions];
+      programs = {
+        fzf.enableZshIntegration = true;
+        zoxide.enableZshIntegration = true;
+        zsh = {
+          inherit (cfg.zsh) enable package;
+          dotDir = "${config.xdg.configHome}/zsh";
+          historySubstringSearch.enable = true;
+          history = {
+            ignorePatterns = ["exit"];
+            path = "${config.xdg.configHome}/zsh/zsh_history";
+            size = 16384;
+          };
+          initContent = zshExtraRc;
+          shellAliases = featureAliases // cfg.zsh.aliases;
+          syntaxHighlighting = mkIf (elem "highlight" cfg.zsh.features) {
+            enable = true;
+            highlighters = ["brackets"];
           };
         };
-      })
+      };
+    })
   ];
 }

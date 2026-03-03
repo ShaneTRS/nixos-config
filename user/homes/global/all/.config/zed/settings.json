@@ -7,7 +7,10 @@
 // custom settings, run the `open default settings` command
 // from the command palette or from `Zed` application menu.
 {
-	"git_panel": {
+	"edit_predictions": {
+  "provider": "zed"
+ },
+ "git_panel": {
   "tree_view": true
  },
  "minimap": {
@@ -90,9 +93,6 @@
 			"model": "gemini-2.5-flash",
 			"provider": "google"
 		}
-	},
-	"features": {
-		"edit_prediction_provider": "zed"
 	},
 	"file_types": {
 		"JSONC": [

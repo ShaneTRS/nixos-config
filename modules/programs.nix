@@ -2,12 +2,11 @@
   config,
   lib,
   pkgs,
-  fn,
   ...
 }: let
   inherit (builtins) attrNames elem listToAttrs toJSON;
-  inherit (fn) configs resolveList;
-  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption mkPackageOption types;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption mkPackageOption types resolveList;
+  inherit (lib.tundra) configs;
   inherit (pkgs) makeDesktopItem writeShellApplication;
   cfg = config.shanetrs.programs;
 in {
@@ -107,93 +106,101 @@ in {
     };
   };
 
-  config = mkMerge [
-    (mkIf cfg.discord.enable {
-      user = {
-        home.packages = [
-          (makeDesktopItem {
-            name = "discord";
-            desktopName = "Discord";
-            exec = getExe (writeShellApplication {
-              name = "discord";
-              text = ''
-                set +o errexit
-                pre_exec="$(date +%s)"
-                "${getExe cfg.discord.package}"
-                [ $(($(date +%s) - pre_exec)) -lt 3 ] && exec "${
-                  getExe (cfg.discord.package.override {
-                    withOpenASAR = false;
-                  })
-                }"
-              '';
-            });
-            terminal = false;
-            type = "Application";
-            icon = let
-              branch = cfg.discord.branch;
-            in "${cfg.discord.package}/share/icons/hicolor/256x256/apps/discord${
-              if branch == "stable"
-              then ""
-              else "-${branch}"
-            }.png";
-          })
-        ];
+  nixos = mkMerge [
+    (mkIf cfg.easyeffects.enable {
+      programs.dconf.enable = true; # settings daemon
+    })
+
+    (mkIf cfg.gimp.enable {
+      services.gvfs = {
+        enable = true; # virtual mounts daemon
+        package = cfg.gimp.gvfs.package;
       };
+    })
+  ];
+
+  home = mkMerge [
+    (mkIf cfg.discord.enable {
+      home.packages = [
+        (makeDesktopItem {
+          name = "discord";
+          desktopName = "Discord";
+          exec = getExe (writeShellApplication {
+            name = "discord";
+            text = ''
+              set +o errexit
+              pre_exec="$(date +%s)"
+              "${getExe cfg.discord.package}"
+              [ $(($(date +%s) - pre_exec)) -lt 3 ] && exec "${
+                getExe (cfg.discord.package.override {
+                  withOpenASAR = false;
+                })
+              }"
+            '';
+          });
+          terminal = false;
+          type = "Application";
+          icon = let
+            branch = cfg.discord.branch;
+          in "${cfg.discord.package}/share/icons/hicolor/256x256/apps/discord${
+            if branch == "stable"
+            then ""
+            else "-${branch}"
+          }.png";
+        })
+      ];
     })
 
     (mkIf cfg.easyeffects.enable {
-      programs.dconf.enable = true; # settings daemon
-      user = {
-        home.packages = [cfg.easyeffects.package];
-        xdg.configFile =
-          {
-            "easyeffects" = {
-              recursive = true;
-              source = configs "easyeffects";
-            };
-          }
-          // listToAttrs (map (k: {
-              name = "easyeffects/output/${k}.json";
-              value = {text = toJSON cfg.easyeffects.extraPresets.${k};};
-            })
-            (attrNames cfg.easyeffects.extraPresets));
-      };
+      home.packages = [cfg.easyeffects.package];
+      xdg.configFile = let
+        attempt = configs "easyeffects";
+      in
+        {
+          "easyeffects" = mkIf (attempt != null) {
+            recursive = true;
+            source = attempt;
+          };
+        }
+        // listToAttrs (map (k: {
+            name = "easyeffects/output/${k}.json";
+            value = {text = toJSON cfg.easyeffects.extraPresets.${k};};
+          })
+          (attrNames cfg.easyeffects.extraPresets));
     })
 
     (mkIf cfg.vscode.enable {
-      user = {
-        home.packages = with pkgs; [
-          (mkIf (elem "nix" cfg.vscode.features) nixd)
-        ];
-        programs.vscode = {
-          inherit (cfg.vscode) enable package;
-          profiles.default.extensions = with pkgs.vscode-extensions;
-            [
-              # (mkIf (elem "nix" cfg.vscode.features) kamadorueda.alejandra)
-              (mkIf (elem "nix" cfg.vscode.features) jnoortheen.nix-ide)
-              (mkIf (elem "nix" cfg.vscode.features) timonwong.shellcheck)
-              (mkIf (elem "rust" cfg.vscode.features) rust-lang.rust-analyzer)
-              (mkIf (elem "rust" cfg.vscode.features) serayuzgur.crates)
-            ]
-            ++ (
-              if (elem "rust" cfg.vscode.features)
-              then
-                pkgs.vscode-utils.extensionsFromVscodeMarketplace [
-                  {
-                    name = "rust-syntax";
-                    publisher = "dustypomerleau";
-                    version = "0.6.1";
-                    sha256 = "sha256-o9iXPhwkimxoJc1dLdaJ8nByLIaJSpGX/nKELC26jGU=";
-                  }
-                ]
-              else []
-            );
-        };
+      home.packages = with pkgs; [
+        (mkIf (elem "nix" cfg.vscode.features) nixd)
+      ];
+      programs.vscode = {
+        inherit (cfg.vscode) enable package;
+        profiles.default.extensions = with pkgs.vscode-extensions;
+          [
+            (mkIf (elem "nix" cfg.vscode.features) kamadorueda.alejandra)
+            (mkIf (elem "nix" cfg.vscode.features) jnoortheen.nix-ide)
+            (mkIf (elem "nix" cfg.vscode.features) timonwong.shellcheck)
+            (mkIf (elem "rust" cfg.vscode.features) rust-lang.rust-analyzer)
+            (mkIf (elem "rust" cfg.vscode.features) serayuzgur.crates)
+          ]
+          ++ (
+            if (elem "rust" cfg.vscode.features)
+            then
+              pkgs.vscode-utils.extensionsFromVscodeMarketplace [
+                {
+                  name = "rust-syntax";
+                  publisher = "dustypomerleau";
+                  version = "0.6.1";
+                  sha256 = "sha256-o9iXPhwkimxoJc1dLdaJ8nByLIaJSpGX/nKELC26jGU=";
+                }
+              ]
+            else []
+          );
       };
     })
 
     (mkIf cfg.zed-editor.enable {
-      user.home.packages = [
+      home.packages = [
         (pkgs.symlinkJoin {
           name = "zed-editor-wrapped";
           paths = [cfg.zed-editor.package];
@@ -218,11 +225,7 @@ in {
     })
 
     (mkIf cfg.gimp.enable {
-      services.gvfs = {
-        enable = true; # virtual mounts daemon
-        package = cfg.gimp.gvfs.package;
-      };
-      user.home.packages = [cfg.gimp.package];
+      home.packages = [cfg.gimp.package];
     })
   ];
 }

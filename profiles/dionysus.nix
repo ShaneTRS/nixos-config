@@ -1,17 +1,13 @@
 {
   pkgs,
   lib,
-  fn,
   ...
 }: let
   inherit (builtins) listToAttrs;
-  inherit (fn) configs;
   inherit (lib) mkIf;
+  inherit (lib.tundra) configs;
 in {
-  services.earlyoom.enable = false;
-  zramSwap.enable = false;
-
-  shanetrs = {
+  config.shanetrs = {
     enable = true;
     browser.firefox.enable = true;
     desktop = {
@@ -31,7 +27,12 @@ in {
     tundra.appStores = [];
   };
 
-  user = {
+  nixos = {
+    services.earlyoom.enable = false;
+    zramSwap.enable = false;
+  };
+
+  home = {
     home.packages = with pkgs; [shanetrs.moonlight-qt];
     xdg.configFile = let
       mkFile = key: let

@@ -10,23 +10,6 @@
 in {
   config = mkIf cfg.enable (mkMerge [
     (mkIf (cfg.session == "wm") {
-      # todo: replace with standalones
-      user = {
-        home = {
-          packages = with pkgs; [
-            swaybg # wallpaper
-            kdePackages.dolphin # file manager
-            kdePackages.konsole # terminal
-          ];
-          sessionVariables = {
-            TERMINAL = "konsole";
-            FILE_MANAGER = "dolphin";
-            # SCREENSHOT = "";
-          };
-        };
-        services.playerctld.enable = true;
-      };
-
       shanetrs.desktop.keymap = let
         launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
 
@@ -76,45 +59,66 @@ in {
       };
     })
 
-    (let
-      xdgPortalConf = {
+    (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
+      shanetrs.shell.extraRc = ''
+        case "$(tty)" in
+          /dev/tty1|/dev/tty7) niri-session -l && exit ;;
+        esac
+      '';
+      xdg.portal = {
         extraPortals = [pkgs.xdg-desktop-portal-gnome];
         configPackages = [pkgs.niri];
         config.niri = {
           "org.freedesktop.impl.portal.FileChooser" = "gtk";
         };
       };
-    in
-      mkIf (cfg.session == "wm" && cfg.preset == "niri") {
-        systemd.services."getty@tty1" = {
-          overrideStrategy = "asDropin";
-          serviceConfig.ExecStart = [
-            ""
-            "${pkgs.util-linux}/sbin/agetty --login-program ${config.services.getty.loginProgram} --autologin ${machine.user} --noclear %I $TERM"
-          ];
+    })
+  ]);
+
+  nixos = mkIf cfg.enable (mkMerge [
+    (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
+      systemd.services."getty@tty1" = {
+        overrideStrategy = "asDropin";
+        serviceConfig.ExecStart = [
+          ""
+          "${pkgs.util-linux}/sbin/agetty --login-program ${config.services.getty.loginProgram} --autologin ${machine.user} --noclear %I $TERM"
+        ];
+      };
+    })
+  ]);
+
+  home = mkIf cfg.enable (mkMerge [
+    (mkIf (cfg.session == "wm") {
+      # todo: replace with standalones
+      home = {
+        packages = with pkgs; [
+          swaybg # wallpaper
+          kdePackages.dolphin # file manager
+          kdePackages.konsole # terminal
+        ];
+        sessionVariables = {
+          TERMINAL = "konsole";
+          FILE_MANAGER = "dolphin";
+          # SCREENSHOT = "";
         };
-        shanetrs.shell.extraRc = ''
-          case "$(tty)" in
-            /dev/tty1|/dev/tty7) niri-session -l && exit ;;
-          esac
-        '';
-        xdg.portal = xdgPortalConf;
-        user = {
-          dbus.packages = with pkgs; [niri];
-          home = {
-            packages = with pkgs; [
-              niri
-              xwayland-satellite
-              adwaita-icon-theme
-            ];
-            sessionVariables = {
-              SCREENSHOT = "niri msg action screenshot";
-              LAUNCHER = "${getExe pkgs.rofi} -show drun";
-            };
-          };
-          xdg.portal = xdgPortalConf;
-          services.gnome-keyring.enable = true;
+      };
+      services.playerctld.enable = true;
+    })
+
+    (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
+      dbus.packages = with pkgs; [niri];
+      home = {
+        packages = with pkgs; [
+          niri
+          xwayland-satellite
+          adwaita-icon-theme
+        ];
+        sessionVariables = {
+          SCREENSHOT = "niri msg action screenshot";
+          LAUNCHER = "${getExe pkgs.rofi} -show drun";
         };
-      })
+      };
+      services.gnome-keyring.enable = true;
+    })
   ]);
 }

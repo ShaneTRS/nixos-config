@@ -1,15 +1,12 @@
 {
   self,
   pkgs,
-  fn,
   tree,
   ...
 } @ args: new: old: let
   inherit (builtins) mapAttrs;
-  inherit (fn) importItem;
+  inherit (pkgs) callPackage;
 in {
-  shanetrs = mapAttrs (k: v:
-    pkgs.callPackage (importItem v) args)
-  tree.overlays.shanetrs;
+  shanetrs = mapAttrs (k: v: callPackage (v.default or v) args) tree.overlays.shanetrs;
   inherit (self.inputs.nixgl.overlays.default new old) nixgl;
 }

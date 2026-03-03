@@ -1,13 +1,10 @@
 {
   config,
-  fn,
   lib,
   pkgs,
   ...
 }: let
-  inherit (fn) resolveList;
-  inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf optionals;
-
+  inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf optionals resolveList;
   cfg = config.shanetrs.gaming;
 in {
   options.shanetrs.gaming.emulation = {
@@ -71,7 +68,7 @@ in {
         package = mkPackageOption pkgs "cemu" {};
         extraPackages = mkOption {
           type = types.listOf types.package;
-          default = with pkgs; [unstable.evdevhook2];
+          default = with pkgs; [evdevhook2];
         };
       };
     };
@@ -80,8 +77,9 @@ in {
       default = [];
     };
   };
-  config = mkIf cfg.emulation.enable {
-    user.home.packages = let
+
+  home = mkIf cfg.emulation.enable {
+    home.packages = let
       e = cfg.emulation;
       n = e.nintendo;
       r = e.retroarch;
