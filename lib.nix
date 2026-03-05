@@ -1,38 +1,42 @@
 let
   inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
-  inherit (builtins) fromJSON match readDir readFile replaceStrings;
+  inherit (builtins) elemAt fromJSON match readDir readFile;
 in {
   collectModules = modules: name: map (x: args: (x args).${name} or {}) modules;
 
   mkTree = dir: let
-    createTree = dir:
+    deepReadDir = dir:
       mapAttrs (name: type:
         if type == "directory"
-        then createTree (dir + "/${name}")
+        then deepReadDir (dir + "/${name}")
         else dir + "/${name}")
       (readDir dir);
-
-    filteredNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
-
-    convertTree = tree:
-      listToAttrs (map (x: {
-        name = replaceStrings [".nix" ".json" ".toml"] ["" "" ""] x;
-        value = let
-          file = tree.${x};
-          ext = match ".+\\.(nix|json|toml)" x;
-        in
-          if ext == ["nix"]
-          then import file
-          else if ext == ["json"]
-          then fromJSON (readFile file) // {__path = file;}
-          else if ext == ["toml"]
-          then fromTOML (readFile file) // {__path = file;}
-          else if isAttrs file
-          then convertTree file
-          else file;
-      }) (filteredNames tree));
+    filterNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
+    convertFiles = tree:
+      listToAttrs (map (name: let
+        file = tree.${name};
+        regex = match "(.+)(\\.nix|\\.json|\\.toml)" name;
+        ext = elemAt regex 1;
+      in
+        if regex != null
+        then {
+          name = elemAt regex 0;
+          value =
+            if ext == ".nix"
+            then import file
+            else if ext == ".json"
+            then fromJSON (readFile file) // {__path = file;}
+            else fromTOML (readFile file) // {__path = file;};
+        }
+        else {
+          inherit name;
+          value =
+            if isAttrs file
+            then convertFiles file
+            else file;
+        }) (filterNames tree));
   in
-    convertTree (createTree dir);
+    convertFiles (deepReadDir dir);
 
   resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
 
