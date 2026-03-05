@@ -1,65 +1,42 @@
 let
-  inherit (builtins) attrNames attrValues filter foldl' isAttrs isFunction listToAttrs mapAttrs pathExists;
-  inherit (builtins) fromJSON isString match readDir readFile replaceStrings toJSON trace;
+  inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
+  inherit (builtins) fromJSON match readDir readFile replaceStrings;
 in {
   collectModules = modules: name: map (x: args: (x args).${name} or {}) modules;
 
   mkTree = dir: let
-    createTree = {
-      dir,
-      item ? {
-        k = ".";
-        v = "directory";
-      },
-    }:
-      if item ? v && item.v == "directory"
-      then let
-        __path = "${dir}/${item.k}";
-      in {
-        dir = __path;
-        item =
-          mapAttrs (k: v:
-            createTree {
-              item = {inherit k v;};
-              dir = __path;
-            }) (readDir __path)
-          // {inherit __path;};
-      }
-      else dir;
+    createTree = dir:
+      mapAttrs (name: type:
+        if type == "directory"
+        then createTree (dir + "/${name}")
+        else dir + "/${name}")
+      (readDir dir);
 
-    filteredTreeNames = tree: filter (x: match "_.*" x == null) (attrNames tree);
+    filteredNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
 
     convertTree = tree:
-      if isAttrs tree
-      then
-        listToAttrs (map (key: {
-          name = replaceStrings [".nix" ".json" ".toml"] ["" "" ""] key;
-          value = let
-            __path = "${tree.${key}}/${key}";
-            ext = match ".*\\.(nix|json|toml)" key;
-          in
-            if ext == ["nix"]
-            then import __path
-            else if ext == ["json"]
-            then fromJSON (readFile __path) // {inherit __path;}
-            else if ext == ["toml"]
-            then fromTOML (readFile __path) // {inherit __path;}
-            else if isString tree.${key} && match "__.*" key == null
-            then __path
-            else tree.${key};
-        }) (filteredTreeNames tree))
-      else tree;
-
-    simplifyTree = tree:
-      if tree ? item
-      then mapAttrs (k: v: convertTree (simplifyTree v)) tree.item
-      else tree;
+      listToAttrs (map (x: {
+        name = replaceStrings [".nix" ".json" ".toml"] ["" "" ""] x;
+        value = let
+          file = tree.${x};
+          ext = match ".+\\.(nix|json|toml)" x;
+        in
+          if ext == ["nix"]
+          then import file
+          else if ext == ["json"]
+          then fromJSON (readFile file) // {__path = file;}
+          else if ext == ["toml"]
+          then fromTOML (readFile file) // {__path = file;}
+          else if isAttrs file
+          then convertTree file
+          else file;
+      }) (filteredNames tree));
   in
-    convertTree (simplifyTree (createTree {inherit dir;}));
+    convertTree (createTree dir);
 
-  resolveList = list: map (i: i.content or i) (filter (i: i.condition or true) list);
+  resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
 
-  transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: f: f k acc) v rules) attrs;
+  transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
 
   tundra = {
     self,
@@ -73,6 +50,7 @@ in {
       else {},
     ...
   } @ args: let
+    inherit (builtins) attrValues isFunction pathExists toJSON trace;
     inherit (lib) collect collectModules nixosSystem homeManagerConfiguration;
   in rec {
     applyOverlays = pkgs: args:
