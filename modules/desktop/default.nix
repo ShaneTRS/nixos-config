@@ -6,8 +6,8 @@
   ...
 }: let
   inherit (builtins) attrNames concatStringsSep length;
-  inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types transformAttrs;
-  inherit (lib.tundra) configs toYAML;
+  inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types;
+  inherit (lib.tundra) configs toYAML transformAttrs;
 
   sessions = {
     plasma = {

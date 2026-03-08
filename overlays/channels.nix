@@ -1,9 +1,11 @@
 {
-  self,
-  pkgs,
+  self ? null,
+  pkgs ? null,
+  pkgsConfig ? pkgs.config,
+  master ? self.inputs.nixpkgs-master,
+  pin ? self.inputs.nixpkgs-pin,
   ...
-}: new: old:
-with self.inputs; {
-  pin = import nixpkgs-pin pkgs.config;
-  master = import nixpkgs-master pkgs.config;
+}: final: prev: {
+  pin = import pin {config = pkgsConfig;};
+  master = import master {config = pkgsConfig;};
 }

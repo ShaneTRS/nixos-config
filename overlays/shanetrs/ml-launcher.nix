@@ -1,13 +1,16 @@
 {
+  self ? null,
   stdenv,
   makeDesktopItem,
   writeShellApplication,
   coreutils,
   shanetrs,
   xdpyinfo,
-  machine ? {},
-  targetHost ? self.outputs.nixosConfigurations.${machine.serial}.config.shanetrs.remote.addresses.host,
-  self,
+  machine ? null,
+  targetHost ?
+    if self != null && machine ? serial
+    then self.outputs.nixosConfigurations.${machine.serial}.config.shanetrs.remote.addresses.host
+    else throw "targetHost is required: use .override to set it",
   ...
 }:
 stdenv.mkDerivation rec {

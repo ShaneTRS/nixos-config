@@ -1,78 +1,81 @@
-let
+{
+  self ? null,
+  pkgs ? null,
+  tree ? null,
+  machine ? {},
+  secrets ?
+    if machine ? serial
+    then self.nixosConfigurations.${machine.serial}.config.sops.secrets
+    else {},
+  nixpkgs ? self.inputs.nixpkgs,
+  home-manager ? self.inputs.home-manager,
+  ...
+} @ args: final: prev: let
   inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
   inherit (builtins) elemAt fromJSON match readDir readFile;
-in {
-  collectModules = modules: name: map (x: args: (x args).${name} or {}) modules;
 
-  mkTree = dir: let
-    deepReadDir = dir:
-      mapAttrs (name: type:
-        if type == "directory"
-        then deepReadDir (dir + "/${name}")
-        else dir + "/${name}")
-      (readDir dir);
-    filterNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
-    convertFiles = tree:
-      listToAttrs (map (name: let
-        file = tree.${name};
-        regex = match "(.+)(\\.nix|\\.json|\\.toml)" name;
-        ext = elemAt regex 1;
-      in
-        if regex != null
-        then {
-          name = elemAt regex 0;
-          value =
-            if ext == ".nix"
-            then import file
-            else if ext == ".json"
-            then fromJSON (readFile file) // {__path = file;}
-            else fromTOML (readFile file) // {__path = file;};
-        }
-        else {
-          inherit name;
-          value =
-            if isAttrs file
-            then convertFiles file
-            else file;
-        }) (filterNames tree));
-  in
-    convertFiles (deepReadDir dir);
+  inherit (builtins) attrValues isFunction pathExists toJSON trace;
 
-  resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
+  inherit (nixpkgs.lib) collect findFirst nixosSystem;
+  inherit (home-manager.lib) homeManagerConfiguration;
 
-  transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
+  tundra = rec {
+    collectModules = modules: name: map (x: args: (x args).${name} or {}) modules;
 
-  tundra = {
-    self,
-    lib,
-    pkgs,
-    tree,
-    machine ? {},
-    secrets ?
-      if machine ? serial
-      then self.nixosConfigurations.${machine.serial}.config.sops.secrets
-      else {},
-    ...
-  } @ args: let
-    inherit (builtins) attrValues isFunction pathExists toJSON trace;
-    inherit (lib) collect collectModules nixosSystem homeManagerConfiguration;
-  in rec {
-    applyOverlays = pkgs: args:
-      pkgs.appendOverlays (map (x: x args)
-        (filter isFunction (attrValues tree.overlays)));
+    mkTree = dir: let
+      deepReadDir = dir:
+        mapAttrs (name: type:
+          if type == "directory"
+          then deepReadDir (dir + "/${name}")
+          else dir + "/${name}")
+        (readDir dir);
+      filterNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
+      convertFiles = tree:
+        listToAttrs (map (name: let
+          file = tree.${name};
+          regex = match "(.+)(\\.nix|\\.json|\\.toml)" name;
+          ext = elemAt regex 1;
+        in
+          if regex != null
+          then {
+            name = elemAt regex 0;
+            value =
+              if ext == ".nix"
+              then import file
+              else if ext == ".json"
+              then fromJSON (readFile file) // {__path = file;}
+              else fromTOML (readFile file) // {__path = file;};
+          }
+          else {
+            inherit name;
+            value =
+              if isAttrs file
+              then convertFiles file
+              else file;
+          }) (filterNames tree));
+    in
+      convertFiles (deepReadDir dir);
 
+    resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
+
+    transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
+
+    getOverlays = args: (map (x: x args) (filter isFunction (attrValues tree.overlays))); # tree
+
+    # self, nixpkgs, machine, secrets
     configs = file:
       with machine;
         if secrets ? ${file}
         then secrets.${file}.path
         else
-          lib.findFirst pathExists (trace "no config was found for ${file}!" null) [
+          findFirst pathExists (trace "no config was found for ${file}!" null) [
             "${self}/user/configs/${user}/${profile}/${file}"
             "${self}/user/configs/${user}/all/${file}"
             "${self}/user/configs/global/${profile}/${file}"
             "${self}/user/configs/global/all/${file}"
           ];
 
+    # self, tree
     nixosConfigurations = systems: let
       tundraSystem = k: v: let
         machine =
@@ -95,6 +98,7 @@ in {
         configModules = getModules "config";
 
         system = nixosSystem {
+          inherit (systemArgs) lib;
           specialArgs = systemArgs;
           modules = with self.inputs;
             [
@@ -133,6 +137,7 @@ in {
     in
       mapAttrs tundraSystem systems;
 
+    # self, tree
     homeConfigurations = homes: let
       tundraHome = k: v: let
         machine =
@@ -149,9 +154,10 @@ in {
         home = homeManagerConfiguration {
           extraSpecialArgs = systemArgs;
           pkgs = systemArgs.pkgs;
-          modules =
+          modules = with self.inputs;
             [
               self.homeModules.default
+              sops.homeModules.default
               {
                 imports = collect isFunction tree.user.homes.${machine.user} or {};
                 home = {
@@ -176,12 +182,13 @@ in {
         args
         // {
           inherit machine;
-          lib = lib // {tundra = lib.tundra this;};
-          pkgs = applyOverlays pkgs this;
+          inherit (this.pkgs) lib;
+          pkgs = pkgs.appendOverlays (getOverlays this);
         };
     in
       this;
 
+    # pkgs
     toYAML = attrs: "${pkgs.runCommand "toYAML" {
         buildInputs = [pkgs.yj];
         attrs = toJSON attrs;
@@ -191,4 +198,9 @@ in {
         yj -jy < "$attrsPath" > $out/attrs.yaml
       ''}/attrs.yaml";
   };
+in {
+  lib =
+    if prev ? lib
+    then prev.lib.extend (final: prev: home-manager.lib or {} // {inherit tundra;})
+    else {inherit tundra;};
 }

@@ -24,26 +24,26 @@
   outputs = {
     self,
     nixpkgs,
-    home-manager,
     ...
   }: let
-    inherit (builtins) isFunction;
-    inherit (lib) collect mkTree collectModules tundra;
-    inherit (tundra specialArgs) nixosConfigurations homeConfigurations applyOverlays;
+    inherit (builtins) foldl' isFunction;
+    inherit (tundra) collectModules getOverlays mkTree nixosConfigurations homeConfigurations;
+    inherit (lib) collect;
 
-    system = "x86_64-linux";
-    pkgs =
-      applyOverlays (import nixpkgs {
-        inherit system;
-        config = {
-          allowUnfree = true;
-          permittedInsecurePackages = [];
-          inherit system;
-        };
-      })
-      specialArgs;
-    lib = nixpkgs.lib.extend (old: new: home-manager.lib // import ./lib.nix);
+    tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
+
     tree = mkTree self;
+    system = "x86_64-linux";
+    pkgs = import nixpkgs {
+      inherit system;
+      overlays = [self.overlays.default];
+      config = {
+        allowUnfree = true;
+        permittedInsecurePackages = [];
+        inherit system;
+      };
+    };
+    inherit (pkgs) lib;
 
     specialArgs = {inherit self pkgs lib tree;};
     getModules = collectModules (collect isFunction tree.modules);
@@ -55,8 +55,12 @@
     devShells.${system} = tree.shells specialArgs;
     formatter.${system} = pkgs.alejandra;
 
-    legacyPackages.${system} = pkgs;
     inherit lib;
+    overlays.default = final: prev:
+      foldl' (acc: this: acc // (this final acc))
+      prev (getOverlays specialArgs);
+    legacyPackages.${system} = pkgs;
+    packages.${system} = pkgs.shanetrs;
 
     nixosModules.default.imports = getModules "nixos" ++ combinedModules;
     homeModules.default.imports = getModules "home" ++ combinedModules;

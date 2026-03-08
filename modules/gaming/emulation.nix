@@ -4,7 +4,8 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf optionals resolveList;
+  inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf optionals;
+  inherit (lib.tundra) resolveList;
   cfg = config.shanetrs.gaming;
 in {
   options.shanetrs.gaming.emulation = {

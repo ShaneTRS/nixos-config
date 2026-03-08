@@ -5,8 +5,8 @@
   ...
 }: let
   inherit (builtins) attrNames elem listToAttrs toJSON;
-  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption mkPackageOption types resolveList;
-  inherit (lib.tundra) configs;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption mkPackageOption types;
+  inherit (lib.tundra) configs resolveList;
   inherit (pkgs) makeDesktopItem writeShellApplication;
   cfg = config.shanetrs.programs;
 in {
