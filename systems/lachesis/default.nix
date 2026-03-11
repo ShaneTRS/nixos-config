@@ -73,4 +73,6 @@
       };
     };
   };
+
+  machine.user = "shane";
 }

@@ -34,4 +34,6 @@
       vlc
     ];
   };
+
+  machine.user = "mo";
 }

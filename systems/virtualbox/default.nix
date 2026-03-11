@@ -42,4 +42,6 @@ in {
     # boot.kernelPackages = pkgs.linuxPackages_6_11;
     hardware.nvidia-container-toolkit.enable = mkForce false;
   };
+
+  machine.user = "vm";
 }

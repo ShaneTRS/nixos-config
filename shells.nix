@@ -4,12 +4,12 @@ with pkgs; rec {
   repl = mkShellNoCC {
     shellHook = ''
       exec nix repl --expr "let
-        self = builtins.getFlake \"$PWD\";
-        nixosConfiguration = self.nixosConfigurations.\"''${TUNDRA_SERIAL:-230925799001945}\";
+        self = builtins.getFlake \"git+file:$PWD\";
+        nixosConfiguration = self.nixosConfigurations.\"''${TUNDRA_SERIAL:-persephone}\";
        	eval = nixosConfiguration.config.system.build.toplevel;
         specialArgs = nixosConfiguration._module.specialArgs;
       in
-      	{ inherit self eval; }
+      	{ inherit self eval specialArgs; }
        	// self.outputs
         // nixosConfiguration
         // specialArgs"

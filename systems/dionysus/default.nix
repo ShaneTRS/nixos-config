@@ -48,4 +48,6 @@ in {
         "xsettings"
       ]);
   };
+
+  machine.user = "shane";
 }

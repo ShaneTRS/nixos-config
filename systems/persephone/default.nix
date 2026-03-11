@@ -198,4 +198,6 @@ in {
     in
       mkIf (attempt != null) {source = attempt;};
   };
+
+  machine.user = "shane";
 }

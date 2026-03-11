@@ -16,7 +16,7 @@
 
   inherit (builtins) attrValues isFunction pathExists toJSON trace;
 
-  inherit (nixpkgs.lib) collect findFirst nixosSystem;
+  inherit (nixpkgs.lib) collect findFirst filterAttrs nixosSystem;
   inherit (home-manager.lib) homeManagerConfiguration;
 
   tundra = rec {
@@ -76,15 +76,36 @@
           ];
 
     # self, tree
-    nixosConfigurations = systems: let
-      tundraSystem = k: v: let
-        machine =
-          {
-            profile = v.hostname;
-            serial = k;
-            source = "/home/${v.user}/.config/nixos/";
-          }
-          // v;
+    nixosConfigurations = set: let
+      # todo: get rid of reliance on default.nix
+      systems = filterAttrs (k: v: v != null) (
+        mapAttrs
+        (k: v: let
+          machine =
+            (v.default or v (args
+              // {
+                inherit machine;
+                options = null;
+                config = null;
+                homeConfig = null;
+                nixosConfig = null;
+              })).machine or null;
+        in
+          if machine != null
+          then
+            {
+              serial = k; # todo: remove this
+              profile = k; # todo: remove this
+              hostname = k;
+              user = "user";
+              source = "/home/${machine.user}/.config/nixos";
+            }
+            // machine
+          else null)
+        (filterAttrs (k: v: isFunction (v.default or v)) set)
+      );
+
+      tundraSystem = name: machine: let
         systemArgs =
           systemHelper machine
           // {
@@ -92,9 +113,7 @@
             homeConfig = system.config.home-manager.users.${machine.user};
           };
 
-        getModules =
-          collectModules (collect isFunction tree.profiles.${machine.profile}
-            ++ collect isFunction tree.hardware.${machine.serial});
+        getModules = collectModules (collect isFunction tree.systems.${name});
         configModules = getModules "config";
 
         system = nixosSystem {
@@ -149,7 +168,7 @@
           // v;
         systemArgs = systemHelper machine // {homeConfig = home.config;};
 
-        getModules = collectModules (collect isFunction tree.profiles.${machine.profile});
+        getModules = collectModules (collect isFunction tree.systems.${machine.profile});
 
         home = homeManagerConfiguration {
           extraSpecialArgs = systemArgs;

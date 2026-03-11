@@ -6,26 +6,26 @@
 	"languages": {
 		"Nix": {
 			"hard_tabs": false,
-			"tab_size": 2
+			"tab_size": 2,
+			"formatter": {
+				"external": {
+					"command": "alejandra"
+				}
+			}
 		}
 	},
 	"lsp": {
 		"nixd": {
 			"settings": {
-				"formatting": {
-					"command": [
-						"alejandra"
-					]
-				},
 				"nixpkgs": {
-					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").legacyPackages.x86_64-linux"
+					"expr": "(builtins.getFlake \"${builtins.getEnv \"git+file:PWD\"}\").legacyPackages.x86_64-linux"
 				},
 				"options": {
 					"nixos": {
-						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_SERIAL\" or \"230925799001945\"}\".options"
+						"expr": "(builtins.getFlake \"${builtins.getEnv \"git+file:PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_SERIAL\" or \"persephone\"}\".options"
 					},
 					"home-manager": {
-						"expr": "{user = (builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_SERIAL\" or \"230925799001945\"}\".options.home-manager.users.type.getSubOptions [];}"
+						"expr": "{user = (builtins.getFlake \"${builtins.getEnv \"git+file:PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_SERIAL\" or \"persephone\"}\".options.home-manager.users.type.getSubOptions [];}"
 					}
 				}
 			}

@@ -65,29 +65,7 @@
     nixosModules.default.imports = getModules "nixos" ++ combinedModules;
     homeModules.default.imports = getModules "home" ++ combinedModules;
 
-    nixosConfigurations = nixosConfigurations {
-      "230925799001945" = {
-        hostname = "persephone";
-        user = "shane";
-      };
-      "H1XH7F3CNCMC0015F0243" = {
-        hostname = "lachesis";
-        user = "shane";
-      };
-      "MXL0265298" = {
-        hostname = "dionysus";
-        user = "shane";
-      };
-      "MOELITEBOOK" = {
-        hostname = "mo-elitebook";
-        user = "mo";
-      };
-      "0" = {
-        hostname = "vm";
-        profile = "bolillo";
-        user = "vm";
-      };
-    };
+    nixosConfigurations = nixosConfigurations tree.systems;
     homeConfigurations = homeConfigurations {
       "shane".profile = "persephone";
       "mo".profile = "crumb";

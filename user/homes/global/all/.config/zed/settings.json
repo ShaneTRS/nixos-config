@@ -8,12 +8,12 @@
 // from the command palette or from `Zed` application menu.
 {
 	"edit_predictions": {
-  "provider": "zed"
- },
- "git_panel": {
-  "tree_view": true
- },
- "minimap": {
+		"provider": "zed"
+	},
+	"git_panel": {
+		"tree_view": true
+	},
+	"minimap": {
 		"show": "always"
 	},
 	"terminal": {
@@ -105,7 +105,16 @@
 				"nixd",
 				"!nil"
 			],
-			"hard_tabs": false
+			"hard_tabs": false,
+			"formatter": {
+				"external": {
+					"command": "nix",
+					"arguments": [
+						"fmt",
+						"--"
+					]
+				}
+			}
 		},
 		"Rust": {
 			// "tab_size": 4,
@@ -138,14 +147,6 @@
 				"diagnostic": {
 					"suppress": [
 						"sema-escaping-with"
-					]
-				},
-				"formatting": {
-					"command": [
-						"nix",
-						"fmt",
-						"--",
-						"-"
 					]
 				},
 			}
