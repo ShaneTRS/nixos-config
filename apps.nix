@@ -24,7 +24,7 @@
         input() { $INTERACTIVE || exit 1; [ -z "''${!1}" ] && read -rp "$1: " "$1"; }
 
         input TUNDRA_SOURCE
-        input TUNDRA_SERIAL
+        input TUNDRA_ID
 
         cd "$TUNDRA_SOURCE" || exit
 
@@ -48,9 +48,9 @@
 
         if [ "$1" = "copy" ]; then
         	TARGET="''${TARGET:-$2}"
-        	TUNDRA_SERIAL="''${TARGET_SERIAL:-''${3:-$(ssh "$TARGET" echo \$TUNDRA_SERIAL)}}"
+        	TUNDRA_ID="''${TARGET_ID:-''${3:-$(ssh "$TARGET" echo \$TUNDRA_ID)}}"
         fi
-        with_nom nix build "$TUNDRA_SOURCE#nixosConfigurations.$TUNDRA_SERIAL.config.system.build.toplevel"
+        with_nom nix build "$TUNDRA_SOURCE#nixosConfigurations.$TUNDRA_ID.config.system.build.toplevel"
         [[ $BUILD && -n "$TARGET" ]] && with_nom nix-copy-closure --to "$TARGET" ./result
         [[ $BUILD && "$1" != "build" && -z "$TARGET" ]] && as_root ./result/bin/switch-to-configuration "$@"
 

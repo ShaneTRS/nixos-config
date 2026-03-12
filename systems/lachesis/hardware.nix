@@ -12,7 +12,7 @@ in {
       devices = ["keyboard" "Video"];
       keymap = [
         {
-          name = machine.serial + "-ungrab";
+          name = machine.id + "-ungrab";
           remap = let
             brightness = amount: direction: {
               launch = [

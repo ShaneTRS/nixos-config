@@ -5,7 +5,7 @@ with pkgs; rec {
     shellHook = ''
       exec nix repl --expr "let
         self = builtins.getFlake \"git+file:$PWD\";
-        nixosConfiguration = self.nixosConfigurations.\"''${TUNDRA_SERIAL:-persephone}\";
+        nixosConfiguration = self.nixosConfigurations.\"''${TUNDRA_ID:-persephone}\";
        	eval = nixosConfiguration.config.system.build.toplevel;
         specialArgs = nixosConfiguration._module.specialArgs;
       in

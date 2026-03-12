@@ -4,8 +4,13 @@
   tree ? null,
   machine ? {},
   secrets ?
-    if machine ? serial
-    then self.nixosConfigurations.${machine.serial}.config.sops.secrets
+    if machine ? id
+    then
+      (
+        if machine ? home
+        then {} # self.homeConfigurations.${machine.user}.config.sops.secrets # infinite recursion
+        else self.nixosConfigurations.${machine.id}.config.sops.secrets
+      )
     else {},
   nixpkgs ? self.inputs.nixpkgs,
   home-manager ? self.inputs.home-manager,
@@ -16,7 +21,7 @@
 
   inherit (builtins) attrValues isFunction pathExists toJSON trace;
 
-  inherit (nixpkgs.lib) collect findFirst filterAttrs nixosSystem;
+  inherit (nixpkgs.lib) collect findFirst filterAttrs mkOverride nixosSystem;
   inherit (home-manager.lib) homeManagerConfiguration;
 
   tundra = rec {
@@ -69,20 +74,21 @@
         then secrets.${file}.path
         else
           findFirst pathExists (trace "no config was found for ${file}!" null) [
-            "${self}/user/configs/${user}/${profile}/${file}"
+            "${self}/user/configs/${user}/${id}/${file}"
             "${self}/user/configs/${user}/all/${file}"
-            "${self}/user/configs/global/${profile}/${file}"
+            "${self}/user/configs/global/${id}/${file}"
             "${self}/user/configs/global/all/${file}"
           ];
 
-    # self, tree
-    nixosConfigurations = set: let
-      # todo: get rid of reliance on default.nix
-      systems = filterAttrs (k: v: v != null) (
-        mapAttrs
-        (k: v: let
+    # tree
+    tundraSystems = filterAttrs (k: v: v != {}) (mapAttrs
+      (k: v:
+        foldl' (acc: this:
+          if this != null
+          then acc // this
+          else acc) {} (map (x: let
           machine =
-            (v.default or v (args
+            (x (args
               // {
                 inherit machine;
                 options = null;
@@ -93,18 +99,18 @@
         in
           if machine != null
           then
-            {
-              serial = k; # todo: remove this
-              profile = k; # todo: remove this
+            rec {
+              id = k;
               hostname = k;
               user = "user";
-              source = "/home/${machine.user}/.config/nixos";
+              source = "/home/${machine.user or user}/.config/nixos";
             }
             // machine
-          else null)
-        (filterAttrs (k: v: isFunction (v.default or v)) set)
-      );
+          else null) (collect isFunction v)))
+      tree.systems);
 
+    # self, tree
+    nixosConfigurations = set: let
       tundraSystem = name: machine: let
         systemArgs =
           systemHelper machine
@@ -154,7 +160,7 @@
       in
         system;
     in
-      mapAttrs tundraSystem systems;
+      mapAttrs tundraSystem tundraSystems;
 
     # self, tree
     homeConfigurations = homes: let
@@ -162,29 +168,27 @@
         machine =
           {
             user = k;
-            hostname = v.profile;
+            hostname = v.id;
             source = "/home/${k}/.config/nixos/";
+            home = "/home/${machine.user}";
           }
           // v;
         systemArgs = systemHelper machine // {homeConfig = home.config;};
 
-        getModules = collectModules (collect isFunction tree.systems.${machine.profile});
+        getModules = collectModules (collect isFunction tree.systems.${machine.id});
 
         home = homeManagerConfiguration {
           extraSpecialArgs = systemArgs;
           pkgs = systemArgs.pkgs;
-          modules = with self.inputs;
+          modules =
             [
               self.homeModules.default
-              sops.homeModules.default
+              # sops.homeModules.default # cannot access secrets due to infinite recursion
               {
                 imports = collect isFunction tree.user.homes.${machine.user} or {};
                 home = {
                   username = machine.user;
-                  homeDirectory =
-                    if machine ? home
-                    then lib.mkForce machine.home
-                    else "/home/${machine.user}";
+                  homeDirectory = mkOverride 900 machine.home;
                 };
               }
             ]

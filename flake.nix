@@ -67,9 +67,9 @@
 
     nixosConfigurations = nixosConfigurations tree.systems;
     homeConfigurations = homeConfigurations {
-      "shane".profile = "persephone";
-      "mo".profile = "crumb";
-      "vm".profile = "solis";
+      "shane".id = "persephone";
+      "mo".id = "crumb";
+      "vm".id = "solis";
     };
   };
 }

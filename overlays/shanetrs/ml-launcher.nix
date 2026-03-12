@@ -8,8 +8,8 @@
   xdpyinfo,
   machine ? null,
   targetHost ?
-    if self != null && machine ? serial
-    then self.outputs.nixosConfigurations.${machine.serial}.config.shanetrs.remote.addresses.host
+    if self != null && machine ? id
+    then self.outputs.nixosConfigurations.${machine.id}.config.shanetrs.remote.addresses.host
     else throw "targetHost is required: use .override to set it",
   ...
 }:

@@ -31,7 +31,7 @@ in {
 
     environment = {
       sessionVariables = {
-        TUNDRA_SERIAL = machine.serial;
+        TUNDRA_ID = machine.id;
         TUNDRA_SOURCE = machine.source;
       };
       systemPackages = with pkgs; [git];
@@ -145,7 +145,7 @@ in {
             done < "$PWD/last"
             rm last
 
-            for i in "${user}/${profile}" "${user}/all" "global/${profile}" "global/all"; do
+            for i in "${user}/${id}" "${user}/all" "global/${id}" "global/all"; do
             	find "$i" -type f >> last
             done
 
