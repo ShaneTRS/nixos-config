@@ -26,8 +26,8 @@
     nixpkgs,
     ...
   }: let
-    inherit (builtins) foldl' isFunction;
-    inherit (tundra) collectModules getOverlays mkTree nixosConfigurations homeConfigurations;
+    inherit (builtins) foldl' isFunction mapAttrs;
+    inherit (tundra) collectModules getOverlays mkTree tundraSystem getMachines tundraHome;
     inherit (lib) collect;
 
     tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
@@ -65,8 +65,8 @@
     nixosModules.default.imports = getModules "nixos" ++ combinedModules;
     homeModules.default.imports = getModules "home" ++ combinedModules;
 
-    nixosConfigurations = nixosConfigurations tree.systems;
-    homeConfigurations = homeConfigurations {
+    nixosConfigurations = mapAttrs tundraSystem (getMachines tree.systems);
+    homeConfigurations = mapAttrs tundraHome {
       "shane".id = "persephone";
       "mo".id = "crumb";
       "vm".id = "solis";
