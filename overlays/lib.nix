@@ -80,125 +80,119 @@
             "${self}/user/configs/global/all/${file}"
           ];
 
-    # tree
-    tundraSystems = filterAttrs (k: v: v != {}) (mapAttrs
-      (k: v:
-        foldl' (acc: this:
-          if this != null
-          then acc // this
-          else acc) {} (map (x: let
-          machine =
-            (x (args
-              // {
-                inherit machine;
+    getMachines = set:
+      filterAttrs (k: v: v != null) (mapAttrs (k: v: let
+        machines = filter (x: x != null) (map (x: let
+          this =
+            (x ({
+                machine = this;
                 options = null;
                 config = null;
                 homeConfig = null;
                 nixosConfig = null;
-              })).machine or null;
+              }
+              // args)).machine or null;
         in
-          if machine != null
-          then
-            rec {
-              id = k;
-              hostname = k;
-              user = "user";
-              source = "/home/${machine.user or user}/.config/nixos";
+          this) (collect isFunction v));
+      in
+        if machines != []
+        then foldl' (acc: this: acc // this) {} machines
+        else null)
+      set);
+
+    # self, tree
+    tundraSystem = name: value: let
+      machine =
+        rec {
+          id = name;
+          hostname = name;
+          user = "user";
+          source = "/home/${machine.user or user}/.config/nixos";
+        }
+        // value;
+
+      systemArgs =
+        systemHelper machine
+        // {
+          nixosConfig = system.config;
+          homeConfig = system.config.home-manager.users.${machine.user};
+        };
+
+      getModules = collectModules (collect isFunction tree.systems.${name});
+      configModules = getModules "config";
+
+      system = nixosSystem {
+        inherit (systemArgs) lib;
+        specialArgs = systemArgs;
+        modules = with self.inputs;
+          [
+            self.outputs.nixosModules.default
+            home-manager.nixosModules.default
+            sops.nixosModules.default
+            nixpkgs.nixosModules.readOnlyPkgs
+            {
+              environment.etc."nix/inputs/pkgs".source = nixpkgs;
+              nixpkgs.pkgs = systemArgs.pkgs;
+              nix = {
+                registry.pkgs.to = {
+                  type = "git";
+                  url = "file:" + machine.source;
+                };
+                settings = {
+                  experimental-features = ["nix-command" "flakes"];
+                  nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
+                };
+              };
+              home-manager = {
+                extraSpecialArgs = systemArgs;
+                users.${machine.user}.imports =
+                  [self.homeModules.default]
+                  ++ (collect isFunction tree.user.homes.${machine.user} or {})
+                  ++ getModules "home"
+                  ++ configModules;
+              };
             }
-            // machine
-          else null) (collect isFunction v)))
-      tree.systems);
+          ]
+          ++ getModules "nixos"
+          ++ configModules;
+      };
+    in
+      system;
 
     # self, tree
-    nixosConfigurations = set: let
-      tundraSystem = name: machine: let
-        systemArgs =
-          systemHelper machine
-          // {
-            nixosConfig = system.config;
-            homeConfig = system.config.home-manager.users.${machine.user};
-          };
+    tundraHome = name: value: let
+      machine =
+        {
+          user = name;
+          hostname = value.id;
+          source = "/home/${name}/.config/nixos/";
+          home = "/home/${machine.user}";
+        }
+        // value;
+      systemArgs = systemHelper machine // {homeConfig = home.config;};
 
-        getModules = collectModules (collect isFunction tree.systems.${name});
-        configModules = getModules "config";
+      getModules = collectModules (collect isFunction tree.systems.${machine.id});
 
-        system = nixosSystem {
-          inherit (systemArgs) lib;
-          specialArgs = systemArgs;
-          modules = with self.inputs;
-            [
-              self.outputs.nixosModules.default
-              home-manager.nixosModules.default
-              sops.nixosModules.default
-              nixpkgs.nixosModules.readOnlyPkgs
-              {
-                environment.etc."nix/inputs/pkgs".source = nixpkgs;
-                nixpkgs.pkgs = systemArgs.pkgs;
-                nix = {
-                  registry.pkgs.to = {
-                    type = "git";
-                    url = "file:" + machine.source;
-                  };
-                  settings = {
-                    experimental-features = ["nix-command" "flakes"];
-                    nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
-                  };
-                };
-                home-manager = {
-                  extraSpecialArgs = systemArgs;
-                  users.${machine.user}.imports =
-                    [self.homeModules.default]
-                    ++ (collect isFunction tree.user.homes.${machine.user} or {})
-                    ++ getModules "home"
-                    ++ configModules;
-                };
-              }
-            ]
-            ++ getModules "nixos"
-            ++ configModules;
-        };
-      in
-        system;
+      home = homeManagerConfiguration {
+        extraSpecialArgs = systemArgs;
+        pkgs = systemArgs.pkgs;
+        modules =
+          [
+            self.homeModules.default
+            # sops.homeModules.default # cannot access secrets due to infinite recursion
+            {
+              imports = collect isFunction tree.user.homes.${machine.user} or {};
+              home = {
+                username = machine.user;
+                homeDirectory = mkOverride 900 machine.home;
+              };
+            }
+          ]
+          ++ getModules "home"
+          ++ getModules "config";
+      };
     in
-      mapAttrs tundraSystem tundraSystems;
-
-    # self, tree
-    homeConfigurations = homes: let
-      tundraHome = k: v: let
-        machine =
-          {
-            user = k;
-            hostname = v.id;
-            source = "/home/${k}/.config/nixos/";
-            home = "/home/${machine.user}";
-          }
-          // v;
-        systemArgs = systemHelper machine // {homeConfig = home.config;};
-
-        getModules = collectModules (collect isFunction tree.systems.${machine.id});
-
-        home = homeManagerConfiguration {
-          extraSpecialArgs = systemArgs;
-          pkgs = systemArgs.pkgs;
-          modules =
-            [
-              self.homeModules.default
-              # sops.homeModules.default # cannot access secrets due to infinite recursion
-              {
-                imports = collect isFunction tree.user.homes.${machine.user} or {};
-                home = {
-                  username = machine.user;
-                  homeDirectory = mkOverride 900 machine.home;
-                };
-              }
-            ]
-            ++ getModules "home"
-            ++ getModules "config";
-        };
-      in
-        home;
-    in
-      mapAttrs tundraHome homes;
+      home;
 
     systemHelper = machine: let
       this =
