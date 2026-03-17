@@ -4,7 +4,6 @@
     hardware = {
       enable = true;
       drivers.g710.enable = true;
-      firmware = "redist";
     };
     remote = {
       addresses.client = "192.168.1.13";

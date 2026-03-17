@@ -826,9 +826,6 @@
         "DecodeBase64": {
             "enabled": false
         },
-        "BetterQuickReact": {
-            "enabled": false
-        },
         "BetterUserArea": {
             "enabled": false
         },
@@ -1242,9 +1239,6 @@
         "LastActive": {
             "enabled": false
         },
-        "LimitMiddleClickPaste": {
-            "enabled": false
-        },
         "MessageBurst": {
             "enabled": false
         },
@@ -1556,6 +1550,12 @@
         },
         "CursorBuddy": {
             "enabled": false
+        },
+        "MoreQuickReactions": {
+            "enabled": false
+        },
+        "MiddleClickTweaks": {
+            "enabled": false
         }
     },
     "notifications": {
@@ -1569,7 +1569,7 @@
         "authenticated": false,
         "url": "https://api.vencord.dev/",
         "settingsSync": false,
-        "settingsSyncVersion": 1771352149315
+        "settingsSyncVersion": 1773771812708
     },
     "enabledThemeLinks": [],
     "userCssVars": {},

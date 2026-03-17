@@ -41,12 +41,11 @@ in {
     };
     hardware = {
       enable = true;
-      graphics = "intel";
+      gpu = "intel";
       drivers.g710 = {
         enable = true;
         captureDelays = false;
       };
-      firmware = "redist";
     };
     remote.usb = {
       devices = "/sys/bus/pci/devices/0000:00:14.0/usb";

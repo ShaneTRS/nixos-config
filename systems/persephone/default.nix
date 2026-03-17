@@ -95,9 +95,12 @@ in {
       gimp.enable = true;
     };
     shell = {
+      default = pkgs.zsh;
+      bash.enable = true;
       zsh.enable = true;
       doas.noPassCmds = mkOptionDefault ["chrt" "iptables"];
     };
+    shell.enable = true;
   };
 
   nixos = {

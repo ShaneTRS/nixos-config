@@ -160,7 +160,7 @@ in {
       };
       user.services = {
         keynav = {
-          serviceConfig.ExecStart = "${getExe pkgs.keynav}";
+          serviceConfig.ExecStart = getExe pkgs.keynav;
           wantedBy = ["graphical-session.target"];
         };
         jfa-go = {

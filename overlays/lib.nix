@@ -27,6 +27,8 @@
   tundra = rec {
     collectModules = modules: name: map (x: args: (x args).${name} or {}) modules;
 
+    mkStrongDefault = mkOverride 900;
+
     mkTree = dir: let
       deepReadDir = dir:
         mapAttrs (name: type:

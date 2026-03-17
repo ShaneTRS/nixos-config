@@ -3,8 +3,7 @@
   config.shanetrs = {
     hardware = {
       enable = true;
-      graphics = "intel";
-      firmware = "redist";
+      gpu = "intel";
     };
   };
 

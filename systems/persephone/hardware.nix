@@ -12,8 +12,7 @@
         enable = true;
         captureDelays = false;
       };
-      firmware = "redist";
-      graphics = "intel";
+      gpu = "intel";
     };
   };
 
@@ -78,23 +77,24 @@
         ExecStart = let
           inherit (pkgs) writeShellApplication;
           inherit (lib) getExe;
-        in "${getExe (writeShellApplication {
-          name = "bluetooth-switch.service";
-          runtimeInputs = with pkgs; [pipewire wireplumber];
-          text = ''
-            set +o errexit
-            while true; do
-            	SINK="$(pw-cli ls "$DEVICE" | awk -F'[ ,]+' 'NR==1 {print $2; exit}')"
-            	if [ -n "$SINK" ]; then
-             		wpctl set-default "$SINK"
-               	until [ -z "$(pw-cli ls "$DEVICE")" ]; do
-                	sleep 10
-                done
-              fi
-             	sleep 1
-            done
-          '';
-        })}";
+        in
+          getExe (writeShellApplication {
+            name = "bluetooth-switch.service";
+            runtimeInputs = with pkgs; [pipewire wireplumber];
+            text = ''
+              set +o errexit
+              while true; do
+              	SINK="$(pw-cli ls "$DEVICE" | awk -F'[ ,]+' 'NR==1 {print $2; exit}')"
+              	if [ -n "$SINK" ]; then
+               		wpctl set-default "$SINK"
+                 	until [ -z "$(pw-cli ls "$DEVICE")" ]; do
+                  	sleep 10
+                  done
+                fi
+               	sleep 1
+              done
+            '';
+          });
       };
       Install.WantedBy = ["graphical-session.target"];
     };

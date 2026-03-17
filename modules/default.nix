@@ -5,16 +5,18 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf mkOverride;
-  inherit (lib.tundra) configs;
-  mkStrongDefault = x: mkOverride 900 x;
+  inherit (lib) mkEnableOption mkIf;
+  inherit (lib.tundra) configs mkStrongDefault;
 in {
   options.shanetrs.enable =
     mkEnableOption "Set strong defaults, such as hostname and networking";
 
   config = mkIf config.shanetrs.enable {
     shanetrs = {
-      shell.doas.enable = mkStrongDefault true;
+      shell = {
+        enable = mkStrongDefault true;
+        doas.enable = mkStrongDefault true;
+      };
       tundra.enable = mkStrongDefault true;
     };
   };
@@ -37,9 +39,12 @@ in {
       systemPackages = with pkgs; [git];
     };
 
-    hardware.graphics = {
-      enable = mkStrongDefault true;
-      enable32Bit = mkStrongDefault true;
+    hardware = {
+      enableRedistributableFirmware = mkStrongDefault true;
+      graphics = {
+        enable = mkStrongDefault true;
+        enable32Bit = mkStrongDefault true;
+      };
     };
 
     networking = {

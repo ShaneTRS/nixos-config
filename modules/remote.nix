@@ -116,14 +116,14 @@ in {
             Type = "oneshot";
             User = machine.user;
           };
-          script = "${getExe (writeShellApplication {
+          script = getExe (writeShellApplication {
             name = "usbip-resume";
             runtimeInputs = with pkgs; [procps];
             text = ''
               pkill usbip.service -USR1
               pkill -P "$(pgrep ml-launcher)" -KILL
             '';
-          })}";
+          });
           wantedBy = ["suspend.target"];
         };
       };
@@ -153,7 +153,7 @@ in {
               "PORTS='${optionalString cfg.usb.enable concatStringsSep " " cfg.usb.ports}'"
               "DEVICES=${cfg.usb.devices}"
             ];
-            ExecStart = "${getExe (writeShellApplication {
+            ExecStart = getExe (writeShellApplication {
               name = "usbip.service";
               runtimeInputs = with pkgs; [coreutils gash-utils libnotify openssh systemd util-linux];
               text = ''
@@ -215,7 +215,7 @@ in {
                 forward_port ''${PORTS[*]}
                 wait
               '';
-            })}";
+            });
             Restart = "on-failure";
             StartLimitBurst = 32;
           };

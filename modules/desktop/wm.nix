@@ -60,7 +60,7 @@ in {
     })
 
     (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
-      shanetrs.shell.extraRc = ''
+      shanetrs.shell.shared.extraRc = ''
         case "$(tty)" in
           /dev/tty1|/dev/tty7) niri-session -l && exit ;;
         esac

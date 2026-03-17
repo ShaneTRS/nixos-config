@@ -14,7 +14,7 @@ in {
       };
       # hardware = {
       #   enable = true;
-      #   graphics = "virtualbox";
+      #   gpu = "virtualbox";
       # };
     };
   };
