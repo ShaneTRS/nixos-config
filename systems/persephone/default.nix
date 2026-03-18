@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (lib) getExe mkIf mkOptionDefault;
-  inherit (lib.tundra) configs;
+  inherit (lib.tundra) getConfig;
 in {
   config.shanetrs = {
     enable = true;
@@ -197,7 +197,7 @@ in {
       shanetrs.schud # controller overlay
     ];
     xdg.configFile."keynav/keynavrc" = let
-      attempt = configs "keynavrc";
+      attempt = getConfig "keynavrc";
     in
       mkIf (attempt != null) {source = attempt;};
   };

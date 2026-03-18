@@ -7,7 +7,7 @@
 }: let
   inherit (builtins) attrNames concatStringsSep length;
   inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types;
-  inherit (lib.tundra) configs toYAML transformAttrs;
+  inherit (lib.tundra) getConfig toYAML transformAttrs;
 
   sessions = {
     plasma = {
@@ -173,7 +173,7 @@ in {
         XCOMPOSECACHE = "${config.xdg.cacheHome}/XCompose";
       };
       xdg.configFile."XCompose" = let
-        attempt = configs ".XCompose";
+        attempt = getConfig ".XCompose";
       in
         mkIf (attempt != null) {source = attempt;};
     })
@@ -181,7 +181,7 @@ in {
     (mkIf (cfg.type == "wayland") {
       home.sessionVariables.QT_QPA_PLATFORM = "wayland";
       xdg.configFile."XCompose" = let
-        attempt = configs ".XCompose";
+        attempt = getConfig ".XCompose";
       in
         mkIf (attempt != null) {
           text =

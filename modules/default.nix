@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf;
-  inherit (lib.tundra) configs mkStrongDefault;
+  inherit (lib.tundra) getConfig mkStrongDefault;
 in {
   options.shanetrs.enable =
     mkEnableOption "Set strong defaults, such as hostname and networking";
@@ -114,7 +114,7 @@ in {
       };
       users.${machine.user} = {
         isNormalUser = mkStrongDefault true;
-        hashedPasswordFile = mkStrongDefault (configs "passwd");
+        hashedPasswordFile = mkStrongDefault (getConfig "passwd");
         extraGroups = ["wheel"];
         autoSubUidGidRange = mkStrongDefault true;
       };

@@ -70,16 +70,16 @@
     getOverlays = args: (map (x: x args) (filter isFunction (attrValues tree.overlays))); # tree
 
     # self, nixpkgs, machine, secrets
-    configs = file:
+    getConfig = file:
       with machine;
         if secrets ? ${file}
         then secrets.${file}.path
         else
           findFirst pathExists (trace "no config was found for ${file}!" null) [
-            "${self}/user/configs/${user}/${id}/${file}"
-            "${self}/user/configs/${user}/all/${file}"
-            "${self}/user/configs/global/${id}/${file}"
-            "${self}/user/configs/global/all/${file}"
+            (self + "/user/configs/${user}/${id}/${file}")
+            (self + "/user/configs/${user}/all/${file}")
+            (self + "/user/configs/global/${id}/${file}")
+            (self + "/user/configs/global/all/${file}")
           ];
 
     getMachines = set:

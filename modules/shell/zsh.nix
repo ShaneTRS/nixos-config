@@ -7,14 +7,14 @@
 }: let
   inherit (builtins) attrValues mapAttrs readFile;
   inherit (lib) concatLines mkEnableOption mkIf mkOverride mkPackageOption optionalString;
-  inherit (lib.tundra) configs mkStrongDefault;
+  inherit (lib.tundra) getConfig mkStrongDefault;
   cfg = config.shanetrs.shell;
   enabled = cfg.enable && cfg.zsh.enable;
 
   extraRc =
     concatLines (
       attrValues (mapAttrs (key: value: ''bindkey "${key}" "${value}"'') cfg.zsh.binds)
-      ++ [(let attempt = configs ".zshrc"; in optionalString (attempt != null) (readFile attempt))]
+      ++ [(let attempt = getConfig ".zshrc"; in optionalString (attempt != null) (readFile attempt))]
     )
     + cfg.shared.extraRc
     + cfg.zsh.extraRc;
