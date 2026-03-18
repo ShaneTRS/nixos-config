@@ -6,7 +6,7 @@
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf optionals;
   inherit (lib.tundra) resolveList;
-  cfg = config.shanetrs.gaming;
+  cfg = config.shanetrs.gaming.emulation;
 in {
   options.shanetrs.gaming.emulation = {
     enable = mkEnableOption "Emulation configuration and installation";
@@ -29,7 +29,7 @@ in {
       "3ds" = {
         enable = mkOption {
           type = types.bool;
-          default = cfg.emulation.nintendo.enable;
+          default = cfg.nintendo.enable;
         };
         package = mkOption {
           type = types.package;
@@ -39,14 +39,14 @@ in {
       ds = {
         enable = mkOption {
           type = types.bool;
-          default = cfg.emulation.nintendo.enable;
+          default = cfg.nintendo.enable;
         };
         package = mkPackageOption pkgs.libretro "desmume" {};
       };
       switch = {
         enable = mkOption {
           type = types.bool;
-          default = cfg.emulation.nintendo.enable;
+          default = cfg.nintendo.enable;
         };
         package = mkPackageOption pkgs "ryubing" {};
         extraPackages = mkOption {
@@ -57,14 +57,14 @@ in {
       wii = {
         enable = mkOption {
           type = types.bool;
-          default = cfg.emulation.nintendo.enable;
+          default = cfg.nintendo.enable;
         };
         package = mkPackageOption pkgs.libretro "dolphin" {};
       };
       wii-u = {
         enable = mkOption {
           type = types.bool;
-          default = cfg.emulation.nintendo.enable;
+          default = cfg.nintendo.enable;
         };
         package = mkPackageOption pkgs "cemu" {};
         extraPackages = mkOption {
@@ -79,9 +79,9 @@ in {
     };
   };
 
-  home = mkIf cfg.emulation.enable {
+  home = mkIf cfg.enable {
     home.packages = let
-      e = cfg.emulation;
+      e = cfg;
       n = e.nintendo;
       r = e.retroarch;
     in
