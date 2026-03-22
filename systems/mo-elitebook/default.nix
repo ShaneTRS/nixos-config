@@ -28,7 +28,7 @@
   home = {
     home.packages = with pkgs; [
       krita
-      helvum
+      crosspipe
       shanetrs.moonlight-qt
       shanetrs.spotify
       vlc

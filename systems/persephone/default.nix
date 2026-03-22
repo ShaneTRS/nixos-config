@@ -92,6 +92,7 @@ in {
       easyeffects.enable = true;
       vscode.enable = true;
       zed-editor.enable = true;
+      zerotier-one.enable = true;
       gimp.enable = true;
     };
     shell = {
@@ -131,7 +132,6 @@ in {
 
     services = {
       ddclient.enable = true;
-      zerotierone.enable = true;
       udev = {
         enable = true;
         packages = [pkgs.shanetrs.vuinputd];
@@ -175,7 +175,7 @@ in {
       libreoffice-still # office suite
       equibop # discord client
 
-      helvum # patchbay
+      crosspipe # patchbay
       spicetify-cli # spotify mods
       shanetrs.spotify # music player
 

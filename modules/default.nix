@@ -169,6 +169,7 @@ in {
     programs = {
       git = {
         enable = mkStrongDefault true;
+        signing.format = mkStrongDefault null;
         settings = {
           user.email = mkStrongDefault "${machine.user}@${machine.hostname}";
           user.name = mkStrongDefault machine.user;
