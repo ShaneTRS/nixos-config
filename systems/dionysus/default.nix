@@ -5,7 +5,7 @@
 }: let
   inherit (builtins) listToAttrs;
   inherit (lib) mkIf;
-  inherit (lib.tundra) configs;
+  inherit (lib.tundra) getConfig;
 in {
   config.shanetrs = {
     enable = true;
@@ -36,7 +36,7 @@ in {
     home.packages = with pkgs; [shanetrs.moonlight-qt];
     xdg.configFile = let
       mkFile = key: let
-        source = configs "xfce4/${key}.xml";
+        source = getConfig "xfce4/${key}.xml";
       in {
         name = "xfce4/xfconf/xfce-perchannel-xml/${key}.xml";
         value = mkIf (source != null) {inherit source;};

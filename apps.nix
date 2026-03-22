@@ -1,4 +1,5 @@
 {
+  self,
   pkgs,
   lib,
   ...
@@ -9,54 +10,53 @@
     program = lib.getExe (pkgs.writeShellApplication {
       name = "flake-rebuild";
       runtimeInputs = with pkgs; [
-        coreutils
-        gawk
-        git
-        nixos-rebuild
+        openssh
         nix-output-monitor
       ];
       text = ''
         set +uo errexit
 
-        INTERACTIVE=''${INTERACTIVE:-true}
-        COMMIT=''${COMMIT:-true}
+        INTERACTIVE="''${INTERACTIVE:-[ -t 0 ]}"
+        SUDO="''${SUDO:-sudo}"
 
-        input() { $INTERACTIVE || exit 1; [ -z "''${!1}" ] && read -rp "$1: " "$1"; }
-
-        input TUNDRA_SOURCE
-        input TUNDRA_ID
-
-        cd "$TUNDRA_SOURCE" || exit
-
-        update-repo() {
-          git add -A; git update-index --refresh >/dev/null
-          git diff-index --quiet HEAD -- ||
-            git commit -am "AUTO: Configuration updated"
+        input() {
+          [ -n "''${!1}" ] && return
+          THIS="$(eval "$2")"
+          if [ -n "$THIS" ]; then
+            read -r "$1" <<< "$THIS"
+          elif eval "$INTERACTIVE"; then
+            read -rp "$1: " "$1"
+          else
+            echo "$1: parameter not set" 1>&2
+            exit 2
+          fi
         }
 
-        if ! git diff-index --quiet HEAD -- &&
-          $COMMIT && $INTERACTIVE && [ ! "$1" = "test" ] && ! git diff --color-words |
-            awk '!/--- a|+++ b|index [0-9a-z]{6}/ {print $0}' | less -RK;
-        then
-          echo "Cancelled configuration update";
-          exit 1
-        fi
+        build() { out="$(nom build --print-out-paths --no-link "${self}#nixosConfigurations.$1.config.system.build.toplevel")"; }
 
-        with_nom() { "$@" --log-format internal-json 2>&1 | nom --json && BUILD=true; }
-        try_exe() { command -v "$1" &> /dev/null && "$@"; }
-        as_root() { try_exe doas "$@" || try_exe sudo "$@" || try_exe su root -c "$@"; }
-
-        if [ "$1" = "copy" ]; then
-        	TARGET="''${TARGET:-$2}"
-        	TUNDRA_ID="''${TARGET_ID:-''${3:-$(ssh "$TARGET" echo \$TUNDRA_ID)}}"
-        fi
-        with_nom nix build "$TUNDRA_SOURCE#nixosConfigurations.$TUNDRA_ID.config.system.build.toplevel"
-        [[ $BUILD && -n "$TARGET" ]] && with_nom nix-copy-closure --to "$TARGET" ./result
-        [[ $BUILD && "$1" != "build" && -z "$TARGET" ]] && as_root ./result/bin/switch-to-configuration "$@"
-
-        $COMMIT && $BUILD && [ "$1" != "test" ] && [ "$1" != "build" ] && update-repo
-
-        exit 0
+        case "$1" in
+          boot|switch|test)
+            input TUNDRA_ID
+            build "$TUNDRA_ID"
+            [ -z "$out" ] && return
+            "$SUDO" "$out/bin/switch-to-configuration" "$@"
+          ;;
+          build)
+            input TUNDRA_ID
+            build "$TUNDRA_ID"
+            echo "$out"
+          ;;
+          remote)
+            input TARGET "echo '$2'"
+            input TARGET_ID "ssh '$TARGET' echo \\\$TUNDRA_ID"
+            build "$TARGET_ID"
+            [ -z "$out" ] && return
+            nix-copy-closure --to "$TARGET" "$out"
+            input TARGET_ACTION "echo \"''${*:3}\""
+            # shellcheck disable=SC2029
+            ssh -t "$TARGET" "$SUDO" "$out/bin/switch-to-configuration" "$TARGET_ACTION"
+          ;;
+        esac
       '';
     });
   };

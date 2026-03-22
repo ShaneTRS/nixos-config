@@ -6,7 +6,7 @@
   ...
 }: let
   inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString toList types;
-  inherit (lib.tundra) configs;
+  inherit (lib.tundra) getConfig;
   inherit (pkgs) writeShellApplication;
   inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs match toJSON;
   cfg = config.shanetrs.remote;
@@ -311,7 +311,7 @@ in {
           Service = {
             Environment = "DISPLAY=:0";
             ExecStart = let
-              attempt = configs ".vnc/passwd";
+              attempt = getConfig ".vnc/passwd";
             in "${getExe pkgs.shanetrs.not-nice} ${pkgs.tigervnc}/bin/x0vncserver Geometry=2732x1536 ${
               optionalString (attempt != null) ''-rfbauth "${attempt}"''
             } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";

@@ -6,11 +6,11 @@
   ...
 }: let
   inherit (lib) getExe mkIf optionalString;
-  inherit (lib.tundra) configs;
+  inherit (lib.tundra) getConfig;
   inherit (pkgs) writeShellApplication;
 in {
   nixos = let
-    jfa-go-conf = configs "jfa-go.ini";
+    jfa-go-conf = getConfig "jfa-go.ini";
   in {
     boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
     networking.extraHosts = ''
@@ -24,7 +24,7 @@ in {
         content = mkIf (jfa-go-conf != null) (builtins.replaceStrings ["$PASSWORD" "$PUBLIC_SERVER"] [
           ph."jellyfin/jfa-go/password"
           ph."jellyfin/jfa-go/public_server"
-        ] (builtins.readFile (configs "jfa-go.ini")));
+        ] (builtins.readFile (getConfig "jfa-go.ini")));
         owner = machine.user;
       };
       ddclient.content = let
@@ -144,7 +144,7 @@ in {
           };
         };
         zerotierone.preStart = ''
-          for netId in $(cat ${configs "zerotier"}); do
+          for netId in $(cat ${getConfig "zerotier"}); do
             touch "/var/lib/zerotier-one/networks.d/$netId.conf"
           done
         '';

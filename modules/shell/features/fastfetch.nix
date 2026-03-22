@@ -6,7 +6,7 @@
 }: let
   inherit (builtins) fromJSON readFile;
   inherit (lib) mkIf mkEnableOption mkPackageOption recursiveUpdate;
-  inherit (lib.tundra) configs;
+  inherit (lib.tundra) getConfig;
   cfg = config.shanetrs.shell;
   enabled = cfg.enable && cfg.features.fastfetch.enable;
 in {
@@ -24,7 +24,7 @@ in {
         cmakeFlags = ["-DENABLE_IMAGEMAGICK7=true"] ++ old.cmakeFlags or [];
       });
       settings = let
-        attempt = configs "fastfetch.jsonc";
+        attempt = getConfig "fastfetch.jsonc";
       in
         mkIf (attempt != null) (recursiveUpdate (fromJSON (readFile attempt)) {
           logo.source = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";

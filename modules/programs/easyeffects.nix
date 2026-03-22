@@ -6,7 +6,7 @@
 }: let
   inherit (builtins) attrNames listToAttrs toJSON;
   inherit (lib) mkEnableOption mkIf mkOption mkPackageOption types;
-  inherit (lib.tundra) configs;
+  inherit (lib.tundra) getConfig;
   cfg = config.shanetrs.programs.easyeffects;
 in {
   options.shanetrs.programs.easyeffects = {
@@ -25,7 +25,7 @@ in {
   home = mkIf cfg.enable {
     home.packages = [cfg.package];
     xdg.configFile = let
-      attempt = configs "easyeffects";
+      attempt = getConfig "easyeffects";
     in
       {
         "easyeffects" = mkIf (attempt != null) {
