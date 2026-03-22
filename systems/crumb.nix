@@ -27,10 +27,7 @@ in {
     programs = {
       discord.enable = true;
       easyeffects.enable = true;
-      vscode = {
-        enable = true;
-        features = ["nix"];
-      };
+      zed-editor.enable = true;
       gimp.enable = true;
     };
     shell.zsh.enable = true;
@@ -41,7 +38,7 @@ in {
     home = {
       packages = with pkgs; [
         audacity
-        helvum
+        crosspipe
         krita
         protontricks
         r2modman

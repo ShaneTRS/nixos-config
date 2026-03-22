@@ -143,11 +143,6 @@ in {
             WorkingDirectory = "/home/${machine.user}/Containers/.shanetrs/.podman-autostart";
           };
         };
-        zerotierone.preStart = ''
-          for netId in $(cat ${getConfig "zerotier"}); do
-            touch "/var/lib/zerotier-one/networks.d/$netId.conf"
-          done
-        '';
       };
       timers = {
         podman-autostart-check = {

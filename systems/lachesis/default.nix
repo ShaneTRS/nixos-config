@@ -25,6 +25,7 @@
       discord.enable = true;
       easyeffects.enable = true;
       zed-editor.enable = true;
+      zerotier-one.enable = true;
       vscode = {
         enable = true;
         features = ["nix"];
@@ -37,7 +38,7 @@
   home = {
     programs.obs-studio.enable = true;
     home.packages = with pkgs; [
-      helvum
+      crosspipe
       shanetrs.moonlight-qt
       shanetrs.spotify
       vlc
