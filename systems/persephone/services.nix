@@ -154,6 +154,10 @@ in {
         };
       };
       user.services = {
+        shadowplay = {
+          serviceConfig.ExecStart = getExe pkgs.shanetrs.shadowplay;
+          wantedBy = ["graphical-session.target"];
+        };
         keynav = {
           serviceConfig.ExecStart = getExe pkgs.keynav;
           wantedBy = ["graphical-session.target"];

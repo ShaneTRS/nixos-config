@@ -146,6 +146,7 @@ in {
     };
 
     systemd.user.services = {
+      shadowplay.enable = true;
       keynav.enable = true;
       jfa-go.enable = true;
     };
@@ -187,7 +188,8 @@ in {
       podman-compose # declarative containers
       distrobox # incompetence
 
-      shanetrs.shadowplay
+      shanetrs.shadowplay # instant replays
+      shanetrs.backups # incremental backup wrapper
 
       qbittorrent # download client
       tor-browser # private web browser

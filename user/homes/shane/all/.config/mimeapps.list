@@ -25,5 +25,5 @@ x-scheme-handler/sidequest=SideQuest.desktop
 
 [Removed Associations]
 application/octet-stream=org.kde.kdeconnect_open.desktop;
-x-scheme-handler/http=firefox.desktop;org.kde.kdeconnect_open.desktop;torbrowser.desktop
-x-scheme-handler/https=firefox.desktop;org.kde.kdeconnect_open.desktop;torbrowser.desktop
+x-scheme-handler/http=firefox.desktop;org.kde.kdeconnect_open.desktop;torbrowser.desktop;firefoxpwa.desktop
+x-scheme-handler/https=firefox.desktop;org.kde.kdeconnect_open.desktop;torbrowser.desktop;firefoxpwa.desktop

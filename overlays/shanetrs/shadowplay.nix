@@ -1,67 +1,80 @@
 {
   writeShellApplication,
+  ffmpeg,
   gawk,
   gpu-screen-recorder,
   libnotify,
   losslesscut-bin,
-  pulseaudio,
+  util-linux,
+  xclip,
   xdpyinfo,
+  targetDir ? "$HOME/Videos/ShadowPlay",
   ...
 }:
-writeShellApplication {
+writeShellApplication rec {
   name = "shadowplay";
   runtimeInputs = [
+    ffmpeg
     gawk
     gpu-screen-recorder
     libnotify
     losslesscut-bin
-    pulseaudio
+    util-linux
+    xclip
     xdpyinfo
   ];
   text = ''
-    set +o errexit
-    # shellcheck disable=SC2104 disable=2128 disable=2207
+    set +uo errexit
+    WORK_DIR="/tmp/${name}-bc2c0893"
+    TARGET_DIR="${targetDir}"
+
+    mkdir -p "$WORK_DIR"
+    exec 3<>"$WORK_DIR/.lock"
+
+    PID="$(flock -n 3 || cat "$WORK_DIR/.lock")";
+
+    kill -0 "$PID" 2>/dev/null && case "$1" in
+      clip) exec kill -USR1 "$PID" ;;
+      stop) exec kill "$PID" ;;
+      *) kill "$PID" ;;
+    esac
+    [ -n "$1" ] && exit 2
+
     notify () {
-      replay=($(ls "$dir" --sort=time -1))
-      trim="''${line%.*}_Trim.''${line##*.}"
-      case "$(notify-send -i media-record -a shadowplay -A "Show replays" "$@")" in
-        0) xdg-open "$dir"
-          break ;;
-        1) losslesscut "$dir/$replay"
-          noti=$(notify-send -i media-record -a shadowplay "Transcoding file" "Please wait for the transcode to complete." -t 60 -p)
-          file="$tmp_dir/$(basename "$trim")"
+      case "$(notify-send -t 15000 -i media-record -a shadowplay -A "Show replays" "$@")" in
+        0) xdg-open "$TARGET_DIR" ;; # show replays
+        1) losslesscut --settings-json "{customOutDir:\"$WORK_DIR\"}" -- "$OUT" # trim replay
+          NOTIFICATION=$(notify-send -t 60000 -i media-record -a shadowplay "Transcoding file" "Please wait for the transcode to complete." -p)
           sleep 0.7
-          if [ -f "$file" ]; then
-            xclip -sel c -t text/uri-list <<< "file://$trim"
-            ffmpeg -threads 2 -i "$file" -vf "scale=trunc(iw/3)*2:trunc(ih/3)*2:flags=lanczos" -crf 28 -movflags faststart -preset veryslow -c:a libopus -ac 1 -b:a 48k "$trim";
-            notify "Transcoding complete" "The clip has been copied to the clipboard." -r "$noti"
+          TRIM="$(basename "''${OUT%.*}")_Trim.''${OUT##*.}"
+          if [ -f "$WORK_DIR/$TRIM" ]; then
+            xclip -sel c -t text/uri-list <<< "file://$TARGET_DIR/$TRIM"
+            ffmpeg -threads 2 -i "$WORK_DIR/$TRIM" -vf "scale=trunc(iw/3)*2:trunc(ih/3)*2:flags=lanczos" -movflags faststart \
+              -crf 28 -preset veryslow -c:a libopus -ac 1 -b:a 48k "$TARGET_DIR/$TRIM";
+            notify "Transcoding complete" "The clip has been copied to the clipboard." -r "$NOTIFICATION"
           else
-            notify "Trimming cancelled" "The full clip has been copied to the clipboard" -r "$noti"
+            notify "Trimming cancelled" "The full clip has been copied to the clipboard" -r "$NOTIFICATION"
           fi
-          break ;;
-        2) rm "$dir/$replay"
-          break ;;
-      esac;
+        ;;
+        2) rm "$OUT" ;; # delete replay
+      esac &
     }
-    refresh () { pkill -P $$; exec $0; }
 
-    trap "refresh" USR1
-    dir="$HOME/Videos/ShadowPlay"
-    tmp_dir="/tmp/shadowplay"
-    mkdir -p "$tmp_dir"
-    # shellcheck disable=SC2089
-    comm="gpu-screen-recorder -o $dir -v no \
-    -w focused -s $(xdpyinfo|awk '/dimensions:/{print $2}') -c mp4 -f 30 -fm vfr -r 120 -q medium -k h264 \
-    -a \"$(pactl get-default-sink).monitor|$(pactl get-default-source)\" -ac opus"
+    flock 3
+    notify "Started recording to RAM" "Execute '${name} clip' to save the last 2 minutes to disk."
 
-    [[ "''${1:-}" == "clip" ]] && exec pkill -f "$comm" -USR1
+    RES="$(xdpyinfo|awk '/dimensions:/{print $2}')"
+    gpu-screen-recorder -o "$TARGET_DIR" -v no -w focused -s "$RES" -c mp4 \
+      -f 30 -fm vfr -r 120 -q medium -k h264 -a 'default_input|default_output' -ac opus > >(
+        while read -r OUT; do
+          echo "- $OUT"
+          xclip -sel c -t text/uri-list <<< "file://$OUT"
+          notify "Saved recording to disk" "''${OUT##*/}" -A "Trim replay" -A "Delete replay"
+        done
+      ) & PID=$!
+    echo "$PID" >&3; wait "$PID"
 
-    echo "$comm" # Make sure this matches the formatting of /proc/#/cmdline
-    notify "Started recording to RAM" "Press Ctrl+Alt+Shift+S to save the last 2 minutes to disk." &
-    eval "$comm" | while read -r line; do
-      xclip -sel c -t text/uri-list <<< "file://$line"
-      notify "Saved recording to disk" "''${line##*/}" -A "Trim replay" -A "Delete replay"
-    done & wait
     notify "Stopped recording to RAM" "The screen recording backend is no-longer running."
+    flock -u 3
   '';
 }
