@@ -184,9 +184,10 @@ in {
         attempt = getConfig ".XCompose";
       in
         mkIf (attempt != null) {
-          text =
-            builtins.readFile "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
-            + builtins.readFile attempt;
+          text = ''
+            include "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
+            include "${attempt}"
+          '';
         };
     })
   ]);

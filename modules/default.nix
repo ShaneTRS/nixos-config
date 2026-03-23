@@ -106,6 +106,7 @@ in {
     time.timeZone = mkStrongDefault "America/Phoenix";
 
     users = {
+      allowNoPasswordLogin = mkStrongDefault true;
       mutableUsers = mkStrongDefault false;
       groups = {
         docker.members = [machine.user];

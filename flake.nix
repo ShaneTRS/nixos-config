@@ -26,13 +26,14 @@
     nixpkgs,
     ...
   }: let
-    inherit (builtins) foldl' isFunction mapAttrs;
-    inherit (tundra) collectModules getOverlays mkTree tundraSystem getMachines tundraHome;
+    inherit (builtins) attrNames foldl' isFunction listToAttrs mapAttrs;
+    inherit (tundra) mapModules getOverlays mkTree tundraSystem getMachines tundraHome;
     inherit (lib) collect;
 
     tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
 
     tree = mkTree self;
+    specialArgs = {inherit self pkgs lib tree;};
     system = "x86_64-linux";
     pkgs = import nixpkgs {
       inherit system;
@@ -45,13 +46,18 @@
     };
     inherit (pkgs) lib;
 
-    specialArgs = {inherit self pkgs lib tree;};
-    getModules = collectModules (collect isFunction tree.modules);
-    combinedModules =
-      map (x: args: {options = x args;}) (getModules "options")
-      ++ getModules "config";
+    mapTreeModules = mapModules (collect isFunction tree.modules);
+    getModules = class: mapTreeModules (x: x.${class} or {});
+    combinedModules = mapTreeModules (x: {
+      options = x.options or {};
+      config = x.config or {};
+    });
   in {
     apps.${system} = tree.apps specialArgs;
+    checks.${system} = listToAttrs (map (x: {
+      name = "homeConfigurations-${x}";
+      value = self.homeConfigurations.${x}.activationPackage;
+    }) (attrNames self.homeConfigurations));
     devShells.${system} = tree.shells specialArgs;
     formatter.${system} = pkgs.alejandra;
 

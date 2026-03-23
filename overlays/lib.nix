@@ -17,25 +17,72 @@
   ...
 } @ args: final: prev: let
   inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
-  inherit (builtins) elemAt fromJSON match readDir readFile;
+  inherit (builtins) elemAt fromJSON match readDir readFile sort;
 
-  inherit (builtins) attrValues isFunction pathExists toJSON trace;
+  inherit (builtins) attrValues isFunction pathExists toJSON warn;
 
   inherit (nixpkgs.lib) collect findFirst filterAttrs mkOverride nixosSystem;
   inherit (home-manager.lib) homeManagerConfiguration;
 
   tundra = rec {
-    collectModules = modules: name: map (x: args: (x args).${name} or {}) modules;
+    deepReadDir = dir:
+      mapAttrs (name: type:
+        if type == "directory"
+        then deepReadDir (dir + "/${name}")
+        else dir + "/${name}")
+      (readDir dir);
+
+    # self, nixpkgs, machine, secrets
+    getConfig = file:
+      if secrets ? ${file}
+      then secrets.${file}.path
+      else
+        findFirst pathExists (warn "no config was found for ${file}!" null) (with machine; [
+          (self + "/user/configs/${user}/${id}/${file}")
+          (self + "/user/configs/${user}/all/${file}")
+          (self + "/user/configs/global/${id}/${file}")
+          (self + "/user/configs/global/all/${file}")
+        ]);
+
+    # nixpkgs
+    getMachines = set:
+      filterAttrs (k: v: v != null) (mapAttrs (k: v: let
+        machines = filter (x: x != null) (map (x: let
+          this =
+            (x ({
+                machine = this;
+                options = null;
+                config = null;
+                homeConfig = null;
+                nixosConfig = null;
+              }
+              // args)).machine or null;
+        in
+          this) (collect isFunction v));
+      in
+        if machines != []
+        then foldl' (acc: this: acc // this) {} machines
+        else null)
+      set);
+
+    getOverlays' = list: args: map (x: x args) (filter isFunction list);
+    getOverlays = args: getOverlays' (attrValues tree.overlays) args; # tree
+
+    mapModules' = modules: argsFn: outFn:
+      map (x: args @ {
+        extendModules,
+        modules,
+        pkgs,
+        utils,
+        ...
+      }:
+        outFn (x (argsFn args)))
+      modules;
+    mapModules = modules: outFn: mapModules' modules (x: x) outFn;
 
     mkStrongDefault = mkOverride 900;
 
     mkTree = dir: let
-      deepReadDir = dir:
-        mapAttrs (name: type:
-          if type == "directory"
-          then deepReadDir (dir + "/${name}")
-          else dir + "/${name}")
-        (readDir dir);
       filterNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
       convertFiles = tree:
         listToAttrs (map (name: let
@@ -64,43 +111,9 @@
       convertFiles (deepReadDir dir);
 
     resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
+    sortPriorities = list: sort (a: b: (a.priority or 100) < (b.priority or 100)) list;
 
     transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
-
-    getOverlays = args: (map (x: x args) (filter isFunction (attrValues tree.overlays))); # tree
-
-    # self, nixpkgs, machine, secrets
-    getConfig = file:
-      with machine;
-        if secrets ? ${file}
-        then secrets.${file}.path
-        else
-          findFirst pathExists (trace "no config was found for ${file}!" null) [
-            (self + "/user/configs/${user}/${id}/${file}")
-            (self + "/user/configs/${user}/all/${file}")
-            (self + "/user/configs/global/${id}/${file}")
-            (self + "/user/configs/global/all/${file}")
-          ];
-
-    getMachines = set:
-      filterAttrs (k: v: v != null) (mapAttrs (k: v: let
-        machines = filter (x: x != null) (map (x: let
-          this =
-            (x ({
-                machine = this;
-                options = null;
-                config = null;
-                homeConfig = null;
-                nixosConfig = null;
-              }
-              // args)).machine or null;
-        in
-          this) (collect isFunction v));
-      in
-        if machines != []
-        then foldl' (acc: this: acc // this) {} machines
-        else null)
-      set);
 
     # self, tree
     tundraSystem = name: value: let
@@ -120,18 +133,17 @@
           homeConfig = system.config.home-manager.users.${machine.user};
         };
 
-      getModules = collectModules (collect isFunction tree.systems.${name});
+      getModules = class: mapModules (collect isFunction tree.systems.${name}) (x: x.${class} or {});
       configModules = getModules "config";
 
       system = nixosSystem {
-        specialArgs = systemArgs;
+        specialArgs = removeAttrs systemArgs ["pkgs" "lib"];
         inherit (systemArgs) pkgs lib;
         modules = with self.inputs;
           [
             self.outputs.nixosModules.default
             home-manager.nixosModules.default
             sops.nixosModules.default
-            nixpkgs.nixosModules.readOnlyPkgs
             {
               environment.etc."nix/inputs/pkgs".source = nixpkgs;
               nix = {
@@ -172,10 +184,10 @@
         // value;
       systemArgs = systemHelper machine // {homeConfig = home.config;};
 
-      getModules = collectModules (collect isFunction tree.systems.${machine.id});
+      getModules = class: mapModules (collect isFunction tree.systems.${machine.id}) (x: x.${class} or {});
 
       home = homeManagerConfiguration {
-        extraSpecialArgs = systemArgs;
+        extraSpecialArgs = removeAttrs systemArgs ["pkgs" "lib"];
         inherit (systemArgs) pkgs lib;
         modules =
           [
