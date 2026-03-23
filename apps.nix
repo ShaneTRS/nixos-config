@@ -4,9 +4,9 @@
   lib,
   ...
 }: rec {
-  default = rebuild;
-  rebuild = {
-    type = "app";
+  default = build;
+  build = {
+    meta.description = "Build the relevant tundraSystem by ID";
     program = lib.getExe (pkgs.writeShellApplication {
       name = "flake-rebuild";
       runtimeInputs = with pkgs; [
@@ -59,5 +59,6 @@
         esac
       '';
     });
+    type = "app";
   };
 }

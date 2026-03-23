@@ -10,7 +10,7 @@
   targetHost ?
     if self != null && machine ? id
     then self.outputs.nixosConfigurations.${machine.id}.config.shanetrs.remote.addresses.host
-    else throw "targetHost is required: use .override to set it",
+    else builtins.warn "targetHost is required: use .override to set it" "",
   ...
 }:
 stdenv.mkDerivation rec {
@@ -35,6 +35,10 @@ stdenv.mkDerivation rec {
       }
       RESOLUTION="''${RESOLUTION:-$(ml_res)}"
       TARGET="''${TARGET:-${targetHost}}"
+      if [ -z "$TARGET" ]; then
+       	echo 'TARGET: parameter not set' 1>&2
+        exit 2
+      fi
       PORT="''${PORT:-47989}"
       BITRATE="''${BITRATE:-65000}"
       FPS="''${FPS:-62}"
@@ -42,7 +46,7 @@ stdenv.mkDerivation rec {
       ARGS="''${ARGS:-$(ml_args)}"
       COMMAND="not-nice moonlight stream "$TARGET:$PORT" ''${ARGS[*]} $*"
       echo "Connecting to $TARGET at $RESOLUTION!"
-      if [ "''${DEBUG:-}" ]; then
+      if [ -n "''${DEBUG:-}" ]; then
         echo "$COMMAND"
         read -rt2
       fi

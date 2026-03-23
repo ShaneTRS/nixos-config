@@ -124,8 +124,8 @@
       configModules = getModules "config";
 
       system = nixosSystem {
-        inherit (systemArgs) lib;
         specialArgs = systemArgs;
+        inherit (systemArgs) pkgs lib;
         modules = with self.inputs;
           [
             self.outputs.nixosModules.default
@@ -134,7 +134,6 @@
             nixpkgs.nixosModules.readOnlyPkgs
             {
               environment.etc."nix/inputs/pkgs".source = nixpkgs;
-              nixpkgs.pkgs = systemArgs.pkgs;
               nix = {
                 registry.pkgs.to = {
                   type = "git";
@@ -177,7 +176,7 @@
 
       home = homeManagerConfiguration {
         extraSpecialArgs = systemArgs;
-        pkgs = systemArgs.pkgs;
+        inherit (systemArgs) pkgs lib;
         modules =
           [
             self.homeModules.default

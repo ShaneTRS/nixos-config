@@ -50,7 +50,6 @@ in {
           tundra-notifier = {
             environment = {
               INTERACTIVE = "false";
-              UPDATE = "true";
               DISPLAY = ":0";
             };
             script = "${getExe pkgs.shanetrs.tundra} notify"; # This is a filler
@@ -59,7 +58,6 @@ in {
           tundra-updater = {
             environment = {
               INTERACTIVE = "false";
-              UPDATE = "true";
             };
             script = "${getExe pkgs.shanetrs.tundra} update";
             serviceConfig.Type = "oneshot";
