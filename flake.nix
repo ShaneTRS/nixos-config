@@ -26,9 +26,8 @@
     nixpkgs,
     ...
   }: let
-    inherit (builtins) attrNames foldl' isFunction listToAttrs mapAttrs;
-    inherit (tundra) mapModules getOverlays mkTree tundraSystem getMachines tundraHome;
-    inherit (lib) collect;
+    inherit (builtins) attrNames foldl' listToAttrs mapAttrs;
+    inherit (tundra) getCombinedModules getOverlays mkTree tundraSystem getMachines tundraHome;
 
     tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
 
@@ -46,12 +45,7 @@
     };
     inherit (pkgs) lib;
 
-    mapTreeModules = mapModules (collect isFunction tree.modules);
-    getModules = class: mapTreeModules (x: x.${class} or {});
-    combinedModules = mapTreeModules (x: {
-      options = x.options or {};
-      config = x.config or {};
-    });
+    combinedTreeModules = getCombinedModules tree.modules;
   in {
     apps.${system} = tree.apps specialArgs;
     checks.${system} = listToAttrs (map (x: {
@@ -68,8 +62,8 @@
     legacyPackages.${system} = pkgs;
     packages.${system} = pkgs.shanetrs;
 
-    nixosModules.default.imports = getModules "nixos" ++ combinedModules;
-    homeModules.default.imports = getModules "home" ++ combinedModules;
+    nixosModules.default.imports = combinedTreeModules "nixos";
+    homeModules.default.imports = combinedTreeModules "home";
 
     nixosConfigurations = mapAttrs tundraSystem (getMachines tree.systems);
     homeConfigurations = mapAttrs tundraHome {

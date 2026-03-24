@@ -32,6 +32,17 @@
         else dir + "/${name}")
       (readDir dir);
 
+    # nixpkgs
+    getCombinedModules = dir: class: let
+      mapDirModules = mapModules (collect isFunction dir);
+      sharedModules = mapDirModules (x: {
+        options = x.options or {};
+        config = x.config or {};
+      });
+      classModules = mapDirModules (x: x.${class} or {});
+    in
+      sharedModules ++ classModules;
+
     # self, nixpkgs, machine, secrets
     getConfig = file:
       if secrets ? ${file}
@@ -125,22 +136,20 @@
           source = "/home/${machine.user or user}/.config/nixos";
         }
         // value;
-
       systemArgs =
         systemHelper machine
         // {
           nixosConfig = system.config;
           homeConfig = system.config.home-manager.users.${machine.user};
         };
-
-      getModules = class: mapModules (collect isFunction tree.systems.${name}) (x: x.${class} or {});
-      configModules = getModules "config";
+      combinedSystemModules = getCombinedModules tree.systems.${name};
 
       system = nixosSystem {
         specialArgs = removeAttrs systemArgs ["pkgs" "lib"];
         inherit (systemArgs) pkgs lib;
-        modules = with self.inputs;
-          [
+        modules =
+          combinedSystemModules "nixos"
+          ++ (with self.inputs; [
             self.outputs.nixosModules.default
             home-manager.nixosModules.default
             sops.nixosModules.default
@@ -159,15 +168,12 @@
               home-manager = {
                 extraSpecialArgs = systemArgs;
                 users.${machine.user}.imports =
-                  [self.homeModules.default]
-                  ++ (collect isFunction tree.user.homes.${machine.user} or {})
-                  ++ getModules "home"
-                  ++ configModules;
+                  combinedSystemModules "home"
+                  ++ [self.homeModules.default]
+                  ++ (collect isFunction tree.user.homes.${machine.user} or {});
               };
             }
-          ]
-          ++ getModules "nixos"
-          ++ configModules;
+          ]);
       };
     in
       system;
@@ -184,15 +190,14 @@
         // value;
       systemArgs = systemHelper machine // {homeConfig = home.config;};
 
-      getModules = class: mapModules (collect isFunction tree.systems.${machine.id}) (x: x.${class} or {});
-
       home = homeManagerConfiguration {
         extraSpecialArgs = removeAttrs systemArgs ["pkgs" "lib"];
         inherit (systemArgs) pkgs lib;
         modules =
-          [
+          getCombinedModules tree.systems.${machine.id} "home"
+          ++ [
             self.homeModules.default
-            # sops.homeModules.default # cannot access secrets due to infinite recursion
+            # sops.homeModules.default # secrets cause inf. recursion
             {
               imports = collect isFunction tree.user.homes.${machine.user} or {};
               home = {
@@ -200,9 +205,7 @@
                 homeDirectory = mkOverride 900 machine.home;
               };
             }
-          ]
-          ++ getModules "home"
-          ++ getModules "config";
+          ];
       };
     in
       home;
