@@ -67,7 +67,7 @@ writeShellApplication rec {
 
     wrap() {
       trap cleanup exit
-      "$@" & PID=$!
+      ("$@"; kill $$) & PID=$!
       while kill -0 "$PID"; do
         sleep "$INTERVAL"
         backup && echo "[${name}] Backup saved as '$TARGET'"

@@ -1,7 +1,8 @@
 name: nix flake check
 on: [push, pull_request, workflow_dispatch]
 jobs:
-  checks:
+  nix-flake-check:
+    name: nix flake check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
