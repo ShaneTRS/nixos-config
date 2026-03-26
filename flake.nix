@@ -26,8 +26,8 @@
     nixpkgs,
     ...
   }: let
-    inherit (builtins) attrNames foldl' listToAttrs mapAttrs;
-    inherit (tundra) getCombinedModules getOverlays mkTree tundraSystem getMachines tundraHome;
+    inherit (builtins) foldl' mapAttrs;
+    inherit (tundra) getCombinedModules getOverlays mkChecks mkTree tundraSystem getMachines tundraHome;
 
     tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
 
@@ -48,10 +48,14 @@
     combinedTreeModules = getCombinedModules tree.modules;
   in {
     apps.${system} = tree.apps specialArgs;
-    checks.${system} = listToAttrs (map (x: {
-      name = "homeConfigurations-${x}";
-      value = self.homeConfigurations.${x}.activationPackage;
-    }) (attrNames self.homeConfigurations));
+    checks.${system} = mkChecks self {
+      homeConfigurations = {final = x: x.activationPackage;};
+      homeModules = {};
+      lib = {
+        single = true;
+        prev = x: x.tundra;
+      };
+    };
     devShells.${system} = tree.shells specialArgs;
     formatter.${system} = pkgs.alejandra;
 

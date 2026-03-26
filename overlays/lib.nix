@@ -19,9 +19,9 @@
   inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
   inherit (builtins) elemAt fromJSON match readDir readFile sort;
 
-  inherit (builtins) attrValues isFunction pathExists toJSON warn;
+  inherit (builtins) attrValues deepSeq isFunction pathExists toJSON warn;
 
-  inherit (nixpkgs.lib) collect findFirst filterAttrs mkOverride nixosSystem;
+  inherit (nixpkgs.lib) collect findFirst filterAttrs flatten mkOverride nixosSystem;
   inherit (home-manager.lib) homeManagerConfiguration;
 
   tundra = rec {
@@ -90,6 +90,38 @@
         outFn (x (argsFn args)))
       modules;
     mapModules = modules: outFn: mapModules' modules (x: x) outFn;
+
+    mkChecks = outputs: set:
+      mapAttrs (k: v:
+        if v.type or null == "derivation"
+        then v
+        else
+          deepSeq v {
+            name = k;
+            type = "derivation";
+          }) (mkEvalChecks outputs set);
+    mkEvalChecks = outputs: set:
+      listToAttrs (flatten (attrValues (mapAttrs (k: v:
+        ({
+          name,
+          single ? false,
+          final ? (x: x),
+          prev ? (x: x),
+          value ? outputs.${name} or outputs.${k},
+        }:
+          if single
+          then {
+            inherit name;
+            value = mapAttrs (k: final) (prev value);
+          }
+          else
+            map (x: {
+              name = "${name}-${x}";
+              value = final (prev value).${x};
+            })
+            (attrNames (prev value)))
+        ({name = k;} // v))
+      set)));
 
     mkStrongDefault = mkOverride 900;
 
