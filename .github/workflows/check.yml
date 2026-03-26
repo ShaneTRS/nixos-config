@@ -7,4 +7,6 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - uses: cachix/install-nix-action@v31
-    - run: nix flake check "path:$PWD" --no-build
+    - name: Configure git for authentication
+      run: git config --global url."https://x-access-token:${{ secrets.TUNDRA_TOKEN }}@github.com/".insteadOf "https://github.com/"
+    - run: nix flake check --no-build
