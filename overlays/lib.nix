@@ -21,7 +21,7 @@
 
   inherit (builtins) attrValues deepSeq isFunction pathExists toJSON warn;
 
-  inherit (nixpkgs.lib) collect findFirst filterAttrs flatten mkOverride nixosSystem;
+  inherit (nixpkgs.lib) collect concatMapAttrs findFirst filterAttrs mkOverride nixosSystem;
   inherit (home-manager.lib) homeManagerConfiguration;
 
   tundra = rec {
@@ -31,6 +31,15 @@
         then deepReadDir (dir + "/${name}")
         else dir + "/${name}")
       (readDir dir);
+
+    exprToFakeDrv = name: expr:
+      if expr.type or null == "derivation"
+      then expr
+      else {
+        inherit name expr;
+        drvPath = deepSeq expr "/nix/store/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-${name}.drv";
+        type = "derivation";
+      };
 
     # nixpkgs
     getCombinedModules = dir: class: let
@@ -77,7 +86,7 @@
       set);
 
     getOverlays' = list: args: map (x: x args) (filter isFunction list);
-    getOverlays = args: getOverlays' (attrValues tree.overlays) args; # tree
+    getOverlays = getOverlays' (attrValues tree.overlays); # tree
 
     mapModules' = modules: argsFn: outFn:
       map (x: args @ {
@@ -92,36 +101,18 @@
     mapModules = modules: outFn: mapModules' modules (x: x) outFn;
 
     mkChecks = outputs: set:
-      mapAttrs (k: v:
-        if v.type or null == "derivation"
-        then v
-        else
-          deepSeq v {
-            name = k;
-            type = "derivation";
-          }) (mkEvalChecks outputs set);
-    mkEvalChecks = outputs: set:
-      listToAttrs (flatten (attrValues (mapAttrs (k: v:
-        ({
-          name,
-          single ? false,
-          final ? (x: x),
-          prev ? (x: x),
-          value ? outputs.${name} or outputs.${k},
-        }:
-          if single
-          then {
-            inherit name;
-            value = mapAttrs (k: final) (prev value);
-          }
-          else
-            map (x: {
-              name = "${name}-${x}";
-              value = final (prev value).${x};
-            })
-            (attrNames (prev value)))
-        ({name = k;} // v))
-      set)));
+      concatMapAttrs (k: {
+        name ? k,
+        single ? false,
+        final ? x: x,
+        prev ? x: x,
+        value ? outputs.${name} or outputs.${k},
+      }:
+        if single
+        then {${name} = mapAttrs (k: final) (prev value);}
+        else concatMapAttrs (k2: v2: {"${name}-${k2}" = final v2;}) (prev value))
+      set;
+    mkDrvChecks = outputs: set: mapAttrs exprToFakeDrv (mkChecks outputs set);
 
     mkStrongDefault = mkOverride 900;
 

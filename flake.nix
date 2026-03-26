@@ -27,7 +27,7 @@
     ...
   }: let
     inherit (builtins) foldl' mapAttrs;
-    inherit (tundra) getCombinedModules getOverlays mkChecks mkTree tundraSystem getMachines tundraHome;
+    inherit (tundra) getCombinedModules getOverlays mkDrvChecks mkTree tundraSystem getMachines tundraHome;
 
     tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
 
@@ -48,22 +48,22 @@
     combinedTreeModules = getCombinedModules tree.modules;
   in {
     apps.${system} = tree.apps specialArgs;
-    checks.${system} = mkChecks self {
+    checks.${system} = mkDrvChecks self {
       homeConfigurations = {final = x: x.activationPackage;};
       homeModules = {};
-      lib = {
+      lib-tundra = {
         single = true;
-        prev = x: x.tundra;
+        value = self.lib.tundra;
       };
     };
     devShells.${system} = tree.shells specialArgs;
     formatter.${system} = pkgs.alejandra;
 
     inherit lib;
+    legacyPackages.${system} = pkgs;
     overlays.default = final: prev:
       foldl' (acc: this: acc // (this final acc))
       prev (getOverlays specialArgs);
-    legacyPackages.${system} = pkgs;
     packages.${system} = pkgs.shanetrs;
 
     nixosModules.default.imports = combinedTreeModules "nixos";

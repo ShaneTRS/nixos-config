@@ -8,7 +8,7 @@
   build = {
     meta.description = "Build the relevant tundraSystem by ID";
     program = lib.getExe (pkgs.writeShellApplication {
-      name = "flake-rebuild";
+      name = "flake-build";
       runtimeInputs = with pkgs; [
         openssh
         nix-output-monitor
