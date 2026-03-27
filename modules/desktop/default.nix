@@ -56,9 +56,15 @@ in {
       type = types.enum (attrNames sessions.${cfg.session});
       default = "default";
     };
-    audio = mkOption {
-      type = types.bool;
-      default = true;
+    audio = {
+      enable = mkOption {
+        type = types.bool;
+        default = true;
+      };
+      alwaysSwitch = mkOption {
+        type = types.listOf types.str;
+        default = [];
+      };
     };
     keymap = {
       enable = mkOption {
@@ -109,13 +115,42 @@ in {
       };
     }
 
-    (mkIf cfg.audio {
+    (mkIf cfg.audio.enable {
       services.pipewire = {
         enable = true;
         alsa.enable = true;
         alsa.support32Bit = true;
         pulse.enable = true;
         jack.enable = true;
+        wireplumber = mkIf (length cfg.audio.alwaysSwitch != 0) {
+          extraConfig."51-shanetrs-always-switch" = {
+            "wireplumber.components" = [
+              {
+                name = "shanetrs-always-switch.lua";
+                type = "script/lua";
+                provides = "shanetrs.always-switch";
+              }
+            ];
+            "wireplumber.profiles" = {
+              main = {"shanetrs.always-switch" = "required";};
+            };
+          };
+          extraScripts = {
+            "shanetrs-always-switch.lua" = ''
+              om = ObjectManager {
+                Interest { type = 'metadata', Constraint { 'metadata.name', 'equals', 'default' } },
+                ${concatStringsSep ",\n  " (map (x: "Interest { type = 'node', Constraint { 'node.name', 'matches', '${x}' } }") cfg.audio.alwaysSwitch)}
+              }
+              om:connect('object-added', function (om, node)
+                local name = node.properties['node.name']
+                local metadata = om:lookup { Constraint { 'metadata.name', 'equals', 'default' } }
+                metadata:set(0, 'default.configured.audio.sink', 'Spa:String:JSON', '{ "name": "' .. name .. '" }')
+                Log.info("default sink set to " .. name)
+              end)
+              om:activate()
+            '';
+          };
+        };
       };
     })
 

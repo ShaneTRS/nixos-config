@@ -1,10 +1,5 @@
 # Persephone
-{
-  pkgs,
-  lib,
-  machine,
-  ...
-}: {
+{machine, ...}: {
   config.shanetrs = {
     hardware = {
       enable = true;
@@ -14,6 +9,10 @@
       };
       gpu = "intel";
     };
+    desktop.audio.alwaysSwitch = [
+      "bluez_output_internal.*"
+      "alsa_output.pci-0000_04_00.0.hdmi*"
+    ];
   };
 
   nixos = {
@@ -64,39 +63,5 @@
         size = 49152;
       }
     ];
-  };
-
-  home.systemd.user.services = {
-    bluetooth-switch = {
-      Unit = {
-        After = "pipewire.service";
-        Description = "Switch to specified device automatically on connection";
-      };
-      Service = {
-        Environment = ["DEVICE=bluez_output.F4:4E:FC:DA:61:E5"];
-        ExecStart = let
-          inherit (pkgs) writeShellApplication;
-          inherit (lib) getExe;
-        in
-          getExe (writeShellApplication {
-            name = "bluetooth-switch.service";
-            runtimeInputs = with pkgs; [pipewire wireplumber];
-            text = ''
-              set +o errexit
-              while true; do
-              	SINK="$(pw-cli ls "$DEVICE" | awk -F'[ ,]+' 'NR==1 {print $2; exit}')"
-              	if [ -n "$SINK" ]; then
-               		wpctl set-default "$SINK"
-                 	until [ -z "$(pw-cli ls "$DEVICE")" ]; do
-                  	sleep 10
-                  done
-                fi
-               	sleep 1
-              done
-            '';
-          });
-      };
-      Install.WantedBy = ["graphical-session.target"];
-    };
   };
 }

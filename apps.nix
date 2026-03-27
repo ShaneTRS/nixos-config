@@ -3,25 +3,23 @@
   pkgs,
   lib,
   ...
-}: rec {
+}: let
+  inherit (lib) getExe;
+  inherit (pkgs) writeShellApplication;
+in rec {
   default = build;
   build = {
     meta.description = "Build the relevant tundraSystem by ID";
-    program = lib.getExe (pkgs.writeShellApplication {
+    program = getExe (writeShellApplication {
       name = "flake-build";
-      runtimeInputs = with pkgs; [
-        openssh
-        nix-output-monitor
-      ];
+      runtimeInputs = with pkgs; [openssh nix-output-monitor];
       text = ''
-        set +uo errexit
-
         INTERACTIVE="''${INTERACTIVE:-[ -t 0 ]}"
         SUDO="''${SUDO:-sudo}"
 
         input() {
-          [ -n "''${!1}" ] && return
-          THIS="$(eval "$2")"
+          [ -n "''${!1:-}" ] && return
+          THIS="$(eval "''${2:-}")"
           if [ -n "$THIS" ]; then
             read -r "$1" <<< "$THIS"
           elif eval "$INTERACTIVE"; then
@@ -47,16 +45,32 @@
             echo "$out"
           ;;
           remote)
-            input TARGET "echo '$2'"
+            input TARGET "echo ${"'\${2:-}'"}"
             input TARGET_ID "ssh '$TARGET' echo \\\$TUNDRA_ID"
             build "$TARGET_ID"
             [ -z "$out" ] && return
             nix-copy-closure --to "$TARGET" "$out"
-            input TARGET_ACTION "echo \"''${*:3}\""
+            input TARGET_ACTION "echo '${"\${*:3}"}'"
             # shellcheck disable=SC2029
             ssh -t "$TARGET" "$SUDO" "$out/bin/switch-to-configuration" "$TARGET_ACTION"
           ;;
         esac
+        [ -n "$out" ]
+      '';
+    });
+    type = "app";
+  };
+  update = {
+    meta.description = "Update flake.lock and run tests";
+    program = getExe (writeShellApplication {
+      name = "flake-update";
+      text = ''
+        restore() { [ "$?" -ne 0 ] && git restore flake.lock; exit; }
+        trap restore exit
+        nix flake update --override-input nixpkgs-pin 'github:nixos/nixpkgs/${self.inputs.nixpkgs.rev}'
+        nix flake check --no-build
+        [ -z "''${TUNDRA_ID:-}" ] && exit
+        "${build.program}" "''${@:-build}"
       '';
     });
     type = "app";
