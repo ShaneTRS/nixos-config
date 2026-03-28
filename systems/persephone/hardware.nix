@@ -9,10 +9,10 @@
       };
       gpu = "intel";
     };
-    desktop.audio.alwaysSwitch = [
-      "bluez_output_internal.*"
-      "alsa_output.pci-0000_04_00.0.hdmi*"
-    ];
+    desktop.audio.autoSwitchOrder = {
+      "bluez_output_internal.*" = 1;
+      "alsa_output.pci-0000_04_00.0.hdmi*" = 2;
+    };
   };
 
   nixos = {

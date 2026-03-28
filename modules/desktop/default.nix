@@ -5,7 +5,7 @@
   pkgs,
   ...
 }: let
-  inherit (builtins) attrNames concatStringsSep length;
+  inherit (builtins) attrNames concatStringsSep length replaceStrings;
   inherit (lib) getExe mkDefault mkEnableOption mkIf mkMerge mkOption types;
   inherit (lib.tundra) getConfig toYAML transformAttrs;
 
@@ -61,9 +61,9 @@ in {
         type = types.bool;
         default = true;
       };
-      alwaysSwitch = mkOption {
-        type = types.listOf types.str;
-        default = [];
+      autoSwitchOrder = mkOption {
+        type = types.attrsOf types.int;
+        default = {};
       };
     };
     keymap = {
@@ -122,7 +122,7 @@ in {
         alsa.support32Bit = true;
         pulse.enable = true;
         jack.enable = true;
-        wireplumber = mkIf (length cfg.audio.alwaysSwitch != 0) {
+        wireplumber = mkIf (cfg.audio.autoSwitchOrder != {}) {
           extraConfig."51-shanetrs-always-switch" = {
             "wireplumber.components" = [
               {
@@ -137,15 +137,52 @@ in {
           };
           extraScripts = {
             "shanetrs-always-switch.lua" = ''
+              set_default = function(name)
+                if not metadata or not name then return end
+                metadata:set(0, 'default.configured.audio.sink', 'Spa:String:JSON', '{ "name": "' .. name .. '" }')
+                last = name
+                Log.info("default sink set to " .. name)
+              end
+              set_fallback = function(name)
+                fallback = name
+                Log.info("fallback sink set to " .. (name or "nil"))
+              end
+              refresh_metadata = function()
+                local this = om:lookup { Constraint { 'metadata.name', 'equals', 'default' } }
+                if not this then return end
+                metadata = this
+                default = metadata:find(0, 'default.configured.audio.sink')
+              end
+              order = {
+                ${concatStringsSep ",\n  " ((map (x: "['${replaceStrings ["*"] [""] x}'] = ${toString cfg.audio.autoSwitchOrder.${x}}")) (attrNames cfg.audio.autoSwitchOrder))}
+              }
               om = ObjectManager {
                 Interest { type = 'metadata', Constraint { 'metadata.name', 'equals', 'default' } },
-                ${concatStringsSep ",\n  " (map (x: "Interest { type = 'node', Constraint { 'node.name', 'matches', '${x}' } }") cfg.audio.alwaysSwitch)}
+                ${concatStringsSep ",\n  " ((map (x: "Interest { type = 'node', Constraint { 'node.name', 'matches', '${x}' } }")) (attrNames cfg.audio.autoSwitchOrder))}
               }
               om:connect('object-added', function (om, node)
                 local name = node.properties['node.name']
-                local metadata = om:lookup { Constraint { 'metadata.name', 'equals', 'default' } }
-                metadata:set(0, 'default.configured.audio.sink', 'Spa:String:JSON', '{ "name": "' .. name .. '" }')
-                Log.info("default sink set to " .. name)
+                if not name then return end
+                refresh_metadata()
+                local node_order = 0; local default_order = nil
+                for k, v in pairs(order) do
+                  if string.find(name, k, 1, true) then node_order = v end
+                  if default and string.find(default, k, 1, true) then default_order = v end
+                end
+                if default_order and node_order > default_order then
+                  set_fallback(name)
+                  return
+                end
+                set_fallback(default)
+                set_default(name)
+              end)
+              om:connect('object-removed', function (om, node)
+                local name = node.properties['node.name']
+                if not name then return end
+                refresh_metadata()
+                if default and string.find(default, name, 1, true) and name == last then
+                  set_default(fallback)
+                end
               end)
               om:activate()
             '';
