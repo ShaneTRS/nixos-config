@@ -89,7 +89,7 @@ in {
       services.flatpak.enable = true;
       environment.systemPackages = with pkgs; [
         (
-          if config.shanetrs.desktop.session == "plasma"
+          if config.shanetrs.desktop.plasma.enable
           then kdePackages.discover
           else gnome-software
         )

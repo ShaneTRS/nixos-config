@@ -10,7 +10,7 @@
     browser.firefox.enable = true;
     desktop = {
       enable = true;
-      session = "plasma";
+      plasma.enable = true;
     };
     programs = {
       discord.enable = true;

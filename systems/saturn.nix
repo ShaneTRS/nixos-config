@@ -7,7 +7,7 @@
     };
     desktop = {
       enable = true;
-      session = "plasma";
+      plasma.enable = true;
     };
     gaming = {
       # epic.enable = true;

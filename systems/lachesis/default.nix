@@ -14,7 +14,7 @@
     browser.firefox.enable = true;
     desktop = {
       enable = true;
-      session = "plasma";
+      plasma.enable = true;
     };
     remote = {
       enable = true;

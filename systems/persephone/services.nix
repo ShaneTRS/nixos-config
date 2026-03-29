@@ -84,6 +84,7 @@ in {
         };
         podman-autostart = {
           environment.LOGGING = "--log-level=info";
+          restartIfChanged = false;
           serviceConfig = {
             RemainAfterExit = true;
             ExecStart = getExe (writeShellApplication {

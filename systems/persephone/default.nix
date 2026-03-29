@@ -16,7 +16,10 @@ in {
     };
     desktop = {
       enable = true;
-      session = "plasma";
+      plasma = {
+        enable = true;
+        extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kdenlive];
+      };
       keymap = let
         xdotool = getExe pkgs.xdotool;
         launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
@@ -63,7 +66,6 @@ in {
           }
         ];
       };
-      extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kdenlive];
     };
     gaming = {
       epic.enable = true;

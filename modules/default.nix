@@ -122,6 +122,8 @@ in {
     };
 
     home-manager = {
+      backupFileExtension = mkStrongDefault "bak";
+      overwriteBackup = true;
       useGlobalPkgs = mkStrongDefault true;
       useUserPackages = mkStrongDefault true;
     };

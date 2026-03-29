@@ -4,21 +4,33 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkIf mkMerge;
+  inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
   chicago95 = pkgs.shanetrs.chicago95;
 
-  cfg = config.shanetrs.desktop;
+  pcfg = config.shanetrs.desktop;
+  cfg = pcfg.xfce;
+  enabled = pcfg.enable && cfg.enable;
 in {
-  nixos = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "xfce") {
+  options.shanetrs.desktop.xfce = {
+    enable = mkEnableOption "Window manager and display manager configuration";
+    presets = {
+      win95.enable = mkEnableOption "Win95 theme and configuration";
+    };
+    extraPackages = mkOption {
+      type = types.listOf types.package;
+      default = [];
+    };
+  };
+
+  nixos = mkIf enabled (mkMerge [
+    {
       xdg.portal.extraPortals = with pkgs; [xdg-desktop-portal-gtk];
       services = {
         displayManager.defaultSession = "xfce";
         xserver.desktopManager.xfce.enable = true;
       };
-    })
-
-    (mkIf (cfg.session == "xfce" && cfg.preset == "win95") {
+    }
+    (mkIf cfg.presets.win95.enable {
       fonts = {
         packages = [chicago95];
         fontconfig.allowBitmaps = true;
@@ -27,8 +39,8 @@ in {
     })
   ]);
 
-  home = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "xfce" && cfg.preset == "win95") {
+  home = mkIf enabled (mkMerge [
+    (mkIf cfg.presets.win95.enable {
       xdg.configFile = {
         "gtk-3.0" = {
           recursive = true;

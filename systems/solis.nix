@@ -11,8 +11,10 @@ in {
     browser.chromium.enable = true;
     desktop = {
       enable = true;
-      session = "plasma";
-      extraPackages = with pkgs; mkOptionDefault [kdePackages.kcalc];
+      plasma = {
+        enable = true;
+        extraPackages = with pkgs; mkOptionDefault [kdePackages.kcalc];
+      };
     };
     programs = {
       vscode.enable = true;

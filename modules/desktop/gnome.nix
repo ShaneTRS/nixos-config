@@ -4,41 +4,44 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkIf mkMerge;
-  cfg = config.shanetrs.desktop;
+  inherit (lib) mkEnableOption mkIf mkOption types;
+
+  pcfg = config.shanetrs.desktop;
+  cfg = pcfg.gnome;
+  enabled = pcfg.enable && cfg.enable;
 in {
-  nixos = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "gnome") {
-      environment.gnome.excludePackages = with pkgs; [
-        gnome-contacts
-        gnome-logs
-        gnome-music
-        gnome-tour
-        yelp
-      ];
-      services.xserver = {
-        displayManager.gdm.enable = true;
-        desktopManager.gnome.enable = true;
-      };
-      # Workaround for a bug
-      systemd.services = {
-        "getty@tty1".enable = false;
-        "autovt@tty1".enable = false;
-      };
-    })
-  ]);
+  options.shanetrs.desktop.gnome = {
+    enable = mkEnableOption "GNOME and GDM configuration";
+    extraPackages = mkOption {
+      type = types.listOf types.package;
+      default = [];
+    };
+  };
 
-  home = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "gnome") {
-      dconf = {
-        enable = true;
-        settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-      };
-    })
+  nixos = mkIf enabled {
+    environment.gnome.excludePackages = with pkgs; [
+      gnome-contacts
+      gnome-logs
+      gnome-music
+      gnome-tour
+      yelp
+    ];
+    services.xserver = {
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+    };
+    # Workaround for a bug
+    systemd.services = {
+      "getty@tty1".enable = false;
+      "autovt@tty1".enable = false;
+    };
+  };
 
-    (mkIf (cfg.session == "gnome" && cfg.preset == "pop") {
-      dconf.settings = {"org/gnome/shell".enabled-extensions = ["pop-shell@system76.com"];};
-      home.packages = with pkgs; [gnomeExtensions.pop-shell];
-    })
-  ]);
+  home = mkIf enabled {
+    home.packages = cfg.extraPackages;
+    dconf = {
+      enable = true;
+      settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+    };
+  };
 }

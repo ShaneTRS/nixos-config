@@ -11,7 +11,7 @@
     desktop = {
       enable = true;
       type = "wayland";
-      session = "xfce";
+      xfce.enable = true;
     };
     remote = {
       enable = true;

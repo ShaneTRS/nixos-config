@@ -1,82 +1,77 @@
 {
   config,
   lib,
-  pkgs,
   machine,
+  pkgs,
   ...
 }: let
-  inherit (lib) getExe mkIf mkMerge;
-  cfg = config.shanetrs.desktop;
+  inherit (lib) getExe mkEnableOption mkIf mkMerge mkOption types;
+
+  pcfg = config.shanetrs.desktop;
+  cfg = pcfg.wm;
+  enabled = pcfg.enable && cfg.enable;
 in {
-  config = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "wm") {
-      shanetrs.desktop.keymap = let
-        launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
+  options.shanetrs.desktop.wm = {
+    enable = mkEnableOption "Window manager and display manager configuration";
+    tty.enable = mkEnableOption "Auto-login on TTY1";
+    extraPackages = mkOption {
+      type = types.listOf types.package;
+      default = [];
+    };
+  };
 
-        wpctl = "${pkgs.wireplumber}/bin/wpctl";
-        playerctl = getExe pkgs.playerctl;
-        brightness = getExe (pkgs.writeShellApplication {
-          name = "brightness-8b501";
-          runtimeInputs = with pkgs; [brightnessctl procps];
-          text = ''
-            brightnessctl --class=backlight set "$(( ''${1:-1} * $(pgrep -fc "$0") ))%''${2:-+}"
-            sleep 1
-          '';
-        });
-      in {
-        keymap = [
-          {
-            name = "system";
-            remap = {
-              volumeup = launch "${wpctl} set-volume @DEFAULT_SINK@ 2%+ -l 1.5";
-              volumedown = launch "${wpctl} set-volume @DEFAULT_SINK@ 2%- -l 1.5";
-              mute = launch "${wpctl} set-mute @DEFAULT_SINK@ toggle";
-              micmute = launch "${wpctl} wpctl set-mute @DEFAULT_SOURCE@ toggle";
+  config = mkIf enabled {
+    shanetrs.desktop.keymap = let
+      launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
 
-              playpause = launch "${playerctl} -a play-pause";
-              stopcd = launch "${playerctl} -a stop";
-              previoussong = launch "${playerctl} -a previous";
-              nextsong = launch "${playerctl} -a next";
-            };
-          }
-          {
-            name = "system-ungrab";
-            remap = {
-              brightnessup = launch "${brightness} 1 +";
-              brightnessdown = launch "${brightness} 1 -";
-            };
-          }
-          {
-            name = "programs";
-            remap = {
-              super-t = launch "eval \"\${TERMINAL}\"";
-              super-d = launch "eval \"\${LAUNCHER}\"";
-              super-e = launch "eval \"\${FILE_MANAGER}\"";
-              super-shift-s = launch "eval \"\${SCREENSHOT}\"";
-            };
-          }
-        ];
-      };
-    })
+      wpctl = "${pkgs.wireplumber}/bin/wpctl";
+      playerctl = getExe pkgs.playerctl;
+      brightness = getExe (pkgs.writeShellApplication {
+        name = "brightness-8b501";
+        runtimeInputs = with pkgs; [brightnessctl procps];
+        text = ''
+          brightnessctl --class=backlight set "$(( ''${1:-1} * $(pgrep -fc "$0") ))%''${2:-+}"
+          sleep 1
+        '';
+      });
+    in {
+      keymap = [
+        {
+          name = "system";
+          remap = {
+            volumeup = launch "${wpctl} set-volume @DEFAULT_SINK@ 2%+ -l 1.5";
+            volumedown = launch "${wpctl} set-volume @DEFAULT_SINK@ 2%- -l 1.5";
+            mute = launch "${wpctl} set-mute @DEFAULT_SINK@ toggle";
+            micmute = launch "${wpctl} wpctl set-mute @DEFAULT_SOURCE@ toggle";
 
-    (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
-      shanetrs.shell.shared.extraRc = ''
-        case "$(tty)" in
-          /dev/tty1|/dev/tty7) niri-session -l && exit ;;
-        esac
-      '';
-      xdg.portal = {
-        extraPortals = [pkgs.xdg-desktop-portal-gnome];
-        configPackages = [pkgs.niri];
-        config.niri = {
-          "org.freedesktop.impl.portal.FileChooser" = "gtk";
-        };
-      };
-    })
-  ]);
+            playpause = launch "${playerctl} -a play-pause";
+            stopcd = launch "${playerctl} -a stop";
+            previoussong = launch "${playerctl} -a previous";
+            nextsong = launch "${playerctl} -a next";
+          };
+        }
+        {
+          name = "system-ungrab";
+          remap = {
+            brightnessup = launch "${brightness} 1 +";
+            brightnessdown = launch "${brightness} 1 -";
+          };
+        }
+        {
+          name = "programs";
+          remap = {
+            super-t = launch "eval \"\${TERMINAL}\"";
+            super-d = launch "eval \"\${LAUNCHER}\"";
+            super-e = launch "eval \"\${FILE_MANAGER}\"";
+            super-shift-s = launch "eval \"\${SCREENSHOT}\"";
+          };
+        }
+      ];
+    };
+  };
 
-  nixos = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
+  nixos = mkIf enabled (mkMerge [
+    (mkIf cfg.tty.enable {
       systemd.services."getty@tty1" = {
         overrideStrategy = "asDropin";
         serviceConfig.ExecStart = [
@@ -87,38 +82,22 @@ in {
     })
   ]);
 
-  home = mkIf cfg.enable (mkMerge [
-    (mkIf (cfg.session == "wm") {
-      # todo: replace with standalones
-      home = {
-        packages = with pkgs; [
+  home = mkIf enabled {
+    # todo: replace with standalones
+    home = {
+      packages = with pkgs;
+        cfg.extraPackages
+        ++ [
           swaybg # wallpaper
           kdePackages.dolphin # file manager
           kdePackages.konsole # terminal
         ];
-        sessionVariables = {
-          TERMINAL = "konsole";
-          FILE_MANAGER = "dolphin";
-          # SCREENSHOT = "";
-        };
+      sessionVariables = {
+        TERMINAL = "konsole";
+        FILE_MANAGER = "dolphin";
+        # SCREENSHOT = "";
       };
-      services.playerctld.enable = true;
-    })
-
-    (mkIf (cfg.session == "wm" && cfg.preset == "niri") {
-      dbus.packages = with pkgs; [niri];
-      home = {
-        packages = with pkgs; [
-          niri
-          xwayland-satellite
-          adwaita-icon-theme
-        ];
-        sessionVariables = {
-          SCREENSHOT = "niri msg action screenshot";
-          LAUNCHER = "${getExe pkgs.rofi} -show drun";
-        };
-      };
-      services.gnome-keyring.enable = true;
-    })
-  ]);
+    };
+    services.playerctld.enable = true;
+  };
 }

@@ -4,7 +4,7 @@
     browser.firefox.enable = true;
     desktop = {
       enable = true;
-      xfce.enable = true;
+      niri.enable = true;
     };
     remote = {
       enable = true;
