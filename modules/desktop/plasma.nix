@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkEnableOption mkIf mkOption mkOptionDefault types;
+  inherit (lib) mkEnableOption mkIf mkOption types;
 
   pcfg = config.shanetrs.desktop;
   cfg = pcfg.plasma;
@@ -26,17 +26,22 @@ in {
   };
 
   config = mkIf enabled {
-    shanetrs.browser = {
-      firefox = {
-        extensions = mkOptionDefault ["plasma-browser-integration@kde.org:plasma-integration/latest"];
-        _.nativeMessagingHosts = mkOptionDefault [pkgs.kdePackages.plasma-browser-integration];
+    # TODO: possibly need systemd.user.services.kdeconnectd
+    shanetrs.desktop.mime = {
+      added = {
+        "inode/directory" = ["org.kde.dolphin.desktop"];
       };
-      chromium.extensions = mkOptionDefault ["cimiefiiaegbelhefglklhhakcgmhkai"]; # Plasma Integration
+      default = {
+        "application/java-archive" = ["org.kde.ark.desktop"];
+        "application/vnd.debian.binary-package" = ["org.kde.ark.desktop"];
+        "inode/directory" = ["org.kde.dolphin.desktop"];
+      };
+      removed = {
+        "application/octet-stream" = ["org.kde.kdeconnect_open.desktop"];
+        "x-scheme-handler/http" = ["org.kde.kdeconnect_open.desktop"];
+        "x-scheme-handler/https" = ["org.kde.kdeconnect_open.desktop"];
+      };
     };
-  };
-
-  nixos = mkIf enabled {
-    # Maybe try to use plasma-manager for some settings
     programs = {
       kdeconnect.enable = true; # opens firewall
       partition-manager.enable = true; # polkit and dbus
@@ -54,13 +59,6 @@ in {
       };
       desktopManager.plasma6.enable = true;
     };
-  };
-
-  home = mkIf enabled {
-    home.packages = cfg.extraPackages;
-    services.kdeconnect = {
-      enable = true;
-      indicator = true;
-    };
+    tundra.packages = cfg.extraPackages;
   };
 }

@@ -22,14 +22,17 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
+    shanetrs.desktop.mime.default = {
+      "image/jpeg" = ["gimp.desktop"];
+      "image/png" = ["gimp.desktop"];
+      "image/webp" = ["gimp.desktop"];
+      "image/x-xcf" = ["gimp.desktop"];
+    };
+    tundra.packages = [cfg.package];
     services.gvfs = {
       enable = true; # virtual mounts daemon
       package = cfg.gvfs.package;
     };
-  };
-
-  home = mkIf cfg.enable {
-    home.packages = [cfg.package];
   };
 }

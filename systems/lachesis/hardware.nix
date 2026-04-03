@@ -1,18 +1,18 @@
 # Inspiron 3501
 {
-  machine,
+  config,
   pkgs,
   lib,
   ...
 }: let
   inherit (lib) getExe;
 in {
-  config.shanetrs = {
+  shanetrs = {
     desktop.keymap = {
       devices = ["keyboard" "Video"];
       keymap = [
         {
-          name = machine.id + "-ungrab";
+          name = config.tundra.id + "-ungrab";
           remap = let
             brightness = amount: direction: {
               launch = [
@@ -53,42 +53,40 @@ in {
     };
   };
 
-  nixos = {
-    boot.loader = {
-      efi = {
-        canTouchEfiVariables = true;
-        efiSysMountPoint = "/boot/efi";
-      };
-      grub = {
-        enable = true;
-        efiSupport = true;
-        device = "nodev";
-        # useOSProber = true;
-      };
+  boot.loader = {
+    efi = {
+      canTouchEfiVariables = true;
+      efiSysMountPoint = "/boot/efi";
     };
-    fileSystems = {
-      "/" = {
-        device = "/dev/disk/by-label/ROOT";
-        fsType = "ext4";
-        neededForBoot = true;
-      };
-      "/boot/efi" = {
-        device = "/dev/disk/by-label/BOOT";
-        fsType = "vfat";
-        neededForBoot = true;
-      };
+    grub = {
+      enable = true;
+      efiSupport = true;
+      device = "nodev";
+      # useOSProber = true;
     };
-    hardware.cpu.intel.updateMicrocode = true;
-    nix.settings = {
-      substituters = ["http://shanetrs.remote.host:5698"];
-      trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
-    };
-    # services.fprintd = {
-    #   enable = true;
-    #   tod = {
-    #     enable = true;
-    #     driver = pkgs.libfprint-2-tod1-goodix;
-    #   };
-    # };
   };
+  fileSystems = {
+    "/" = {
+      device = "/dev/disk/by-label/ROOT";
+      fsType = "ext4";
+      neededForBoot = true;
+    };
+    "/boot/efi" = {
+      device = "/dev/disk/by-label/BOOT";
+      fsType = "vfat";
+      neededForBoot = true;
+    };
+  };
+  hardware.cpu.intel.updateMicrocode = true;
+  nix.settings = {
+    substituters = ["http://shanetrs.remote.host:5698"];
+    trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
+  };
+  # services.fprintd = {
+  #   enable = true;
+  #   tod = {
+  #     enable = true;
+  #     driver = pkgs.libfprint-2-tod1-goodix;
+  #   };
+  # };
 }

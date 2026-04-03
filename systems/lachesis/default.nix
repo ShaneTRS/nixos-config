@@ -3,13 +3,14 @@
   lib,
   ...
 }: {
-  nixos = {
-    services.earlyoom.enable = false;
-    zramSwap.enable = false;
-    programs.noisetorch.enable = true;
+  services.earlyoom.enable = false;
+  zramSwap.enable = false;
+  programs = {
+    noisetorch.enable = true;
+    obs-studio.enable = true;
   };
 
-  config.shanetrs = {
+  shanetrs = {
     enable = true;
     browser.firefox.enable = true;
     desktop = {
@@ -26,54 +27,45 @@
       easyeffects.enable = true;
       zed-editor.enable = true;
       zerotier-one.enable = true;
-      vscode = {
-        enable = true;
-        features = ["nix"];
-      };
       gimp.enable = true;
     };
     shell.zsh.enable = true;
   };
 
-  home = {
-    programs.obs-studio.enable = true;
-    home.packages = with pkgs; [
+  systemd.user.services.audio-fix = {
+    after = ["pipewire.service"];
+    serviceConfig.Restart = "on-failure";
+    environment = {
+      TARGET = "shanetrs.remote.host";
+      MIN_DELAY = "5";
+    };
+    script = let
+      inherit (pkgs) writeShellApplication;
+      inherit (lib) getExe;
+    in "${getExe (writeShellApplication {
+      name = "audio-fix.service";
+      runtimeInputs = with pkgs; [inetutils];
+      text = ''
+        set +o errexit
+        sleep "$MIN_DELAY"
+        until ping -qs1 -c1 -W1 "$TARGET"; do
+          sleep 1
+        done
+        systemctl restart --user pipewire-pulse pipewire
+        noisetorch -i
+      '';
+    })}";
+    startLimitBurst = 32;
+    wantedBy = ["graphical-session.target"];
+  };
+
+  tundra = {
+    user = "shane";
+    packages = with pkgs; [
       crosspipe
       shanetrs.moonlight-qt
       shanetrs.spotify
       vlc
     ];
-    systemd.user.services = {
-      audio-fix = {
-        Unit = {
-          After = "pipewire.service";
-          Description = "Bandage fix for not forwarding audio at boot";
-        };
-        Service = {
-          Environment = ["TARGET=shanetrs.remote.host" "MIN_DELAY=5"];
-          ExecStart = let
-            inherit (pkgs) writeShellApplication;
-            inherit (lib) getExe;
-          in "${getExe (writeShellApplication {
-            name = "audio-fix.service";
-            runtimeInputs = with pkgs; [inetutils];
-            text = ''
-              set +o errexit
-              sleep "$MIN_DELAY"
-              until ping -qs1 -c1 -W1 "$TARGET"; do
-                sleep 1
-              done
-              systemctl restart --user pipewire-pulse pipewire
-              noisetorch -i
-            '';
-          })}";
-          Restart = "on-failure";
-          StartLimitBurst = 32;
-        };
-        Install.WantedBy = ["graphical-session.target"];
-      };
-    };
   };
-
-  machine.user = "shane";
 }

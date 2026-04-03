@@ -5,8 +5,9 @@
   ...
 }: let
   inherit (lib) mkIf mkEnableOption mkPackageOption;
-  cfg = config.shanetrs.shell;
-  enabled = cfg.enable && cfg.features.bat.enable;
+  pcfg = config.shanetrs.shell;
+  cfg = pcfg.features.bat;
+  enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.shell.features.bat = {
     enable = mkEnableOption "Install and configure bat to preferences";
@@ -18,12 +19,9 @@ in {
       cat = "bat";
       ccat = "command cat";
     };
-  };
-
-  home = mkIf enabled {
     programs.bat = {
       enable = true;
-      inherit (cfg.features.bat) package;
+      inherit (cfg) package;
     };
   };
 }

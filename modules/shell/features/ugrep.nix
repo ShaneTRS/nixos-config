@@ -5,8 +5,9 @@
   ...
 }: let
   inherit (lib) mkIf mkEnableOption mkPackageOption;
-  cfg = config.shanetrs.shell;
-  enabled = cfg.enable && cfg.features.ugrep.enable;
+  pcfg = config.shanetrs.shell;
+  cfg = pcfg.features.ugrep;
+  enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.shell.features.ugrep = {
     enable = mkEnableOption "Install and configure fastfetch to preferences";
@@ -17,9 +18,6 @@ in {
     shanetrs.shell.shared.aliases = {
       grep = "ugrep";
     };
-  };
-
-  home = mkIf enabled {
-    home.packages = [cfg.features.ugrep.package];
+    tundra.packages = [cfg.package];
   };
 }

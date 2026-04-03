@@ -1,15 +1,13 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }: let
-  inherit (lib) mkEnableOption mkPackageOption mkIf mkOption types;
+  inherit (lib) mkEnableOption mkIf mkOption types;
   cfg = config.shanetrs.browser.chromium;
 in {
   options.shanetrs.browser.chromium = {
     enable = mkEnableOption "Chromium configuration and integration";
-    package = mkPackageOption pkgs "chromium" {};
     extensions = mkOption {
       type = types.listOf types.str;
       default = [
@@ -21,12 +19,21 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
+  config = mkIf cfg.enable {
+    shanetrs.desktop.mime = {
+      default = {
+        "application/xhtml+xml" = ["chromium.desktop"];
+        "text/html" = ["chromium.desktop"];
+      };
+      removed = {
+        "x-scheme-handler/http" = ["chromium.desktop"];
+        "x-scheme-handler/https" = ["chromium.desktop"];
+      };
+    };
     # TODO: Implement search engines manually
     programs.chromium = {
       enable = true;
-      extensions = map (id: {inherit id;}) cfg.extensions;
-      inherit (cfg) package;
+      inherit (cfg) extensions;
     };
   };
 }

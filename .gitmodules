@@ -1,3 +1,0 @@
-[submodule "modules/secrets"]
-	path = modules/secrets
-	url = https://github.com/ShaneTRS/nixos-secrets

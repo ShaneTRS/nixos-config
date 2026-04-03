@@ -26,7 +26,7 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     services.zerotierone = {
       enable = true;
       inherit (cfg) package joinNetworks;

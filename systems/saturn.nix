@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  config.shanetrs = {
+  shanetrs = {
     enable = true;
     browser = {
       firefox.enable = true;
@@ -18,11 +18,7 @@
       enable = true;
       role = "host";
     };
-    programs = {
-      discord.enable = true;
-      vscode.enable = true;
-    };
+    programs.discord.enable = true;
   };
-
-  home.home.packages = with pkgs; [krita vlc];
+  tundra.packages = with pkgs; [krita vlc];
 }

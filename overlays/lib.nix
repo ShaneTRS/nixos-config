@@ -1,30 +1,136 @@
 {
   self ? null,
+  nixosConfig ? throw "nixosConfig is only available in modules!",
   pkgs ? null,
   tree ? null,
-  machine ? {},
-  secrets ?
-    if machine ? id
-    then
-      (
-        if machine ? home
-        then {} # self.homeConfigurations.${machine.user}.config.sops.secrets # infinite recursion
-        else self.nixosConfigurations.${machine.id}.config.sops.secrets
-      )
-    else {},
+  secrets ? self.inputs.secrets,
   nixpkgs ? self.inputs.nixpkgs,
-  home-manager ? self.inputs.home-manager,
   ...
 } @ args: final: prev: let
   inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
-  inherit (builtins) elemAt fromJSON match readDir readFile sort;
-
-  inherit (builtins) attrValues deepSeq isFunction pathExists toJSON warn;
-
-  inherit (nixpkgs.lib) collect concatMapAttrs findFirst filterAttrs mkOverride nixosSystem;
-  inherit (home-manager.lib) homeManagerConfiguration;
+  inherit (builtins) elem elemAt fromJSON match readDir readFile sort substring;
+  inherit (builtins) attrValues deepSeq isFunction isPath isString pathExists toJSON warn;
+  inherit (nixpkgs.lib) any collect concatMapAttrs findFirst getExe mkIf mkOverride nixosSystem optionalAttrs;
 
   tundra = rec {
+    inherit (fsScripts) decryptSecret decryptTemplate mergeFormat;
+    fsScripts = {
+      # nixpkgs, nixosConfig, pkgs
+      decryptSecret = source: let
+        inherit (pkgs) jq sops writeShellScript;
+      in
+        writeShellScript "decrypt-secret" ''
+          { read -r secret; read -r mode; } < <(${getExe jq} -r '
+            (.meta.name | split("/") | map("[" + tojson + "]") | join("")),
+            (.mode | try tonumber catch "440")
+          ' "$2")
+          tmp="$1.tmp"
+          decrypt() { ${getExe sops} --extract "$secret" --output "$tmp" -d ${source}/$1.yaml 2>/dev/null; }
+          decrypt ${nixosConfig.tundra.user} || decrypt global;
+          chmod "''$mode" "$tmp"
+          mv -f "$tmp" "$1"
+        '';
+
+      # nixpkgs, nixosConfig, pkgs
+      decryptTemplate = source: template: let
+        inherit (pkgs) jq sops writeShellScript;
+      in
+        writeShellScript "decrypt-template" ''
+          read -r mode < <(${getExe jq} -r '.mode | try tonumber catch "440"' "$2")
+          decrypt() { ${getExe sops} --output-type json -d ${source}/$1.yaml 2>/dev/null; }
+          { decrypt ${nixosConfig.tundra.user}; decrypt global; } |
+          ${getExe jq} -rs '
+            reduce .[] as $f ({}; . * ($f.all // {})) as $all |
+            reduce .[] as $f ({}; . * ($f.${nixosConfig.tundra.id} // {})) as $id |
+            reduce .[] as $f ({}; . * $f) | $all * $id * . |
+            reduce (paths(scalars) as $p | {
+              key: $p | join("."),
+              value: getpath($p) | tostring
+            } ) as $pair ($text; gsub("%%" + $pair.key; $pair.value))
+          ' --rawfile text "${template}" > "$1.tmp"
+          chmod "$mode" "$1.tmp"
+          mv -f "$1.tmp" "$1"
+        '';
+
+      # todo: add support for merging secrets
+      # nixpkgs, pkgs
+      mergeFormat = type: content: let
+        inherit (pkgs) jq perl dasel gnused writeShellScript writeText;
+        applyStats = x: ''chmod "$mode" "${x}"; chown "$uid:$gid" "${x}"'';
+        getStats = x: ''mode="$(stat -c %a "${x}")" uid="$(stat -c %u "${x}")" gid="$(stat -c %g "${x}")"'';
+        contentIsPath = isPath content || isString content && substring 0 1 content == "/";
+        contentFile =
+          if contentIsPath
+          then content
+          else writeText "merge-${type}-content" content;
+        contentJSON =
+          if contentIsPath
+          then content
+          else writeText "merge-${type}-content" (toJSON content);
+      in
+        if elem type ["json" "yaml" "hcl" "csv" "toml" "xml" "ini"]
+        then
+          writeShellScript "merge-${type}" ''
+            if [ -f "$1" ]; then
+              ${getStats "$1"}
+              { ${getExe jq} -s 'if .[0] | type == "array"
+                then reduce .[] as $o ([]; . + $o)
+                else reduce .[] as $o ({}; . * ($o // {}))
+              end' <(${getExe dasel} -i ${type} -o json < "$1") ${contentJSON} ||
+                cat ${contentJSON}
+              } | ${getExe dasel} -i json -o ${type} > "$1.tmp"
+              ${applyStats "$1.tmp"}
+            else
+              ${getExe dasel} -i json -o ${type} < ${contentJSON} > "$1.tmp"
+            fi
+            mv -f "$1.tmp" "$1"
+          ''
+        else if type == "ini-mime"
+        then
+          writeShellScript "merge-ini-mime" ''
+            D="%%DELIM%%"
+            if [ -f "$1" ]; then
+              ${getStats "$1"}
+              { ${getExe jq} -s 'reduce (.[] | to_entries[]) as $cat ({};
+                reduce ($cat.value | to_entries[]) as $mime (.;
+                  .[$cat.key][$mime.key] += ($mime.value | split("'"$D"'")
+                ))) | map_values(map_values(reduce .[] as $v ([];
+                  if (index($v)|not) then . + [$v] else . end
+                ) | join("'"$D"'")))' <(${getExe gnused} "s:;:$D:g" "$1" | ${getExe dasel} -i ini -o json) <(${getExe gnused} "s:;:$D:g" ${contentJSON}) ||
+                ${getExe gnused} "s:;:$D:g" ${contentJSON}
+              } | ${getExe dasel} -i json -o ini |
+              ${getExe gnused} "s:$D:;:g" > "$1.tmp"
+              ${applyStats "$1.tmp"}
+            else
+              ${getExe gnused} "s:;:$D:g" ${contentJSON} | ${getExe dasel} -i json -o ini |
+              ${getExe gnused} "s:$D:;:g" > "$1.tmp"
+            fi
+            mv -f "$1.tmp" "$1"
+          ''
+        else if type == "text"
+        then
+          writeShellScript "merge-text" ''
+            if [ -f "$1" ]; then
+              ${getExe perl} -0777 -e 'exit !(index(<>, <>) >= 0)' "$1" ${contentFile} && exit
+              ${getStats "$1"}
+              cat "$1" ${contentFile} > "$1.tmp"
+              ${applyStats "$1.tmp"}
+            else
+              cat ${contentFile} > "$1.tmp"
+            fi
+            mv -f "$1.tmp" "$1"
+          ''
+        else throw "unknown type: ${type}!";
+    };
+
+    deepDirOf = dir: let
+      recurse = dir:
+        if dir != "/"
+        then recurse (dirOf dir) ++ [dir]
+        else [];
+    in
+      recurse (dirOf dir);
+
     deepReadDir = dir:
       mapAttrs (name: type:
         if type == "directory"
@@ -41,64 +147,50 @@
         type = "derivation";
       };
 
-    # nixpkgs
-    getCombinedModules = dir: class: let
-      mapDirModules = mapModules (collect isFunction dir);
-      sharedModules = mapDirModules (x: {
-        options = x.options or {};
-        config = x.config or {};
-      });
-      classModules = mapDirModules (x: x.${class} or {});
+    # self, nixosConfig, nixpkgs
+    getConfig' = extra: file: let
+      inherit (nixosConfig.tundra) user id;
+      exists = x:
+        if pathExists x
+        then x
+        else null;
     in
-      sharedModules ++ classModules;
-
-    # self, nixpkgs, machine, secrets
-    getConfig = file:
-      if secrets ? ${file}
-      then secrets.${file}.path
-      else
-        findFirst pathExists (warn "no config was found for ${file}!" null) (with machine; [
-          (self + "/user/configs/${user}/${id}/${file}")
-          (self + "/user/configs/${user}/all/${file}")
-          (self + "/user/configs/global/${id}/${file}")
-          (self + "/user/configs/global/all/${file}")
+      findFirst (x: x != null) (warn "no config was found for ${file}!" null) (extra
+        ++ [
+          (exists (self + "/user/configs/${user}/${id}/${file}"))
+          (exists (self + "/user/configs/${user}/all/${file}"))
+          (exists (self + "/user/configs/global/${id}/${file}"))
+          (exists (self + "/user/configs/global/all/${file}"))
         ]);
+    # self, nixosConfig, nixpkgs
+    getConfig = file: let
+      inherit (nixosConfig.tundra) id secret;
+    in
+      getConfig' [
+        (secret."${id}/${file}".target or null)
+        (secret."all/${file}".target or null)
+        (secret.${file}.target or null)
+      ]
+      file;
 
     # nixpkgs
-    getMachines = set:
-      filterAttrs (k: v: v != null) (mapAttrs (k: v: let
-        machines = filter (x: x != null) (map (x: let
-          this =
-            (x ({
-                machine = this;
-                options = null;
-                config = null;
-                homeConfig = null;
-                nixosConfig = null;
-              }
-              // args)).machine or null;
+    getSystems = set:
+      concatMapAttrs (k: v:
+        optionalAttrs (any (x: let
+          this = x ({
+              config = {};
+              options = {};
+              nixosConfig = {};
+            }
+            // args);
+          tundra = this.tundra or this.config.tundra or {};
         in
-          this) (collect isFunction v));
-      in
-        if machines != []
-        then foldl' (acc: this: acc // this) {} machines
-        else null)
-      set);
+          tundra ? id || tundra ? source || tundra ? user)
+        (collect isFunction v)) {${k} = tundraSystem k;})
+      set;
 
     getOverlays' = list: args: map (x: x args) (filter isFunction list);
     getOverlays = getOverlays' (attrValues tree.overlays); # tree
-
-    mapModules' = modules: argsFn: outFn:
-      map (x: args @ {
-        extendModules,
-        modules,
-        pkgs,
-        utils,
-        ...
-      }:
-        outFn (x (argsFn args)))
-      modules;
-    mapModules = modules: outFn: mapModules' modules (x: x) outFn;
 
     mkChecks = outputs: set:
       concatMapAttrs (k: {
@@ -113,6 +205,8 @@
         else concatMapAttrs (k2: v2: {"${name}-${k2}" = final v2;}) (prev value))
       set;
     mkDrvChecks = outputs: set: mapAttrs exprToFakeDrv (mkChecks outputs set);
+
+    mkIfConfig = file: fn: let attempt = getConfig file; in mkIf (attempt != null) (fn attempt);
 
     mkStrongDefault = mkOverride 900;
 
@@ -147,116 +241,51 @@
     resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
     sortPriorities = list: sort (a: b: (a.priority or 100) < (b.priority or 100)) list;
 
+    toYAML = (pkgs.formats.yaml {}).generate "toYAML"; # pkgs
+
     transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
 
     # self, tree
-    tundraSystem = name: value: let
-      machine =
-        rec {
-          id = name;
-          hostname = name;
-          user = "user";
-          source = "/home/${machine.user or user}/.config/nixos";
-        }
-        // value;
+    tundraSystem = name: let
       systemArgs =
-        systemHelper machine
+        args
         // {
+          inherit (systemArgs.pkgs) lib;
+          pkgs = pkgs.appendOverlays (getOverlays systemArgs);
           nixosConfig = system.config;
-          homeConfig = system.config.home-manager.users.${machine.user};
         };
-      combinedSystemModules = getCombinedModules tree.systems.${name};
 
       system = nixosSystem {
         specialArgs = removeAttrs systemArgs ["pkgs" "lib"];
         inherit (systemArgs) pkgs lib;
         modules =
-          combinedSystemModules "nixos"
-          ++ (with self.inputs; [
+          collect isFunction tree.systems.${name}
+          ++ [
             self.outputs.nixosModules.default
-            home-manager.nixosModules.default
-            sops.nixosModules.default
+            secrets.nixosModules.default
             {
+              tundra.id = name;
               environment.etc."nix/inputs/pkgs".source = nixpkgs;
               nix = {
+                package = pkgs.nixVersions.latest;
                 registry.pkgs.to = {
                   type = "git";
-                  url = "file:" + machine.source;
+                  url = "file:" + self;
                 };
                 settings = {
                   experimental-features = ["nix-command" "flakes"];
                   nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
                 };
               };
-              home-manager = {
-                extraSpecialArgs = systemArgs;
-                users.${machine.user}.imports =
-                  combinedSystemModules "home"
-                  ++ [self.homeModules.default]
-                  ++ (collect isFunction tree.user.homes.${machine.user} or {});
-              };
-            }
-          ]);
-      };
-    in
-      system;
-
-    # self, tree
-    tundraHome = name: value: let
-      machine =
-        {
-          user = name;
-          hostname = value.id;
-          source = "/home/${name}/.config/nixos/";
-          home = "/home/${machine.user}";
-        }
-        // value;
-      systemArgs = systemHelper machine // {homeConfig = home.config;};
-
-      home = homeManagerConfiguration {
-        extraSpecialArgs = removeAttrs systemArgs ["pkgs" "lib"];
-        inherit (systemArgs) pkgs lib;
-        modules =
-          getCombinedModules tree.systems.${machine.id} "home"
-          ++ [
-            self.homeModules.default
-            # sops.homeModules.default # secrets cause inf. recursion
-            {
-              imports = collect isFunction tree.user.homes.${machine.user} or {};
-              home = {
-                username = machine.user;
-                homeDirectory = mkOverride 900 machine.home;
-              };
             }
           ];
       };
     in
-      home;
-
-    systemHelper = machine: let
-      this =
-        args
-        // {
-          inherit machine;
-          inherit (this.pkgs) lib;
-          pkgs = pkgs.appendOverlays (getOverlays this);
-        };
-    in
-      this;
-
-    # pkgs
-    toYAML = attrs: "${pkgs.runCommand "toYAML" {
-        buildInputs = [pkgs.yj];
-        attrs = toJSON attrs;
-        passAsFile = ["attrs"];
-      } ''
-        mkdir -p $out
-        yj -jy < "$attrsPath" > $out/attrs.yaml
-      ''}/attrs.yaml";
+      system;
   };
 in {
   lib =
     if prev ? lib
-    then prev.lib.extend (final: prev: home-manager.lib or {} // {inherit tundra;})
+    then prev.lib.extend (final: prev: {inherit tundra;})
     else {inherit tundra;};
 }

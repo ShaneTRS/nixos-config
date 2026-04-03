@@ -18,7 +18,7 @@ in {
     };
   };
 
-  nixos = mkIf enabled {
+  config = mkIf enabled {
     environment.gnome.excludePackages = with pkgs; [
       gnome-contacts
       gnome-logs
@@ -26,7 +26,8 @@ in {
       gnome-tour
       yelp
     ];
-    services.xserver = {
+    programs.dconf.enable = true;
+    services = {
       displayManager.gdm.enable = true;
       desktopManager.gnome.enable = true;
     };
@@ -35,13 +36,6 @@ in {
       "getty@tty1".enable = false;
       "autovt@tty1".enable = false;
     };
-  };
-
-  home = mkIf enabled {
-    home.packages = cfg.extraPackages;
-    dconf = {
-      enable = true;
-      settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
-    };
+    tundra.packages = cfg.extraPackages;
   };
 }

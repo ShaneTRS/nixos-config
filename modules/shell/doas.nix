@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  machine,
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOption mkPackageOption types;
@@ -28,7 +27,7 @@ in {
     };
   };
 
-  nixos = mkIf enabled {
+  config = mkIf enabled {
     environment.systemPackages = with pkgs; [doas-sudo-shim];
     security = {
       sudo.enable = false;
@@ -37,7 +36,7 @@ in {
         extraRules =
           cfg.doas.extraRules
           ++ map (cmd: {
-            users = [machine.user];
+            users = [config.tundra.user];
             keepEnv = true;
             noPass = true;
             cmd = cmd;

@@ -13,11 +13,10 @@ in {
     package = mkPackageOption pkgs "fd" {};
   };
 
-  home = mkIf enabled {
-    programs.fd = {
-      enable = true;
-      hidden = true;
-      inherit (cfg.features.fd) package;
+  config = mkIf enabled {
+    shanetrs.shell.shared.aliases = {
+      fd = "fd --hidden";
     };
+    tundra.packages = [cfg.features.fd.package];
   };
 }

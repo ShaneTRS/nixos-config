@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  machine,
   ...
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkIf mkOption types;
@@ -140,10 +139,10 @@ in {
         };
       };
     };
-    settings = mkOption {
+    preferences = mkOption {
       type = types.attrs;
       default = {
-        "browser.download.dir" = "${config.home.homeDirectory}/Downloads/Firefox";
+        "browser.download.dir" = "${config.tundra.paths.home}/Downloads/Firefox";
         "browser.download.always_ask_before_handling_new_types" = true;
         "browser.shell.checkDefaultBrowser" = false;
         "browser.newtabpage.enabled" = false;
@@ -166,22 +165,38 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
-    home.packages = mkIf cfg.pwa.enable [cfg.pwa.package]; # environment.systemPackages
+  config = mkIf cfg.enable {
+    shanetrs.desktop.mime = let
+      firefoxpwa-mime =
+        if cfg.pwa.enable
+        then ["firefoxpwa.desktop"]
+        else [];
+    in {
+      default = {
+        "application/xhtml+xml" = ["firefox.desktop"];
+        "text/html" = ["firefox.desktop"];
+      };
+      removed = {
+        "x-scheme-handler/http" = ["firefox.desktop"] ++ firefoxpwa-mime;
+        "x-scheme-handler/https" = ["firefox.desktop"] ++ firefoxpwa-mime;
+      };
+    };
+    tundra.packages = mkIf cfg.pwa.enable [cfg.pwa.package]; # environment.systemPackages
     systemd.user.tmpfiles.rules = [
-      "L ${config.home.homeDirectory}/Downloads/Firefox - - - - /tmp/firefox_${machine.user}"
-      "d /tmp/firefox_${machine.user} 1700 ${machine.user} users -"
+      "L ${config.tundra.paths.home}/Downloads/Firefox - - - - /tmp/firefox_${config.tundra.user}"
+      "d /tmp/firefox_${config.tundra.user} 1700 ${config.tundra.user} users -"
     ];
     programs.firefox = {
       enable = true;
-      package = cfg.package.override {inherit (cfg._) nativeMessagingHosts;};
-      profiles.default = {
-        search = {
-          force = true;
-          inherit (cfg.search) default engines;
-        };
-        inherit (cfg) settings;
-      };
+      inherit (cfg) package preferences;
+      nativeMessagingHosts.packages = cfg._.nativeMessagingHosts;
+      # TODO: we need to use mozlz4a to compress the engines before placing them wherever home-manager does
+      # profiles.default = {
+      #   search = {
+      #     force = true;
+      #     inherit (cfg.search) default engines;
+      #   };
+      # };
       policies.ExtensionSettings = listToAttrs (map (x: let
           addon = split ":" x;
         in {

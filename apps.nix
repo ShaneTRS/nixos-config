@@ -32,11 +32,12 @@ in rec {
 
         build() { out="$(nom build --print-out-paths --no-link "${self}#nixosConfigurations.$1.config.system.build.toplevel")"; }
 
-        case "$1" in
+        case "''${1:-build}" in
           boot|switch|test)
             input TUNDRA_ID
             build "$TUNDRA_ID"
             [ -z "$out" ] && return
+            [ "$1" != test ] && "$SUDO" nix-env -p /nix/var/nix/profiles/system --set "$out"
             "$SUDO" "$out/bin/switch-to-configuration" "$@"
           ;;
           build)
@@ -51,11 +52,10 @@ in rec {
             [ -z "$out" ] && return
             nix-copy-closure --to "$TARGET" "$out"
             input TARGET_ACTION "echo '${"\${*:3}"}'"
-            # shellcheck disable=SC2029
             ssh -t "$TARGET" "$SUDO" "$out/bin/switch-to-configuration" "$TARGET_ACTION"
           ;;
         esac
-        [ -n "$out" ]
+        [ -n "''${out:-}" ]
       '';
     });
     type = "app";

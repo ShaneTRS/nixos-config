@@ -1,16 +1,13 @@
 {
-  self ? null,
+  nixosConfig ? null,
   symlinkJoin,
   makeDesktopItem,
   writeShellApplication,
   coreutils,
   shanetrs,
   xdpyinfo,
-  machine ? null,
-  targetHost ?
-    if self != null && machine ? id
-    then self.outputs.nixosConfigurations.${machine.id}.config.shanetrs.remote.addresses.host
-    else builtins.warn "targetHost is required: use .override to set it" "",
+  targetHost ? nixosConfig.shanetrs.remote.addresses.host or
+    (builtins.warn "targetHost is required: use .override to set it" ""),
   ...
 }:
 symlinkJoin rec {

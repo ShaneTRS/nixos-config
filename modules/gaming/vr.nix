@@ -24,12 +24,9 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     programs.alvr.enable = mkIf (cfg.headsets == "oculus") true; # TODO: declarative configuration
-  };
-
-  home = mkIf cfg.enable {
-    home.packages = with pkgs;
+    tundra.packages = with pkgs;
       cfg.extraPackages
       ++ [
         # (mkIf (elem "camera-fbt" cfg.features) shanetrs.camera-fbt)

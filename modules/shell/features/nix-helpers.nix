@@ -114,8 +114,6 @@ in {
         ''}
       '';
     };
-  };
-  home = mkIf enabled {
-    home.sessionVariables.NIX_MISSING = pcfg.features.nix-helpers.index.missing;
+    tundra.environment.variables.NIX_MISSING = pcfg.features.nix-helpers.index.missing;
   };
 }

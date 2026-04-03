@@ -4,9 +4,10 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkIf mkEnableOption mkPackageOption mkOverride;
-  cfg = config.shanetrs.shell;
-  enabled = cfg.enable && cfg.features.fzf.enable;
+  inherit (lib) getExe mkIf mkEnableOption mkPackageOption mkOverride;
+  pcfg = config.shanetrs.shell;
+  cfg = pcfg.features.fzf;
+  enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.shell.features.fzf = {
     enable = mkEnableOption "Install and configure fastfetch to preferences";
@@ -14,16 +15,20 @@ in {
   };
 
   config = mkIf enabled {
-    shanetrs.shell.bash.aliases.history-search = mkOverride 149 ''eval "$(fzf --tac < "$HISTFILE")"'';
-  };
-
-  home = mkIf enabled {
-    programs.fzf = {
-      enable = true;
-      enableBashIntegration = true;
-      enableZshIntegration = true;
-      inherit (cfg.features.fzf) package;
+    shanetrs.shell = {
+      bash = {
+        aliases.history-search = mkOverride 149 ''eval "$(fzf --tac < "$HISTFILE")"'';
+        extraRc = ''
+          [[ :$SHELLOPTS: =~ :(vi|emacs): ]] && eval "$(${getExe cfg.package} --bash)"
+        '';
+      };
+      zsh.extraRc = ''
+        [[ $options[zle] = on ]] && source <(${getExe cfg.package} --zsh)
+      '';
     };
-    home.sessionVariables.FZF_COMPLETION_TRIGGER = "#";
+    tundra = {
+      packages = [cfg.package];
+      environment.variables.FZF_COMPLETION_TRIGGER = "#";
+    };
   };
 }

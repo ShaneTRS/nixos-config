@@ -105,7 +105,6 @@ class SteamControllerDevice extends EventEmitter {
 	dispatch(event) {
 		const byteAr = Array.from(event);
 		if (!arrayCompare(byteAr.slice(0, 4), [1, 0, 1, 60])) {
-			// TODO: check that it is a heartbeat
 			this.emit("heartbeat", this.state);
 			return;
 		}

@@ -1,12 +1,12 @@
 {
   config,
   lib,
-  machine,
   pkgs,
   ...
 }: let
+  inherit (builtins) mapAttrs;
   inherit (lib) mkEnableOption mkIf;
-  inherit (lib.tundra) getConfig mkStrongDefault;
+  inherit (lib.tundra) getConfig mergeFormat mkIfConfig mkStrongDefault;
 in {
   options.shanetrs.enable =
     mkEnableOption "Set strong defaults, such as hostname and networking";
@@ -17,11 +17,9 @@ in {
         enable = mkStrongDefault true;
         doas.enable = mkStrongDefault true;
       };
-      tundra.enable = mkStrongDefault true;
+      # tundra.enable = mkStrongDefault true;
     };
-  };
 
-  nixos = mkIf config.shanetrs.enable {
     boot = {
       initrd.availableKernelModules = ["ahci" "ata_piix" "ehci_pci" "nvme" "ohci_pci" "sd_mod" "sr_mod" "usbhid"];
       kernelModules = ["v4l2loopback"];
@@ -31,13 +29,7 @@ in {
       tmp.useTmpfs = mkStrongDefault true;
     };
 
-    environment = {
-      sessionVariables = {
-        TUNDRA_ID = machine.id;
-        TUNDRA_SOURCE = machine.source;
-      };
-      systemPackages = with pkgs; [git];
-    };
+    environment.systemPackages = with pkgs; [git];
 
     hardware = {
       enableRedistributableFirmware = mkStrongDefault true;
@@ -50,14 +42,14 @@ in {
     networking = {
       firewall.enable = mkStrongDefault false;
       networkmanager.enable = mkStrongDefault true;
-      hostName = mkStrongDefault machine.hostname;
+      hostName = mkStrongDefault config.tundra.id;
     };
 
     nix.settings = {
       auto-optimise-store = mkStrongDefault true;
       substituters = ["https://nix-community.cachix.org"];
       trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
-      trusted-users = [machine.user];
+      trusted-users = [config.tundra.user];
       use-xdg-base-directories = mkStrongDefault true;
     };
 
@@ -105,15 +97,68 @@ in {
 
     time.timeZone = mkStrongDefault "America/Phoenix";
 
+    tundra = {
+      packages = with pkgs; [gitFull openssh];
+      environment.variables = {
+        TUNDRA_ID = config.tundra.id;
+        TUNDRA_SOURCE = config.tundra.paths.source;
+      };
+      filesystem = let
+        cfg = config.tundra;
+      in
+        mapAttrs (k: v: {
+          type = "recursive";
+          inherit (cfg) user;
+          source = "${cfg.paths.source}/user/homes/${v}";
+          target = cfg.paths.home;
+        }) {
+          "${cfg.paths.home}:symlinkFarm user/id" = "${cfg.user}/${cfg.id}";
+          "${cfg.paths.home}:symlinkFarm user/all" = "${cfg.user}/all";
+          "${cfg.paths.home}:symlinkFarm global/id" = "global/${cfg.id}";
+          "${cfg.paths.home}:symlinkFarm global/all" = "global/all";
+        };
+      home = {
+        ".ssh/config".text = mkStrongDefault ''
+          Host *
+            ServerAliveInterval 15
+            ServerAliveCountMax 3000
+            ControlMaster auto
+            ControlPersist 5m
+        '';
+        ".ssh/authorized_keys" = mkIfConfig ".ssh/authorized_keys" (x: {
+          type = "execute";
+          source = mergeFormat "text" x;
+        });
+        ".ssh/known_hosts" = mkIfConfig ".ssh/known_hosts" (x: {
+          type = "execute";
+          source = mergeFormat "text" x;
+        });
+      };
+      xdg.config = {
+        "git/config" = {
+          type = "execute";
+          source = mergeFormat "ini" {
+            credential = {
+              helper = "store";
+            };
+            user = {
+              email = "${config.tundra.user}@${config.networking.hostName}";
+              name = config.tundra.user;
+            };
+          };
+        };
+      };
+    };
+
     users = {
       allowNoPasswordLogin = mkStrongDefault true;
       mutableUsers = mkStrongDefault false;
       groups = {
-        docker.members = [machine.user];
-        realtime.members = [machine.user];
-        networkmanager.members = [machine.user];
+        docker.members = [config.tundra.user];
+        realtime.members = [config.tundra.user];
+        networkmanager.members = [config.tundra.user];
       };
-      users.${machine.user} = {
+      users.${config.tundra.user} = {
         isNormalUser = mkStrongDefault true;
         hashedPasswordFile = mkStrongDefault (getConfig "passwd");
         extraGroups = ["wheel"];
@@ -121,75 +166,9 @@ in {
       };
     };
 
-    home-manager = {
-      backupFileExtension = mkStrongDefault "bak";
-      overwriteBackup = true;
-      useGlobalPkgs = mkStrongDefault true;
-      useUserPackages = mkStrongDefault true;
-    };
-
     zramSwap = {
       enable = mkStrongDefault true;
       memoryPercent = mkStrongDefault 70;
-    };
-  };
-
-  home = mkIf config.shanetrs.enable {
-    home = {
-      stateVersion = "23.11";
-      activation = {
-        symlinkFarmHomes = with machine;
-          lib.hm.dag.entryAfter ["writeBoundary"] ''
-            set +o errexit
-            cd "${source}/user/homes" || exit 1
-
-            [ -f "$PWD/last" ] && while read -r FILE; do
-              TARGET="$(realpath "$FILE")"
-              FILE="''${FILE#*/}" # Strip target profile
-              FILE="''${FILE#*/}" # Strip target user
-              if [ -L "$HOME/$FILE" ]; then
-                run rm "$HOME/$FILE"
-              fi
-            done < "$PWD/last"
-            rm last
-
-            for i in "${user}/${id}" "${user}/all" "global/${id}" "global/all"; do
-            	find "$i" -type f >> last
-            done
-
-            [ -f "$PWD/last" ] && while read -r FILE; do
-              TARGET="$(realpath "$FILE")"
-              FILE="''${FILE#*/}" # Strip target profile
-              FILE="''${FILE#*/}" # Strip target user
-              if [ ! -L "$HOME/$FILE" ]; then
-                run mkdir -p "$HOME/$(dirname "$FILE")"
-                run ln -sf "$TARGET" "$HOME/$FILE" # Replace existing files
-              fi
-            done < "$PWD/last"
-          '';
-      };
-    };
-    programs = {
-      git = {
-        enable = mkStrongDefault true;
-        signing.format = mkStrongDefault null;
-        settings = {
-          user.email = mkStrongDefault "${machine.user}@${machine.hostname}";
-          user.name = mkStrongDefault machine.user;
-          credential.helper = mkStrongDefault "store";
-        };
-      };
-      home-manager.enable = mkStrongDefault true;
-      ssh = {
-        enable = mkStrongDefault true;
-        enableDefaultConfig = mkStrongDefault false;
-        matchBlocks."*" = {
-          controlMaster = mkStrongDefault "auto";
-          controlPersist = mkStrongDefault "5m";
-          serverAliveCountMax = mkStrongDefault 3000;
-          serverAliveInterval = mkStrongDefault 15;
-        };
-      };
     };
   };
 }

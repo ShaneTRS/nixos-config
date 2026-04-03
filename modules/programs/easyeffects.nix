@@ -18,25 +18,21 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     programs.dconf.enable = true; # settings daemon
-  };
-
-  home = mkIf cfg.enable {
-    home.packages = [cfg.package];
-    xdg.configFile = let
+    tundra.packages = [cfg.package];
+    tundra.xdg.config = let
       attempt = getConfig "easyeffects";
     in
       {
         "easyeffects" = mkIf (attempt != null) {
-          recursive = true;
+          type = "recursive";
           source = attempt;
         };
       }
       // listToAttrs (map (k: {
-          name = "easyeffects/output/${k}.json";
-          value = {text = toJSON cfg.extraPresets.${k};};
-        })
-        (attrNames cfg.extraPresets));
+        name = "easyeffects/output/${k}.json";
+        value.text = toJSON cfg.extraPresets.${k};
+      }) (attrNames cfg.extraPresets));
   };
 }

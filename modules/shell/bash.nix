@@ -34,21 +34,17 @@ in {
       binds = {
         "\\es" = "history-search\n"; # alt-s
       };
-      # extraRc = "";
     };
-  };
-
-  nixos = mkIf enabled {
     users.defaultUserShell = mkOverride 999 cfg.bash.package;
-    programs.bash.promptInit = extraRc;
-  };
-
-  home = mkIf enabled {
     programs.bash = {
-      enable = true;
-      historyFile = "$HOME/.config/.bash_history";
-      historyControl = ["erasedups"];
-      initExtra = extraRc;
+      promptInit =
+        ''
+          HISTCONTROL=erasedups
+          HISTFILE=${config.tundra.paths.xdg.state}/.bash_history
+          HISTFILESIZE=131072
+          HISTSIZE=16384
+        ''
+        + extraRc;
       shellAliases = cfg.shared.aliases // cfg.bash.aliases;
     };
   };

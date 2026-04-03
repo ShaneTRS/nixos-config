@@ -52,36 +52,45 @@ in {
         "^[[6~" = "down-line-or-history"; # Page Down
 
         "^[s" = "history-incremental-search-backward"; # Alt + S
+
+        "^[[A" = "history-substring-search-up";
+        "^[[B" = "history-substring-search-down";
       };
     };
-  };
-
-  nixos = mkIf enabled {
     users.defaultUserShell = mkOverride 999 cfg.zsh.package;
     programs.zsh = {
       enable = true;
       autosuggestions.enable = true;
-      histSize = 16384;
-      promptInit = extraRc;
-    };
-  };
-
-  home = mkIf cfg.enable {
-    home.packages = [pkgs.zsh-completions];
-    programs.zsh = {
-      enable = true;
-      dotDir = "${config.xdg.configHome}/zsh";
-      historySubstringSearch.enable = true;
-      history = {
-        ignorePatterns = ["exit"];
-        path = "${config.xdg.configHome}/zsh/zsh_history";
-        size = 16384;
-      };
-      initContent = extraRc;
-      shellAliases = cfg.shared.aliases // cfg.bash.aliases;
+      histSize = 131072;
+      histFile = "$ZDOTDIR/zsh_history";
+      shellInit = ''
+        zsh-newuser-install() { :; }
+        ZDOTDIR="''${HOME:-${config.tundra.paths.home}}/.config/zsh"
+      '';
+      promptInit =
+        ''
+          HISTORY_IGNORE='(exit)'
+          source ${pkgs.zsh-history-substring-search}/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+        ''
+        + extraRc;
+      shellAliases = cfg.shared.aliases // cfg.zsh.aliases;
       syntaxHighlighting = {
         enable = true;
         highlighters = ["brackets"];
+      };
+      setOptions = [
+        "HIST_FCNTL_LOCK"
+        "HIST_IGNORE_DUPS"
+        "HIST_IGNORE_SPACE"
+        "SHARE_HISTORY"
+        "NO_APPEND_HISTORY"
+      ];
+    };
+    tundra = {
+      packages = [pkgs.zsh-completions];
+      xdg.config."zsh" = {
+        type = "directory";
+        mode = 755;
       };
     };
   };

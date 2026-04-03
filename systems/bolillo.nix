@@ -1,8 +1,6 @@
 {
   config,
   pkgs,
-  machine,
-  homeConfig,
   ...
 }: {
   config.shanetrs = {
@@ -23,7 +21,6 @@
       zed-editor.enable = true;
     };
     shell.zsh.enable = true;
-    tundra.appStores = [];
   };
 
   nixos = {
@@ -35,14 +32,10 @@
       allowedUDPPorts = [8080];
     };
 
-    environment.sessionVariables = {inherit (homeConfig.home.sessionVariables) KODI_DATA;};
-    services.displayManager.autoLogin.user = machine.user;
+    services.displayManager.autoLogin.user = config.tundra.user;
     services.xserver = {
       enable = true;
-      desktopManager.kodi = {
-        package = homeConfig.programs.kodi.package;
-        enable = true;
-      };
+      desktopManager.kodi.enable = true;
       # displayManager.lightdm.greeter.enable = false;
     };
   };

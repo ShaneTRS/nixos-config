@@ -1,5 +1,5 @@
 {pkgs, ...}: {
-  config.shanetrs = {
+  shanetrs = {
     enable = true;
     browser.firefox.enable = true;
     desktop = {
@@ -16,15 +16,13 @@
       features = ["nix"];
     };
     shell.zsh.enable = true;
-    tundra.appStores = [];
   };
 
-  nixos = {
-    services.earlyoom.enable = false;
-    zramSwap.enable = false;
+  services.earlyoom.enable = false;
+  zramSwap.enable = false;
+
+  tundra = {
+    user = "shane";
+    packages = with pkgs; [shanetrs.moonlight-qt];
   };
-
-  home.home.packages = with pkgs; [shanetrs.moonlight-qt];
-
-  machine.user = "shane";
 }

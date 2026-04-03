@@ -20,23 +20,17 @@ in {
 
   config = mkIf enabled {
     shanetrs.desktop.wm.enable = true;
-  };
-
-  nixos = mkIf enabled {
     programs.niri.enable = true;
-  };
-
-  home = mkIf enabled {
-    dbus.packages = with pkgs; [niri];
-    home = {
+    tundra = {
       packages = with pkgs; [
         xwayland-satellite
         adwaita-icon-theme
       ];
-      sessionVariables = {
+      environment.variables = {
         SCREENSHOT = "niri msg action screenshot";
         LAUNCHER = "${getExe pkgs.rofi} -show drun";
       };
     };
+    # service.dbus.packages = with pkgs; [niri];
   };
 }

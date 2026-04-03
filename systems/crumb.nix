@@ -5,9 +5,8 @@
 }: let
   inherit (lib) mkOptionDefault;
 in {
-  nixos.services.zerotierone.enable = true;
-
-  config.shanetrs = {
+  services.zerotierone.enable = true;
+  shanetrs = {
     enable = true;
     browser = {
       firefox.enable = true;
@@ -34,19 +33,14 @@ in {
     };
     shell.zsh.enable = true;
   };
-
-  home = {
-    programs.obs-studio.enable = true;
-    home = {
-      packages = with pkgs; [
-        audacity
-        crosspipe
-        krita
-        protontricks
-        r2modman
-        shanetrs.spotify
-        vlc
-      ];
-    };
-  };
+  programs.obs-studio.enable = true;
+  tundra.packages = with pkgs; [
+    audacity
+    crosspipe
+    krita
+    protontricks
+    r2modman
+    shanetrs.spotify
+    vlc
+  ];
 }

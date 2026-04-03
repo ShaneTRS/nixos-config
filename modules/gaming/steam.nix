@@ -29,7 +29,7 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     programs.steam = {
       inherit (cfg) enable package extraCompatPackages extraPackages;
       remotePlay.openFirewall = true; # 27031..27036

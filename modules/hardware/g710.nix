@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  machine,
   ...
 }: let
   inherit (lib) getExe mkEnableOption mkIf mkPackageOption mkOption optionalString types;
@@ -14,7 +13,7 @@ in {
     package = mkPackageOption pkgs.shanetrs "sidewinderd" {};
     user = mkOption {
       type = types.str;
-      default = machine.user;
+      default = config.tundra.user;
     };
     captureDelays = mkOption {
       type = types.bool;
@@ -30,11 +29,11 @@ in {
     };
     workDir = mkOption {
       type = types.nullOr types.str;
-      default = null; # "/home/${machine.user}/.local/share/sidewinderd"
+      default = null; # "${config.tundra.paths.xdg.data}/sidewinderd"
     };
   };
 
-  nixos = mkIf (pcfg.enable && cfg.enable) {
+  config = mkIf (pcfg.enable && cfg.enable) {
     warnings = mkIf (config.shanetrs.desktop.keymap.enable) ["sidewinderd doesn't properly record macros when xremap is running!"];
     environment.etc."sidewinderd.conf".text = with cfg; ''
       user = "${user}";

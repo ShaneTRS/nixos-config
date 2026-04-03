@@ -4,9 +4,10 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mkIf mkEnableOption mkOverride mkPackageOption;
-  cfg = config.shanetrs.shell;
-  enabled = cfg.enable && cfg.features.eza.enable;
+  inherit (lib) mkIf mkEnableOption mkPackageOption;
+  pcfg = config.shanetrs.shell;
+  cfg = pcfg.features.eza;
+  enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.shell.features.eza = {
     enable = mkEnableOption "Install and configure eza to preferences";
@@ -15,16 +16,10 @@ in {
 
   config = mkIf enabled {
     shanetrs.shell.shared.aliases = {
-      eza = mkOverride 99 "eza --header -o";
+      eza = "eza --header -o";
       ls = "eza";
       tree = "eza -T";
     };
-  };
-
-  home = mkIf enabled {
-    programs.eza = {
-      enable = true;
-      inherit (cfg.features.eza) package;
-    };
+    tundra.packages = [cfg.package];
   };
 }

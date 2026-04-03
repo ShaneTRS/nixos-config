@@ -46,8 +46,8 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
-    home.packages = [
+  config = mkIf cfg.enable {
+    tundra.packages = [
       (makeDesktopItem {
         name = "discord";
         desktopName = "Discord";

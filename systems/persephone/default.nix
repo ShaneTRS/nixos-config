@@ -1,14 +1,13 @@
 {
   config,
-  machine,
   pkgs,
   lib,
   ...
 }: let
-  inherit (lib) getExe mkIf mkOptionDefault;
-  inherit (lib.tundra) getConfig;
+  inherit (lib) getExe mkOptionDefault;
+  inherit (lib.tundra) mkIfConfig;
 in {
-  config.shanetrs = {
+  shanetrs = {
     enable = true;
     browser.firefox = {
       enable = true;
@@ -16,6 +15,18 @@ in {
     };
     desktop = {
       enable = true;
+      mime = {
+        default = {
+          "audio/ogg" = ["vlc.desktop"];
+          "image/svg+xml" = ["org.inkscape.Inkscape.desktop"];
+          "video/mp4" = ["vlc.desktop"];
+          "x-scheme-handler/discord" = ["equibop.desktop"];
+        };
+        removed = {
+          "x-scheme-handler/http" = ["torbrowser.desktop"];
+          "x-scheme-handler/https" = ["torbrowser.desktop"];
+        };
+      };
       plasma = {
         enable = true;
         extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kdenlive];
@@ -92,13 +103,12 @@ in {
     programs = {
       discord.enable = true;
       easyeffects.enable = true;
-      vscode.enable = true;
       zed-editor.enable = true;
       zerotier-one.enable = true;
       gimp.enable = true;
     };
     shell = {
-      default = pkgs.zsh;
+      default = "zsh";
       bash.enable = true;
       zsh.enable = true;
       doas.noPassCmds = mkOptionDefault ["chrt" "iptables"];
@@ -106,72 +116,71 @@ in {
     shell.enable = true;
   };
 
-  nixos = {
-    environment.systemPackages = with pkgs; [shanetrs.not-nice iptables];
-    programs = {
-      dconf.enable = true; # Enable dconf for GTK apps
-      noisetorch.enable = true;
+  environment.systemPackages = with pkgs; [shanetrs.not-nice iptables];
+  programs = {
+    dconf.enable = true; # Enable dconf for GTK apps
+    noisetorch.enable = true;
+    obs-studio.enable = true;
+  };
+  users = {
+    groups = {
+      uinput.gid = 990;
+      adbusers.members = [config.tundra.user];
+      vboxusers.members = [config.tundra.user];
     };
-    users = {
-      groups = {
-        uinput.gid = 990;
-        adbusers.members = [machine.user];
-        vboxusers.members = [machine.user];
-      };
-      users.${machine.user} = {
-        subGidRanges = [
-          {
-            count = 1;
-            startGid = config.users.groups.input.gid;
-          }
-          {
-            count = 1;
-            startGid = config.users.groups.uinput.gid;
-          }
-        ];
-      };
-    };
-
-    services = {
-      ddclient.enable = true;
-      udev = {
-        enable = true;
-        packages = [pkgs.shanetrs.vuinputd];
-        extraHwdb = ''
-          evdev:input:b0003v1209p5020e????-*
-           ID_VUINPUT=1
-
-          input:b0003v1209p5020e????-*
-           ID_VUINPUT=1
-        '';
-      };
-    };
-
-    systemd.user.services = {
-      shadowplay.enable = true;
-      keynav.enable = true;
-      jfa-go.enable = true;
-    };
-
-    boot.kernelParams = ["kvm.enable_virt_at_load=0"];
-    virtualisation = {
-      virtualbox.host = {
-        enable = true;
-        enableExtensionPack = true;
-        enableHardening = false;
-      };
-      podman = {
-        enable = true;
-        dockerCompat = true;
-        defaultNetwork.settings.dns_enabled = true;
-        extraPackages = [pkgs.slirp4netns];
-      };
+    users.${config.tundra.user} = {
+      subGidRanges = [
+        {
+          count = 1;
+          startGid = config.users.groups.input.gid;
+        }
+        {
+          count = 1;
+          startGid = config.users.groups.uinput.gid;
+        }
+      ];
     };
   };
 
-  home = {
-    programs.obs-studio.enable = true;
-    home.packages = with pkgs; [
+  services = {
+    ddclient.enable = true;
+    udev = {
+      enable = true;
+      packages = [pkgs.shanetrs.vuinputd];
+      extraHwdb = ''
+        evdev:input:b0003v1209p5020e????-*
+         ID_VUINPUT=1
+
+        input:b0003v1209p5020e????-*
+         ID_VUINPUT=1
+      '';
+    };
+  };
+
+  systemd.user.services = {
+    shadowplay.enable = true;
+    keynav.enable = true;
+    jfa-go.enable = true;
+  };
+
+  boot.kernelParams = ["kvm.enable_virt_at_load=0"];
+  virtualisation = {
+    virtualbox.host = {
+      enable = true;
+      enableExtensionPack = true;
+      enableHardening = false;
+    };
+    podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+      extraPackages = [pkgs.slirp4netns];
+    };
+  };
+
+  tundra = {
+    user = "shane";
+    packages = with pkgs; [
       audacity # audio editor
       krita # drawing
       inkscape-with-extensions # vector editor
@@ -200,11 +209,8 @@ in {
       shanetrs.jfa-go # jellyfin temp. accounts
       shanetrs.schud # controller overlay
     ];
-    xdg.configFile."keynav/keynavrc" = let
-      attempt = getConfig "keynavrc";
-    in
-      mkIf (attempt != null) {source = attempt;};
+    xdg.config."keynav/keynavrc" = mkIfConfig "keynavrc" (x: {
+      source = x;
+    });
   };
-
-  machine.user = "shane";
 }

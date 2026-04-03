@@ -12,7 +12,7 @@ in {
     default = null;
   };
 
-  nixos = mkIf (cfg.enable && cfg.gpu != null) (mkMerge [
+  config = mkIf (cfg.enable && cfg.gpu != null) (mkMerge [
     (mkIf (cfg.gpu == "nvidia") {
       services.xserver.videoDrivers = ["nvidia"];
       virtualisation.podman.enableNvidia = true;

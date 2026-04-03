@@ -17,7 +17,7 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
-    home.packages = cfg.extraPackages ++ [cfg.package];
+  config = mkIf cfg.enable {
+    tundra.packages = cfg.extraPackages ++ [cfg.package];
   };
 }

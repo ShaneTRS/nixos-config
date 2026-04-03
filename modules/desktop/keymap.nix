@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  machine,
   pkgs,
   ...
 }: let
@@ -41,29 +40,20 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     hardware.uinput.enable = true;
-    users.groups.uinput.members = [machine.user];
-  };
-
-  home = mkIf cfg.enable {
-    systemd.user.services = {
-      xremap = let
-        yaml =
-          removeAttrs
-          (cfg
-            // {
-              virtual_modifiers = cfg.virtualModifiers;
-              default_mode = cfg.defaultMode;
-            })
-          ["defaultMode" "devices" "enable" "transforms" "virtualModifiers"];
+    users.groups.uinput.members = [config.tundra.user];
+    systemd.user.services.xremap = {
+      script = let
+        yaml = removeAttrs (cfg
+          // {
+            virtual_modifiers = cfg.virtualModifiers;
+            default_mode = cfg.defaultMode;
+          }) ["defaultMode" "devices" "enable" "transforms" "virtualModifiers"];
         transformedYaml = transformAttrs cfg.transforms yaml;
         deviceString = concatStringsSep " " (map (x: "--device " + x) cfg.devices);
-      in {
-        Unit.Description = "Key remapper for X11 and Wayland";
-        Service.ExecStart = "${getExe pkgs.xremap} --mouse ${deviceString} ${toYAML transformedYaml}";
-        Install.WantedBy = ["graphical-session.target"];
-      };
+      in "${getExe pkgs.xremap} --mouse ${deviceString} ${toYAML transformedYaml}";
+      wantedBy = ["graphical-session.target"];
     };
   };
 }

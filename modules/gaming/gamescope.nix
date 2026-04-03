@@ -20,7 +20,7 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     programs.gamescope = {
       inherit (cfg) enable args env package;
       capSysNice = false; # doesn't work in fhs when true

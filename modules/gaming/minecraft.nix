@@ -21,8 +21,8 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
-    home.packages =
+  config = mkIf cfg.enable {
+    tundra.packages =
       cfg.extraPackages
       ++ [(cfg.package.override {jdks = cfg.java;})];
   };

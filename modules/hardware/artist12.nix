@@ -13,7 +13,7 @@ in {
     package = mkPackageOption pkgs "xp-pen-deco-01-v2-driver" {}; # note: this is out of date
   };
 
-  nixos = mkIf (pcfg.enable && cfg.enable) {
+  config = mkIf (pcfg.enable && cfg.enable) {
     environment.systemPackages = [cfg.package];
     services.udev.packages = [cfg.package];
     systemd.services.xp-pen-deco-01-v2-driver = {

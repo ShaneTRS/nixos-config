@@ -5,8 +5,9 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkPackageOption;
-  cfg = config.shanetrs.shell;
-  enabled = cfg.enable && cfg.features.zoxide.enable;
+  pcfg = config.shanetrs.shell;
+  cfg = pcfg.features.zoxide;
+  enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.shell.features.zoxide = {
     enable = mkEnableOption "Install and configure fastfetch to preferences";
@@ -20,15 +21,10 @@ in {
       };
       features.fzf.enable = true;
     };
-  };
-
-  home = mkIf enabled {
     programs.zoxide = {
       enable = true;
-      options = ["--cmd cd"];
-      enableBashIntegration = true;
-      enableZshIntegration = true;
-      inherit (cfg.features.zoxide) package;
+      flags = ["--cmd cd"];
+      inherit (cfg) package;
     };
   };
 }

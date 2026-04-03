@@ -19,7 +19,7 @@ in {
     };
   };
 
-  nixos = mkIf cfg.enable {
+  config = mkIf cfg.enable {
     services.pipewire = {
       enable = true;
       alsa.enable = true;

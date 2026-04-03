@@ -79,8 +79,8 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
-    home.packages = let
+  config = mkIf cfg.enable {
+    tundra.packages = let
       e = cfg;
       n = e.nintendo;
       r = e.retroarch;

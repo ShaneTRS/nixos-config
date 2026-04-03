@@ -1,6 +1,6 @@
 # HP t530 Thin Client
 {...}: {
-  config.shanetrs = {
+  shanetrs = {
     hardware = {
       enable = true;
       drivers.g710.enable = true;
@@ -14,26 +14,24 @@
     };
   };
 
-  nixos = {
-    boot = {
-      kernelModules = ["kvm-amd"];
-      kernelParams = ["radeon.si_support=0" "amdgpu.si_support=1" "radeon.cik_support=0" "amdgpu.cik_support=1"];
-      loader.grub = {
-        enable = true;
-        device = "/dev/sda";
-      };
+  boot = {
+    kernelModules = ["kvm-amd"];
+    kernelParams = ["radeon.si_support=0" "amdgpu.si_support=1" "radeon.cik_support=0" "amdgpu.cik_support=1"];
+    loader.grub = {
+      enable = true;
+      device = "/dev/sda";
     };
-    fileSystems."/" = {
-      device = "/dev/disk/by-label/Nix";
-      fsType = "ext4";
-      neededForBoot = true;
-    };
-    hardware = {
-      cpu.amd.updateMicrocode = true;
-    };
-    nix.settings = {
-      substituters = ["http://shanetrs.remote.host:5698"];
-      trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
-    };
+  };
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/Nix";
+    fsType = "ext4";
+    neededForBoot = true;
+  };
+  hardware = {
+    cpu.amd.updateMicrocode = true;
+  };
+  nix.settings = {
+    substituters = ["http://shanetrs.remote.host:5698"];
+    trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
   };
 }

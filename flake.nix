@@ -1,24 +1,11 @@
 {
-  description = "My 2nd generation system configuration";
+  description = "My 3rd generation system configuration";
 
   inputs = {
-    self.submodules = true;
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-pin.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-master.url = "github:nixos/nixpkgs";
-
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    nixgl = {
-      url = "github:nix-community/nixgl";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    sops = {
-      url = "github:mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs-pin.url = "github:nixos/nixpkgs/nixos-unstable";
+    secrets.url = "git+https://github.com/shanetrs/nixos-secrets";
   };
 
   outputs = {
@@ -26,8 +13,9 @@
     nixpkgs,
     ...
   }: let
-    inherit (builtins) foldl' mapAttrs;
-    inherit (tundra) getCombinedModules getOverlays mkDrvChecks mkTree tundraSystem getMachines tundraHome;
+    inherit (builtins) foldl' isFunction;
+    inherit (tundra) getOverlays mkDrvChecks mkTree getSystems;
+    inherit (nixpkgs.lib) collect;
 
     tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
 
@@ -44,13 +32,9 @@
       };
     };
     inherit (pkgs) lib;
-
-    combinedTreeModules = getCombinedModules tree.modules;
   in {
     apps.${system} = tree.apps specialArgs;
     checks.${system} = mkDrvChecks self {
-      homeConfigurations = {final = x: x.activationPackage;};
-      homeModules = {};
       lib-tundra = {
         single = true;
         value = self.lib.tundra;
@@ -59,21 +43,14 @@
     devShells.${system} = tree.shells specialArgs;
     formatter.${system} = pkgs.alejandra;
 
-    inherit lib;
     legacyPackages.${system} = pkgs;
+    inherit lib;
     overlays.default = final: prev:
       foldl' (acc: this: acc // (this final acc))
       prev (getOverlays specialArgs);
     packages.${system} = pkgs.shanetrs;
 
-    nixosModules.default.imports = combinedTreeModules "nixos";
-    homeModules.default.imports = combinedTreeModules "home";
-
-    nixosConfigurations = mapAttrs tundraSystem (getMachines tree.systems);
-    homeConfigurations = mapAttrs tundraHome {
-      "shane".id = "persephone";
-      "mo".id = "crumb";
-      "vm".id = "solis";
-    };
+    nixosConfigurations = getSystems tree.systems;
+    nixosModules.default.imports = collect isFunction tree.modules;
   };
 }

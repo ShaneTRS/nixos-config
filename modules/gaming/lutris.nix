@@ -20,8 +20,8 @@ in {
     };
   };
 
-  home = mkIf cfg.enable {
-    home.packages = [
+  config = mkIf cfg.enable {
+    tundra.packages = [
       (cfg.package.override {
         extraLibraries = pkgs: cfg.extraLibraries;
         extraPkgs = pkgs: cfg.extraPackages;

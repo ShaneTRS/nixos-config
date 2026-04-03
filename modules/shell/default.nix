@@ -10,7 +10,12 @@ in {
   options.shanetrs.shell = {
     enable = mkEnableOption "Custom configuration and tools for shells";
     default = mkOption {
-      type = types.nullOr types.package;
+      type =
+        types.anything
+        // {
+          description = "package (or ref)";
+          check = x: x == null || cfg.${x}.package or null != null;
+        };
       default = null;
     };
     extraPackages = mkOption {
@@ -49,13 +54,7 @@ in {
       };
       shared.aliases.less = mkStrongDefault "less -R --use-color";
     };
-  };
-
-  nixos = mkIf cfg.enable {
-    users.defaultUserShell = mkIf (cfg.default != null) cfg.default;
-  };
-
-  home = mkIf cfg.enable {
-    home.packages = cfg.extraPackages;
+    users.defaultUserShell = mkIf (cfg.default != null) (cfg.${cfg.default}.package or cfg.default);
+    tundra.packages = cfg.extraPackages;
   };
 }

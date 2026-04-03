@@ -18,14 +18,11 @@
 		"nixd": {
 			"settings": {
 				"nixpkgs": {
-					"expr": "(builtins.getFlake \"${builtins.getEnv \"git+file:PWD\"}\").legacyPackages.x86_64-linux"
+					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").legacyPackages.x86_64-linux"
 				},
 				"options": {
 					"nixos": {
-						"expr": "(builtins.getFlake \"${builtins.getEnv \"git+file:PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_ID\" or \"persephone\"}\".options"
-					},
-					"home-manager": {
-						"expr": "{user = (builtins.getFlake \"${builtins.getEnv \"git+file:PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_ID\" or \"persephone\"}\".options.home-manager.users.type.getSubOptions [];}"
+						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.example.options"
 					}
 				}
 			}
