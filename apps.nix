@@ -30,7 +30,7 @@ in rec {
           fi
         }
 
-        build() { out="$(nom build --print-out-paths --no-link "${self}#nixosConfigurations.$1.config.system.build.toplevel")"; }
+        build() { out="$(nom build --print-out-paths --no-link "${self}#nixosConfigurations.$1.config.system.build.''${2:-toplevel}")"; echo "$out"; }
 
         case "''${1:-build}" in
           boot|switch|test)
@@ -43,7 +43,6 @@ in rec {
           build)
             input TUNDRA_ID
             build "$TUNDRA_ID"
-            echo "$out"
           ;;
           remote)
             input TARGET "echo ${"'\${2:-}'"}"
@@ -53,6 +52,16 @@ in rec {
             nix-copy-closure --to "$TARGET" "$out"
             input TARGET_ACTION "echo '${"\${*:3}"}'"
             ssh -t "$TARGET" "$SUDO" "$out/bin/switch-to-configuration" "$TARGET_ACTION"
+          ;;
+          vm)
+            input TARGET_ID "echo ${"'\${2:-}'"}"
+            build "$TARGET_ID" "''${TARGET_TYPE:-vm}"
+            [ -z "$out" ] && return
+            vm=("$out/bin/run-"*"-vm")
+            export TMPDIR="''${TMPDIR:-/tmp/nix-vm.$TARGET_ID}"
+            export USE_TMPDIR=1 NIX_DISK_IMAGE="$TMPDIR/root.qcow2"
+            mkdir -p "$TMPDIR"
+            "''${vm[0]}" -display gtk,grab-on-hover=on,zoom-to-fit=on "''${@:3}"
           ;;
         esac
         [ -n "''${out:-}" ]

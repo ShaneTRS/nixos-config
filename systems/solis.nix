@@ -5,7 +5,10 @@
 }: let
   inherit (lib) mkOptionDefault;
 in {
-  services.printing.enable = true;
+  services = {
+    flatpak.enable = true;
+    printing.enable = true;
+  };
   shanetrs = {
     enable = true;
     browser.chromium.enable = true;
@@ -18,5 +21,5 @@ in {
     };
     programs.gimp.enable = true;
   };
-  tundra.packages = with pkgs; [flatpak libreoffice-still vlc];
+  tundra.packages = with pkgs; [libreoffice-still vlc];
 }

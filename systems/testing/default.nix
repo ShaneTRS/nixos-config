@@ -49,11 +49,6 @@
       enable = true;
       gnome.enable = true;
     };
-    remote = {
-      enable = true;
-      usb.enable = true;
-      role = "client";
-    };
     programs.zed-editor = {
       enable = true;
       features = ["nix"];
@@ -61,5 +56,5 @@
     shell.zsh.enable = true;
   };
 
-  tundra.packages = with pkgs; [shanetrs.moonlight-qt];
+  tundra.packages = with pkgs; [shanetrs.backups];
 }

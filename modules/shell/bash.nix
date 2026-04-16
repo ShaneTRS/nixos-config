@@ -40,7 +40,7 @@ in {
       promptInit =
         ''
           HISTCONTROL=erasedups
-          HISTFILE=${config.tundra.paths.xdg.state}/.bash_history
+          HISTFILE="${config.tundra.paths.xdg.state}/.bash_history"
           HISTFILESIZE=131072
           HISTSIZE=16384
         ''

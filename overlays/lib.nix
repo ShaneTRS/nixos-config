@@ -263,21 +263,21 @@
           ++ [
             self.outputs.nixosModules.default
             secrets.nixosModules.default
-            {
+            ({config, ...}: {
               tundra.id = name;
               environment.etc."nix/inputs/pkgs".source = nixpkgs;
               nix = {
                 package = pkgs.nixVersions.latest;
                 registry.pkgs.to = {
                   type = "git";
-                  url = "file:" + self;
+                  url = "file:" + config.tundra.paths.source;
                 };
                 settings = {
                   experimental-features = ["nix-command" "flakes"];
                   nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
                 };
               };
-            }
+            })
           ];
       };
     in

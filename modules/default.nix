@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (builtins) mapAttrs;
-  inherit (lib) mkEnableOption mkIf;
+  inherit (lib) mkEnableOption mkIf mkOverride;
   inherit (lib.tundra) getConfig mergeFormat mkIfConfig mkStrongDefault;
 in {
   options.shanetrs.enable =
@@ -163,6 +163,26 @@ in {
         hashedPasswordFile = mkStrongDefault (getConfig "passwd");
         extraGroups = ["wheel"];
         autoSubUidGidRange = mkStrongDefault true;
+      };
+    };
+
+    virtualisation.vmVariant = {
+      boot.kernelParams = ["video=Virtual-1:1920x1025@60"];
+      tundra.paths.secret.key = mkStrongDefault "/tmp/shared/id_ed25519";
+      users.users.${config.tundra.user} = {
+        hashedPassword = mkStrongDefault "$y$jET$N7MIfVqgEUh3jVxAi6cwB0$x7AbQ95awn0HjsS8csB2JRWXm98Pdg28zp.6dfmKmT/";
+        hashedPasswordFile = mkOverride 850 null;
+      };
+      virtualisation = {
+        cores = mkStrongDefault 6;
+        memorySize = mkStrongDefault 6144;
+        forwardPorts = [
+          {
+            from = "host";
+            host.port = 13022;
+            guest.port = 22;
+          }
+        ];
       };
     };
 

@@ -41,7 +41,7 @@
       [ -d ${e.target} ] || mkdir ${e.target}
       ${defer}chown ${fsToChown x} ${e.target}
       ${optionalString (x.mode != "symlink") "chmod ${toString x.mode} ${e.target}"}
-      tundraDeactivate '[ -d ${e.target} ] && rmdir ${e.target}'
+      tundraDeactivate ': -500; [ -d ${e.target} ] && rmdir ${e.target}'
     ''
     else if x.mode != "symlink"
     then ''
@@ -214,7 +214,7 @@ in {
       mode = 440;
       group = "users";
       source = decryptSecret self.inputs.secrets;
-      target = x: "${cfg.paths.secret}/${x.name}";
+      target = x: "${cfg.paths.secret.dir}/${x.name}";
       textSource = x: decryptTemplate self.inputs.secrets (writeText "${x.meta.name}-text" x.text);
       meta.secret = true;
     };
@@ -229,7 +229,10 @@ in {
     user = strOption {default = "user";};
     paths = {
       home = strOption {default = config.users.users.${cfg.user}.home;};
-      secret = strOption {default = "/run/secret";};
+      secret = {
+        dir = strOption {default = "/run/secret";};
+        key = strOption {default = "/etc/ssh/ssh_host_ed25519_key";};
+      };
       source = strOption {default = "${cfg.paths.xdg.config}/nixos";};
       xdg = mapAttrs (k: v: strOption {default = "${cfg.paths.home}/${v}";}) {
         config = ".config";
@@ -262,10 +265,10 @@ in {
       inherit (cfg.activation) tundraEarlySecrets tundraSecrets;
       inherit (fsSubsets) enabled earlySecrets earlyOther secrets other;
       setupCleanup = let
-        rev = substring 7 17 (replaceStrings ["/" "+"] ["" ""] self.narHash);
+        rev = substring 11 32 self.outPath;
       in ''
         mkdir -p /var/lib/tundra
-        tundraLastSystem="$(readlink /var/lib/tundra/current-system)"
+        tundraLastSystem="$(readlink /var/lib/tundra/current-system || true)"
         [ -e "$tundraLastSystem" ] && [ "$tundraLastSystem" != /var/lib/tundra/system-${rev} ] &&
           mv -fT /var/lib/tundra/current-system /var/lib/tundra/last-system
         [ ! -e /var/lib/tundra/current-system ] && ln -sT /var/lib/tundra/system-${rev} /var/lib/tundra/current-system
@@ -286,14 +289,26 @@ in {
           chmod "$mode" "$1"
         }
       '';
-      setupSops = ''export SOPS_AGE_KEY="$(${getExe pkgs.ssh-to-age} -i /etc/ssh/ssh_host_ed25519_key -private-key)"'';
+      setupSops = ''export SOPS_AGE_KEY="$(${getExe pkgs.ssh-to-age} -i "${cfg.paths.secret.key}" -private-key)"'';
       cleanupSops = "unset SOPS_AGE_KEY";
       runDeferred = ''
         for i in "''${tundraDeferred[@]}"; do eval "$i"; done
         tundraDeferred=()
       '';
       runCleanup = ''
-        source <(comm -23 <(sort -u /var/lib/tundra/last-system) <(sort -u /var/lib/tundra/current-system)) || true
+        source <(sort -nr <(comm -23 <(sort /var/lib/tundra/last-system) <(sort /var/lib/tundra/current-system))) || true
+      '';
+      wrapTraps = ''
+        tundraTrapDebug="$(trap -P DEBUG)"
+        tundraTrapDebugCmd="$(trap -p DEBUG)"
+        tundraTrapErr="$(trap -P ERR)"
+        tundraTrapErrCmd="$(trap -p ERR)"
+        trap "''${tundraTrapDebug:-:}; [[ \$_localstatus -gt 0 ]] && ERR_COMMAND=\$BASH_COMMAND" DEBUG
+        trap "''${tundraTrapErr:-:}; echo -e \"\033[31;1m'\$ERR_COMMAND' exited with code \$_localstatus\033[0m\" >&2" ERR
+      '';
+      unwrapTraps = ''
+        eval "''${tundraTrapDebugCmd:-trap - DEBUG}"
+        eval "''${tundraTrapErrCmd:-trap - ERR}"
       '';
       inheritExempt = map (x: x.target) enabled;
       mkInheritDir = defer: track: x: let
@@ -307,11 +322,13 @@ in {
     in {
       activation = {
         tundraEarly = ''
+          ${wrapTraps}
           ${setupCleanup}
           ${setupTundra}
           ${mkInheritParents true (earlySecrets ++ earlyOther)}
           ${tundraEarlySecrets}
           ${mapToLines (x: x.meta.activate) earlyOther}
+          ${unwrapTraps}
         '';
         tundraEarlySecrets = mkIf (earlySecrets != []) ''
           ${setupSops}
@@ -319,11 +336,13 @@ in {
           ${cleanupSops}
         '';
         tundra = ''
+          ${wrapTraps}
           ${mkInheritParents false (secrets ++ other)}
           ${tundraSecrets}
           ${mapToLines (x: x.meta.activate) other}
           ${runDeferred}
           ${runCleanup}
+          ${unwrapTraps}
         '';
         tundraSecrets = mkIf (secrets != []) ''
           ${setupSops}

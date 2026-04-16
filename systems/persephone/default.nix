@@ -165,11 +165,12 @@ in {
 
   boot.kernelParams = ["kvm.enable_virt_at_load=0"];
   virtualisation = {
-    virtualbox.host = {
-      enable = true;
-      enableExtensionPack = true;
-      enableHardening = false;
-    };
+    # todo: fix regression
+    # virtualbox.host = {
+    #   enable = true;
+    #   enableExtensionPack = true;
+    #   enableHardening = false;
+    # };
     podman = {
       enable = true;
       dockerCompat = true;
