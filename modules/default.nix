@@ -127,17 +127,17 @@ in {
         '';
         ".ssh/authorized_keys" = mkIfConfig ".ssh/authorized_keys" (x: {
           type = "execute";
-          source = mergeFormat "text" x;
+          source = mergeFormat.text.concat x;
         });
         ".ssh/known_hosts" = mkIfConfig ".ssh/known_hosts" (x: {
           type = "execute";
-          source = mergeFormat "text" x;
+          source = mergeFormat.text.concat x;
         });
       };
       xdg.config = {
         "git/config" = {
           type = "execute";
-          source = mergeFormat "ini" {
+          source = mergeFormat.ini.default {
             credential = {
               helper = "store";
             };

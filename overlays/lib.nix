@@ -8,7 +8,7 @@
   ...
 } @ args: final: prev: let
   inherit (builtins) attrNames filter foldl' isAttrs listToAttrs mapAttrs;
-  inherit (builtins) elem elemAt fromJSON match readDir readFile sort substring;
+  inherit (builtins) elemAt fromJSON match readDir readFile sort substring;
   inherit (builtins) attrValues deepSeq isFunction isPath isString pathExists toJSON warn;
   inherit (nixpkgs.lib) any collect concatMapAttrs findFirst getExe mkIf mkOverride nixosSystem optionalAttrs;
 
@@ -54,73 +54,131 @@
 
       # todo: add support for merging secrets
       # nixpkgs, pkgs
-      mergeFormat = type: content: let
-        inherit (pkgs) jq perl dasel gnused writeShellScript writeText;
+      mergeFormat = let
+        inherit (pkgs) jq perl dasel gnused mozlz4a writeShellScript writeText;
         applyStats = x: ''chmod "$mode" "${x}"; chown "$uid:$gid" "${x}"'';
         getStats = x: ''mode="$(stat -c %a "${x}")" uid="$(stat -c %u "${x}")" gid="$(stat -c %g "${x}")"'';
-        contentIsPath = isPath content || isString content && substring 0 1 content == "/";
-        contentFile =
-          if contentIsPath
-          then content
-          else writeText "merge-${type}-content" content;
-        contentJSON =
-          if contentIsPath
-          then content
-          else writeText "merge-${type}-content" (toJSON content);
-      in
-        if elem type ["json" "yaml" "hcl" "csv" "toml" "xml" "ini"]
-        then
-          writeShellScript "merge-${type}" ''
-            if [ -f "$1" ]; then
-              ${getStats "$1"}
-              { ${getExe jq} -s 'if .[0] | type == "array"
-                then reduce .[] as $o ([]; . + $o)
-                else reduce .[] as $o ({}; . * ($o // {}))
-              end' <(${getExe dasel} -i ${type} -o json < "$1") ${contentJSON} ||
-                cat ${contentJSON}
-              } | ${getExe dasel} -i json -o ${type} > "$1.tmp"
-              ${applyStats "$1.tmp"}
-            else
-              ${getExe dasel} -i json -o ${type} < ${contentJSON} > "$1.tmp"
-            fi
-            mv -f "$1.tmp" "$1"
-          ''
-        else if type == "ini-mime"
-        then
-          writeShellScript "merge-ini-mime" ''
-            D="%%DELIM%%"
-            if [ -f "$1" ]; then
-              ${getStats "$1"}
-              { ${getExe jq} -s 'reduce (.[] | to_entries[]) as $cat ({};
-                reduce ($cat.value | to_entries[]) as $mime (.;
-                  .[$cat.key][$mime.key] += ($mime.value | split("'"$D"'")
-                ))) | map_values(map_values(reduce .[] as $v ([];
-                  if (index($v)|not) then . + [$v] else . end
-                ) | join("'"$D"'")))' <(${getExe gnused} "s:;:$D:g" "$1" | ${getExe dasel} -i ini -o json) <(${getExe gnused} "s:;:$D:g" ${contentJSON}) ||
-                ${getExe gnused} "s:;:$D:g" ${contentJSON}
-              } | ${getExe dasel} -i json -o ini |
-              ${getExe gnused} "s:$D:;:g" > "$1.tmp"
-              ${applyStats "$1.tmp"}
-            else
-              ${getExe gnused} "s:;:$D:g" ${contentJSON} | ${getExe dasel} -i json -o ini |
-              ${getExe gnused} "s:$D:;:g" > "$1.tmp"
-            fi
-            mv -f "$1.tmp" "$1"
-          ''
-        else if type == "text"
-        then
-          writeShellScript "merge-text" ''
-            if [ -f "$1" ]; then
-              ${getExe perl} -0777 -e 'exit !(index(<>, <>) >= 0)' "$1" ${contentFile} && exit
-              ${getStats "$1"}
-              cat "$1" ${contentFile} > "$1.tmp"
-              ${applyStats "$1.tmp"}
-            else
-              cat ${contentFile} > "$1.tmp"
-            fi
-            mv -f "$1.tmp" "$1"
-          ''
-        else throw "unknown type: ${type}!";
+        genericMerge = ''
+          if .[0] | type == "array"
+            then reduce .[] as $o ([]; reduce $o[] as $x (.; if index($x) then . else . + [$x] end))
+            else reduce .[] as $o ({}; . * ($o // {}))
+          end
+        '';
+        wrapContent = fn: content:
+          fn rec {
+            cIsPath = isPath content || isString content && substring 0 1 content == "/";
+            file =
+              if cIsPath
+              then content
+              else writeText "merge-content" content;
+            json =
+              if cIsPath
+              then content
+              else writeText "merge-json-content" (toJSON content);
+            nix = content;
+          };
+      in rec {
+        mkDasel = type:
+          wrapContent (c:
+            writeShellScript "merge-${type}" ''
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                { ${getExe jq} -s '${genericMerge}' <(${getExe dasel} -i ${type} -o json < "$1") ${c.json} ||
+                  cat ${c.json}
+                } | ${getExe dasel} -i json -o ${type} > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                ${getExe dasel} -i json -o ${type} < ${c.json} > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+        json = {
+          default = wrapContent (c:
+            writeShellScript "merge-json" ''
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                { ${getExe jq} -s '${genericMerge}' "$1" ${c.json} || cat ${c.json}
+                } > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                cat ${c.json} > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+          mozlz4 = wrapContent (c:
+            writeShellScript "merge-json-mozlz4" ''
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                { ${getExe jq} -s '${genericMerge}' <(${getExe mozlz4a} -d "$1") ${c.json} ||
+                  cat ${c.json}
+                } | ${getExe mozlz4a} - "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                ${getExe mozlz4a} ${c.json} "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+        };
+        yaml.default = mkDasel "yaml";
+        hcl.default = mkDasel "hcl";
+        csv.default = mkDasel "csv";
+        toml.default = mkDasel "toml";
+        xml.default = mkDasel "xml";
+        ini = {
+          default = mkDasel "ini";
+          plain = wrapContent (c:
+            writeShellScript "merge-ini-plain" ''
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                { ${getExe jq} -s '${genericMerge}' <(${getExe dasel} -i ini -o json < "$1") ${c.json} ||
+                  cat ${c.json}
+                } | ${getExe dasel} -i json -o ini |
+                ${getExe gnused} -E 's: *= *:=:g' > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                ${getExe dasel} -i json -o ini < ${c.json} |
+                ${getExe gnused} -E 's: *= *:=:g' > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+          mime = wrapContent (c:
+            writeShellScript "merge-ini-mime" ''
+              D="%%DELIM%%"
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                { ${getExe jq} -s 'reduce (.[] | to_entries[]) as $cat ({};
+                  reduce ($cat.value | to_entries[]) as $mime (.;
+                    .[$cat.key][$mime.key] += ($mime.value | split("'"$D"'")
+                  ))) | map_values(map_values(reduce .[] as $v ([];
+                    if index($v) then . else . + [$v] end
+                  ) | join("'"$D"'")))' <(${getExe gnused} "s:;:$D:g" "$1" |
+                  ${getExe dasel} -i ini -o json) <(${getExe gnused} "s:;:$D:g" ${c.json}) ||
+                  ${getExe gnused} "s:;:$D:g" ${c.json}
+                } | ${getExe dasel} -i json -o ini |
+                ${getExe gnused} "s:$D:;:g" > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                ${getExe gnused} "s:;:$D:g" ${c.json} | ${getExe dasel} -i json -o ini |
+                ${getExe gnused} "s:$D:;:g" > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+        };
+        text = {
+          concat = wrapContent (c:
+            writeShellScript "merge-text" ''
+              if [ -f "$1" ]; then
+                ${getExe perl} -0777 -e 'exit !(index(<>, <>) >= 0)' "$1" ${c.file} && exit
+                ${getStats "$1"}
+                cat "$1" ${c.file} > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                cat ${c.file} > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+        };
+      };
     };
 
     deepDirOf = dir: let
