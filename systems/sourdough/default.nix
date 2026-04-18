@@ -5,7 +5,14 @@
 }: let
   inherit (lib) mkOptionDefault;
 in {
-  services.flatpak.enable = true;
+  services = {
+    flatpak.enable = true;
+    sunshine = {
+      enable = true;
+      autoStart = false;
+      capSysAdmin = true;
+    };
+  };
   shanetrs = {
     enable = true;
     browser = {
@@ -47,7 +54,6 @@ in {
     blender # 3d modeling
     krita # drawing
     inkscape-with-extensions # vector editor
-    moonlight-qt # game streamer
 
     crosspipe # patchbay
     libreoffice-still # office suite

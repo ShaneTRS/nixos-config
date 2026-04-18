@@ -373,7 +373,8 @@ in {
           TUNDRA_SOURCE = cfg.paths.source;
         };
       };
-      packages = [
+      packages = with pkgs; [
+        shanetrs.tundra
         (runCommandLocal "tundra-environment-variables" {} ''
           mkdir -p $out/etc/profile.d
           cat <<-EOF > $out/etc/profile.d/tundra-variables.sh

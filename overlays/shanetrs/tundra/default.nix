@@ -1,24 +1,45 @@
 {
-  stdenv,
-  lib ? null,
-  makeBinPath ? lib.makeBinPath,
-  makeWrapper,
+  symlinkJoin,
+  writeShellApplication,
   dbus,
   git,
   libnotify,
   ...
 }:
-stdenv.mkDerivation rec {
-  pname = "tundra";
-  version = "0.1.0";
-  src = ./src;
-  nativeBuildInputs = [makeWrapper];
-  meta.mainProgram = pname;
-  installPhase = ''
-    cp --no-preserve=all -r $src/. $out
-    chmod +x "$out/bin/tundra"
-    wrapProgram "$out/bin/tundra" \
-      --prefix PATH : ${makeBinPath [dbus git libnotify]} \
-      --set-default NOTIFY_ICON "$out/share/icons/hicolor/scalable/apps/tundra-bordered.svg"
-  '';
+symlinkJoin rec {
+  name = "tundra";
+  paths = [
+    ./src
+    (writeShellApplication {
+      inherit name;
+      runtimeInputs = [dbus git libnotify];
+      text = ''
+        SUDO="''${SUDO:-sudo}"
+
+        # shellcheck disable=SC2120
+        garbage() {
+          local cmd="nix-collect-garbage ''${*:---delete-older-than ''${TIME:-30d}}"
+          echo "executing: $cmd" 1>&2
+          # shellcheck disable=SC2086
+          "$SUDO" $cmd || exit 1; $cmd
+        }
+
+        rebuild() {
+          nix run "$TUNDRA_SOURCE#build" -- "''${@:-boot}"
+        }
+
+        help() {
+        	cat <<-EOF
+        	Usage: $(basename "$0") <command>
+        	Commands:
+        	  garbage    Run garbage collection on the Nix store
+        	  rebuild    Rebuild system with current configuration
+        	EOF
+        }
+
+        cd "$TUNDRA_SOURCE" || exit 1
+        "''${@:-help}"
+      '';
+    })
+  ];
 }

@@ -33,7 +33,7 @@ in {
     };
     systemd.services.zerotierone.preStart =
       concatMapStrings (x: ''
-        for id in "$(cat ${x})"; do
+        for id in $(cat ${x}); do
           touch "/var/lib/zerotier-one/networks.d/$id.conf"
         done
       '')
