@@ -40,7 +40,6 @@ in {
       ];
     };
     hardware = {
-      enable = true;
       gpu = "intel";
       drivers.g710 = {
         enable = true;

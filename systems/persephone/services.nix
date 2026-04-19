@@ -5,8 +5,8 @@
   ...
 }: let
   inherit (builtins) readFile;
-  inherit (lib) getExe mkIf optionalString;
-  inherit (lib.tundra) getConfig';
+  inherit (lib) getExe mkIf optionalAttrs optionalString;
+  inherit (lib.tundra) getConfig' getConfig;
   inherit (pkgs) writeShellApplication;
 
   jfa-go-conf = getConfig' [] "jfa-go.ini";
@@ -152,7 +152,13 @@ in {
         wantedBy = ["graphical-session.target"];
       };
       keynav = {
-        serviceConfig.ExecStart = getExe pkgs.keynav;
+        serviceConfig.ExecStart = getExe (pkgs.keynav.overrideAttrs (old: let
+          attempt = getConfig "keynavrc";
+        in
+          optionalAttrs (attempt != null) {
+            env.NIX_CFLAGS_COMPILE =
+              (old.env.NIX_CFLAGS_COMPILE or "") + " -DGLOBAL_CONFIG_FILE=\"${attempt}\"";
+          }));
         wantedBy = ["graphical-session.target"];
       };
       jfa-go = {

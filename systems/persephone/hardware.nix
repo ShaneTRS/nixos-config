@@ -2,7 +2,6 @@
 {config, ...}: {
   shanetrs = {
     hardware = {
-      enable = true;
       drivers.g710 = {
         enable = true;
         captureDelays = false;

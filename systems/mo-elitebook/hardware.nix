@@ -1,9 +1,6 @@
 # HP EliteBook 840 G1 (A3009CD10002)
 {pkgs, ...}: {
-  shanetrs.hardware = {
-    enable = true;
-    gpu = "intel";
-  };
+  shanetrs.hardware.gpu = "intel";
   boot = {
     kernelPackages = pkgs.linuxPackages_5_15;
     kernelParams = ["intel_iommu=off" "acpi_backlight=native" "acpi_sleep=nonvs"];

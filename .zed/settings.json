@@ -1,31 +1,27 @@
-// Folder-specific settings
-//
-// For a full list of overridable settings, and general information on folder-specific settings,
-// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
 {
-	"languages": {
-		"Nix": {
-			"hard_tabs": false,
-			"tab_size": 2,
-			"formatter": {
-				"external": {
-					"command": "alejandra"
-				}
-			}
-		}
-	},
-	"lsp": {
-		"nixd": {
-			"settings": {
-				"nixpkgs": {
-					"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").legacyPackages.x86_64-linux"
-				},
-				"options": {
-					"nixos": {
-						"expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.example.options"
-					}
-				}
-			}
-		}
-	}
+  "hard_tabs": false,
+  "languages": {
+    "Nix": {
+      "tab_size": 2,
+      "formatter": {
+        "external": {
+          "command": "alejandra"
+        }
+      }
+    }
+  },
+  "lsp": {
+    "nixd": {
+      "settings": {
+        "nixpkgs": {
+          "expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").legacyPackages.x86_64-linux"
+        },
+        "options": {
+          "nixos": {
+            "expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_ID\" or \"persephone\"}\".options"
+          }
+        }
+      }
+    }
+  }
 }

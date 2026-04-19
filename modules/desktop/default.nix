@@ -59,10 +59,12 @@ in {
       tundra = {
         packages = cfg.extraPackages;
         environment.variables = {
-          XCOMPOSEFILE = "${config.tundra.paths.xdg.config}/XCompose";
+          XCOMPOSEFILE = "${pkgs.writeText "XCompose" ''
+            include "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
+            <Multi_key> <p> <i> : "π" U03C0
+          ''}";
           XCOMPOSECACHE = "${config.tundra.paths.xdg.cache}/XCompose";
         };
-
         xdg.config."mimeapps.list" = mkIf cfg.mime.enable {
           type = "execute";
           source = mergeFormat.ini.mime (mapAttrs (k: mapAttrs (k: concatStringsSep ";")) {
@@ -71,10 +73,6 @@ in {
             "Removed Associations" = cfg.mime.removed;
           });
         };
-        xdg.config."XCompose".text = ''
-          include "${pkgs.libx11}/share/X11/locale/en_US.UTF-8/Compose"
-          <Multi_key> <p> <i> : "π" U03C0
-        '';
       };
     }
 

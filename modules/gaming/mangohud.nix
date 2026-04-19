@@ -31,24 +31,13 @@ in {
 
   config = mkIf cfg.enable {
     tundra = {
-      packages = [
-        (pkgs.symlinkJoin {
-          name = "mangohud-wrapped";
-          paths = [cfg.package];
-          preferLocalBuild = true;
-          nativeBuildInputs = with pkgs; [makeWrapper];
-          postBuild = let
-            toINI = x: lib.generators.toINIWithGlobalSection {} {globalSection = x;};
-            configFile = pkgs.writeText "mangohud-config" (toINI cfg.settings);
-          in ''
-            wrapProgram $out/bin/mangohud --set MANGOHUD_CONFIGFILE ${configFile}
-            wrapProgram $out/bin/mangoapp --set MANGOHUD_CONFIGFILE ${configFile}
-          '';
-        })
-      ];
+      packages = [cfg.package];
       environment.variables = {
         MANGOHUD = "1";
         MANGOHUD_DLSYM = "1";
+        MANGOHUD_CONFIGFILE =
+          toString (pkgs.writeText "mangohud-config.ini" (lib.generators.toINIWithGlobalSection
+              {} {globalSection = cfg.settings;}));
       };
     };
   };

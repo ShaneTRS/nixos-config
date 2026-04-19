@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib) getExe mkEnableOption mkIf mkOption types;
-  inherit (pkgs) makeDesktopItem writeShellApplication;
+  inherit (pkgs) symlinkJoin writeShellScriptBin;
   cfg = config.shanetrs.programs.discord;
 in {
   options.shanetrs.programs.discord = {
@@ -48,31 +48,24 @@ in {
 
   config = mkIf cfg.enable {
     tundra.packages = [
-      (makeDesktopItem {
-        name = "discord";
-        desktopName = "Discord";
-        exec = getExe (writeShellApplication {
-          name = "discord";
-          text = ''
-            set +o errexit
+      (symlinkJoin {
+        name = "discord-wrapped";
+        paths = [
+          cfg.package
+          (writeShellScriptBin "discord" ''
             pre_exec="$(date +%s)"
             "${getExe cfg.package}"
             [ $(($(date +%s) - pre_exec)) -lt 3 ] && exec "${
-              getExe (cfg.package.override {
-                withOpenASAR = false;
-              })
+              getExe (cfg.package.override {withOpenASAR = false;})
             }"
-          '';
-        });
-        terminal = false;
-        type = "Application";
-        icon = let
-          branch = cfg.branch;
-        in "${cfg.package}/share/icons/hicolor/256x256/apps/discord${
-          if branch == "stable"
-          then ""
-          else "-${branch}"
-        }.png";
+          '')
+        ];
+        postBuild = ''
+          desktopFile=$(readlink -f $out/share/applications/discord*.desktop)
+          rm $out/share/applications
+          mkdir -p $out/share/applications
+          sed 's:Exec=.*:Exec=discord:' $desktopFile > $out/share/applications/discord.desktop
+        '';
       })
     ];
   };

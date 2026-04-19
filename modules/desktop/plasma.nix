@@ -26,7 +26,6 @@ in {
   };
 
   config = mkIf enabled {
-    # TODO: possibly need systemd.user.services.kdeconnectd
     shanetrs.desktop.mime = {
       added = {
         "inode/directory" = ["org.kde.dolphin.desktop"];

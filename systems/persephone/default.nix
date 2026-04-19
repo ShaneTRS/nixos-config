@@ -5,7 +5,6 @@
   ...
 }: let
   inherit (lib) getExe mkOptionDefault;
-  inherit (lib.tundra) mkIfConfig;
 in {
   shanetrs = {
     enable = true;
@@ -210,8 +209,5 @@ in {
       shanetrs.jfa-go # jellyfin temp. accounts
       shanetrs.schud # controller overlay
     ];
-    xdg.config."keynav/keynavrc" = mkIfConfig "keynavrc" (x: {
-      source = x;
-    });
   };
 }

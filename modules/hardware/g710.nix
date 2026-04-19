@@ -5,8 +5,7 @@
   ...
 }: let
   inherit (lib) getExe mkEnableOption mkIf mkPackageOption mkOption optionalString types;
-  pcfg = config.shanetrs.hardware;
-  cfg = pcfg.drivers.g710;
+  cfg = config.shanetrs.hardware.drivers.g710;
 in {
   options.shanetrs.hardware.drivers.g710 = {
     enable = mkEnableOption "Logitech G710 driver installation and configuration";
@@ -33,7 +32,7 @@ in {
     };
   };
 
-  config = mkIf (pcfg.enable && cfg.enable) {
+  config = mkIf cfg.enable {
     warnings = mkIf (config.shanetrs.desktop.keymap.enable) ["sidewinderd doesn't properly record macros when xremap is running!"];
     environment.etc."sidewinderd.conf".text = with cfg; ''
       user = "${user}";

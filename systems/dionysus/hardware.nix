@@ -1,10 +1,7 @@
 # HP t530 Thin Client
 {...}: {
   shanetrs = {
-    hardware = {
-      enable = true;
-      drivers.g710.enable = true;
-    };
+    hardware.drivers.g710.enable = true;
     remote = {
       addresses.client = "192.168.1.13";
       usb = {
