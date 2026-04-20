@@ -21,7 +21,7 @@ in {
     light = {
       enable = mkOption {
         type = types.bool;
-        default = true;
+        default = false;
       };
       command = mkOption {
         type = types.listOf types.str;
@@ -45,7 +45,7 @@ in {
       enable = true;
       package = cfg.package;
     };
-    systemd.services.iio-sensors = let
+    systemd.user.services.iio-sensors = let
       skipVert = optionalString (cfg.accel.enable == "vertical") "continue;";
     in {
       script = ''
@@ -80,7 +80,7 @@ in {
           esac
         done
       '';
-      wantedBy = ["multi-user.target"];
+      wantedBy = ["graphical-session.target"];
     };
   };
 }

@@ -4,6 +4,7 @@
   makeDesktopItem,
   writeShellApplication,
   coreutils,
+  gawk,
   shanetrs,
   xdpyinfo,
   targetHost ? nixosConfig.shanetrs.remote.addresses.host or
@@ -22,7 +23,7 @@ symlinkJoin rec {
     })
     (writeShellApplication {
       inherit name;
-      runtimeInputs = [coreutils shanetrs.moonlight-qt shanetrs.not-nice xdpyinfo];
+      runtimeInputs = [coreutils gawk shanetrs.moonlight-qt shanetrs.not-nice xdpyinfo];
       text = ''
         ml_res() { xdpyinfo | awk '/dimensions/{print $2}'; }
         ml_args() {

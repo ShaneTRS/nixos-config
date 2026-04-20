@@ -1,8 +1,4 @@
-{
-  pkgs,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   services.earlyoom.enable = false;
   zramSwap.enable = false;
   programs = {
@@ -34,28 +30,17 @@
 
   systemd.user.services.audio-fix = {
     after = ["pipewire.service"];
-    serviceConfig.Restart = "on-failure";
-    environment = {
-      TARGET = "shanetrs.remote.host";
-      MIN_DELAY = "5";
-    };
-    script = let
-      inherit (pkgs) writeShellApplication;
-      inherit (lib) getExe;
-    in "${getExe (writeShellApplication {
-      name = "audio-fix.service";
-      runtimeInputs = with pkgs; [inetutils];
-      text = ''
-        set +o errexit
-        sleep "$MIN_DELAY"
-        until ping -qs1 -c1 -W1 "$TARGET"; do
-          sleep 1
-        done
-        systemctl restart --user pipewire-pulse pipewire
-        noisetorch -i
-      '';
-    })}";
-    startLimitBurst = 32;
+    serviceConfig.Type = "oneshot";
+    script = ''
+      set +o errexit
+      sleep 5
+      until ${pkgs.inetutils}/bin/ping -qs1 -c1 -W1 shanetrs.remote.host; do
+        sleep 1
+      done
+      ${pkgs.systemd}/bin/systemctl restart --user pipewire-pulse pipewire
+      ${pkgs.noisetorch}/bin/noisetorch -i -t 30
+      true
+    '';
     wantedBy = ["graphical-session.target"];
   };
 

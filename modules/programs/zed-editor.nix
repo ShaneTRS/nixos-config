@@ -146,15 +146,15 @@ in {
         xdg.config = {
           "zed/settings.json" = {
             type = "execute";
-            source = mergeFormat.json.default cfg.settings;
+            source = mergeFormat.json.c cfg.settings;
           };
           "zed/keymap.json" = {
             type = "execute";
-            source = mergeFormat.json.default cfg.keymap;
+            source = mergeFormat.json.c cfg.keymap;
           };
           "zed/tasks.json" = {
             type = "execute";
-            source = mergeFormat.json.default cfg.tasks;
+            source = mergeFormat.json.c cfg.tasks;
           };
         };
         packages = [

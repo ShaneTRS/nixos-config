@@ -55,7 +55,7 @@
       # todo: add support for merging secrets
       # nixpkgs, pkgs
       mergeFormat = let
-        inherit (pkgs) jq perl dasel gnused mozlz4a writeShellScript writeText;
+        inherit (pkgs) jq dasel gnused hjson-go mozlz4a perl writeShellScript writeText;
         applyStats = x: ''chmod "$mode" "${x}"; chown "$uid:$gid" "${x}"'';
         getStats = x: ''mode="$(stat -c %a "${x}")" uid="$(stat -c %u "${x}")" gid="$(stat -c %g "${x}")"'';
         genericMerge = ''
@@ -98,6 +98,18 @@
               if [ -f "$1" ]; then
                 ${getStats "$1"}
                 { ${getExe jq} -s '${genericMerge}' "$1" ${c.json} || cat ${c.json}
+                } > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                cat ${c.json} > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+          c = wrapContent (c:
+            writeShellScript "merge-jsonc" ''
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                { ${getExe jq} -s '${genericMerge}' <(${getExe hjson-go} -c "$1") ${c.json} || cat ${c.json}
                 } > "$1.tmp"
                 ${applyStats "$1.tmp"}
               else

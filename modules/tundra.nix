@@ -6,13 +6,12 @@
   pkgs,
   ...
 }: let
-  inherit (builtins) attrValues concatMap concatStringsSep elem filter groupBy isFunction listToAttrs mapAttrs match replaceStrings sort substring toJSON toPath warn;
-  inherit (lib) escapeShellArgs flatten getExe mapAttrsToList mkIf mkOption mkOptionType mkOverride optionalString types unique;
+  inherit (builtins) attrValues concatMap elem filter groupBy isFunction listToAttrs mapAttrs match replaceStrings sort substring toJSON toPath warn;
+  inherit (lib) concatLines escapeShellArgs flatten getExe mapAttrsToList mkIf mkOption mkOptionType mkOverride optionalString types unique;
   inherit (lib.tundra) decryptSecret decryptTemplate deepDirOf;
   inherit (pkgs) buildEnv runCommandLocal writeText;
 
-  mapToLines = fn: list: toLines (map fn list);
-  toLines = concatStringsSep "\n";
+  mapConcatLines = fn: list: concatLines (map fn list);
 
   fsToChown = x: "${x.user}:${
     if x.group == null
@@ -203,6 +202,20 @@ in {
       type = types.listOf types.package;
       default = [];
     };
+    updater = {
+      enable = mkOption {
+        type = types.bool;
+        default = false;
+      };
+      interval = mkOption {
+        type = types.enum ["daily" "weekly" "monthly"];
+        default = "weekly";
+      };
+      unattended = mkOption {
+        type = types.bool;
+        default = false;
+      };
+    };
 
     filesystem = fsOption {};
     home = fsOption {
@@ -244,22 +257,61 @@ in {
   };
 
   config = {
+    systemd.user = {
+      services = {
+        tundra-notifier = {
+          environment = {
+            INTERACTIVE = "false";
+            DISPLAY = ":0";
+          };
+          script = "${getExe pkgs.shanetrs.tundra} notify";
+          serviceConfig.Type = "oneshot";
+        };
+        tundra-updater = {
+          environment.INTERACTIVE = "false";
+          script = "${getExe pkgs.shanetrs.tundra} notify";
+          serviceConfig.Type = "oneshot";
+        };
+      };
+      timers.tundra-updater = {
+        enable = cfg.updater.enable;
+        wantedBy = ["timers.target"];
+        timerConfig = {
+          OnCalendar =
+            {
+              "daily" = "*-*-* 04:40:00";
+              "weekly" = "Thu *-*-* 04:40:00";
+              "monthly" = "Thu *-*-1..7 04:40:00";
+            }.${
+              cfg.updater.interval
+            };
+          Unit =
+            if cfg.updater.unattended
+            then "tundra-updater.service"
+            else "tundra-notifier.service";
+        };
+      };
+    };
+
     environment = {
       systemPackages = [cfg.environment.package];
       extraInit = ''
         source ${cfg.environment.package}/etc/profile.d/*.sh
       '';
     };
-    system.activationScripts = {
-      tundraEarly = {
-        deps = ["specialfs"];
-        text = cfg.activation.tundraEarly;
+    system = {
+      activationScripts = {
+        tundraEarly = {
+          deps = ["specialfs"];
+          text = cfg.activation.tundraEarly;
+        };
+        users.deps = ["tundraEarly"];
+        tundra = {
+          deps = ["users" "groups" "specialfs" "tundraEarly"];
+          text = cfg.activation.tundra;
+        };
       };
-      users.deps = ["tundraEarly"];
-      tundra = {
-        deps = ["users" "groups" "specialfs" "tundraEarly"];
-        text = cfg.activation.tundra;
-      };
+      systemBuilderCommands = "ln -sf ${self} $out/source";
     };
     tundra = let
       inherit (cfg.activation) tundraEarlySecrets tundraSecrets;
@@ -289,8 +341,11 @@ in {
           chmod "$mode" "$1"
         }
       '';
-      setupSops = ''export SOPS_AGE_KEY="$(${getExe pkgs.ssh-to-age} -i "${cfg.paths.secret.key}" -private-key)"'';
-      cleanupSops = "unset SOPS_AGE_KEY";
+      setupSops = ''
+        SOPS_AGE_KEY="$(${getExe pkgs.ssh-to-age} -i "${cfg.paths.secret.key}" -private-key)"
+        if [ -n "$SOPS_AGE_KEY" ]; then export SOPS_AGE_KEY
+      '';
+      cleanupSops = "fi; unset SOPS_AGE_KEY";
       runDeferred = ''
         for i in "''${tundraDeferred[@]}"; do eval "$i"; done
         tundraDeferred=()
@@ -317,36 +372,41 @@ in {
         trackStr = optionalString track " && ${deferStr}tundraInheritStats ${e}";
       in "[ -d ${e} ] || mkdir ${e}${trackStr}";
       mkInheritParents = defer: list:
-        toLines (map (x: mkInheritDir defer (!elem x inheritExempt) x)
+        concatLines (map (x: mkInheritDir defer (!elem x inheritExempt) x)
           (unique (concatMap (x: (deepDirOf x.target)) list)));
     in {
       activation = {
         tundraEarly = ''
+          echo 'setting up tundra filesystem...'
           ${wrapTraps}
           ${setupCleanup}
           ${setupTundra}
           ${mkInheritParents true (earlySecrets ++ earlyOther)}
           ${tundraEarlySecrets}
-          ${mapToLines (x: x.meta.activate) earlyOther}
+          echo 'populating early tundra files...'
+          ${mapConcatLines (x: x.meta.activate) earlyOther}
           ${unwrapTraps}
         '';
         tundraEarlySecrets = mkIf (earlySecrets != []) ''
+          echo 'populating early tundra secrets...'
           ${setupSops}
-          ${mapToLines (x: x.meta.activate) earlySecrets}
+          ${mapConcatLines (x: x.meta.activate) earlySecrets}
           ${cleanupSops}
         '';
         tundra = ''
           ${wrapTraps}
           ${mkInheritParents false (secrets ++ other)}
           ${tundraSecrets}
-          ${mapToLines (x: x.meta.activate) other}
+          echo 'populating tundra files...'
+          ${mapConcatLines (x: x.meta.activate) other}
           ${runDeferred}
           ${runCleanup}
           ${unwrapTraps}
         '';
         tundraSecrets = mkIf (secrets != []) ''
+          echo 'populating tundra secrets...'
           ${setupSops}
-          ${mapToLines (x: x.meta.activate) secrets}
+          ${mapConcatLines (x: x.meta.activate) secrets}
           ${cleanupSops}
         '';
       };
@@ -378,7 +438,7 @@ in {
         (runCommandLocal "tundra-environment-variables" {} ''
           mkdir -p $out/etc/profile.d
           cat <<-EOF > $out/etc/profile.d/tundra-variables.sh
-          ${toLines (mapAttrsToList (k: v: "export ${k}=${escapeShellArgs [v]}") cfg.environment.variables)}
+          ${concatLines (mapAttrsToList (k: v: "export ${k}=${escapeShellArgs [v]}") cfg.environment.variables)}
           EOF
         '')
       ];

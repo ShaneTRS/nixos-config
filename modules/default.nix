@@ -134,6 +134,7 @@ in {
           source = mergeFormat.text.concat x;
         });
       };
+      updater.enable = true;
       xdg.config = {
         "git/config" = {
           type = "execute";
