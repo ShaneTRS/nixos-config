@@ -5,8 +5,8 @@
   ...
 }: let
   inherit (builtins) readFile;
-  inherit (lib) getExe mkIf optionalAttrs optionalString;
-  inherit (lib.tundra) getConfig' getConfig;
+  inherit (lib) getExe mkIf optionalString;
+  inherit (lib.tundra) getConfig' mkIfConfig;
   inherit (pkgs) writeShellApplication;
 
   jfa-go-conf = getConfig' [] "jfa-go.ini";
@@ -65,6 +65,9 @@ in {
     source = getExe pkgs.shanetrs.vuinputd;
   };
 
+  environment.etc."keynavrc" = mkIfConfig "keynavrc" (x: {
+    source = x;
+  });
   systemd = {
     services = {
       vuinputd = {
@@ -148,17 +151,11 @@ in {
     };
     user.services = {
       shadowplay = {
-        serviceConfig.ExecStart = getExe pkgs.shanetrs.shadowplay;
+        script = getExe pkgs.shanetrs.shadowplay;
         wantedBy = ["graphical-session.target"];
       };
       keynav = {
-        serviceConfig.ExecStart = getExe (pkgs.keynav.overrideAttrs (old: let
-          attempt = getConfig "keynavrc";
-        in
-          optionalAttrs (attempt != null) {
-            env.NIX_CFLAGS_COMPILE =
-              (old.env.NIX_CFLAGS_COMPILE or "") + " -DGLOBAL_CONFIG_FILE=\"${attempt}\"";
-          }));
+        script = getExe pkgs.keynav;
         wantedBy = ["graphical-session.target"];
       };
       jfa-go = {

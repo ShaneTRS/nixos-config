@@ -12,8 +12,9 @@
         useOSProber = true;
       };
     };
-    initrd.availableKernelModules = ["nvme" "xhci_pci" "usb_storage" "rtsx_pci_sdmmc"];
+    initrd.availableKernelModules = ["xhci_pci" "usb_storage" "rtsx_pci_sdmmc"];
     kernelModules = ["kvm-amd"];
+    extraModprobeConfig = "options rtw89_pci disable_aspm_l1=1 disable_aspm_l1ss=1";
   };
   programs.xppen.enable = true;
   shanetrs.hardware = {
