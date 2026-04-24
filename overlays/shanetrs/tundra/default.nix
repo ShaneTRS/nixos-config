@@ -25,7 +25,6 @@ symlinkJoin rec {
         nix() { command nix ${nixArgs} "$@"; }
 
         current() { readlink /nix/var/nix/profiles/system/source | awk -F'[-/ ]+' '{print $4}' 2>/dev/null; }
-        # shellcheck disable=SC2120
         garbage() {
           local cmd="nix-collect-garbage ''${*:---delete-older-than ''${TIME:-30d}}"
           echo "executing: $cmd" 1>&2
@@ -35,7 +34,7 @@ symlinkJoin rec {
         source() { nix flake metadata | awk -F'[-/ ]+' '/Path:/{print $4}' 2>/dev/null; }
         # shellcheck disable=SC1090
         check() { [ "$(source)" != "$(current)" ]; }
-        rebuild() { nix run "$TUNDRA_SOURCE#build" -- "''${@:-boot}"; }
+        rebuild() { nix run "$TUNDRA_SOURCE#build" "''${@:-boot}"; }
         sync() {
           git fetch -q &>/dev/null
           git reset --hard '@{u}' &>/dev/null

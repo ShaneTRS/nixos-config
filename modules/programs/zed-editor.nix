@@ -112,13 +112,13 @@ in {
             alt-q = "editor::AcceptEditPrediction";
             alt-tab = "editor::Tab";
           };
-          context = "Editor && edit_prediction_conflict";
+          context = "Editor && (edit_prediction && (showing_completions || in_leading_whitespace))";
         }
         {
           bindings = {
             alt-s = [
               "terminal::SendText"
-              ""
+              "s"
             ];
           };
           context = "Terminal";

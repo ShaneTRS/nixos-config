@@ -607,13 +607,13 @@
   },
   {
     "pname": "Ryujinx.Systems.Update.Common",
-    "version": "1.0.44",
-    "hash": "sha256-2MPWhK/AqY6+iQ9iMmdqqhTxev5JWQjqz3KmoWV2kBE="
+    "version": "2.0.6",
+    "hash": "sha256-2btWQmCwqJSxISN3N7HdRCbkfSAs4Ph+o8hT+GlySYk="
   },
   {
     "pname": "Ryujinx.UpdateClient",
-    "version": "1.0.44",
-    "hash": "sha256-4lKA2mscjyiJZAQf0ixAdVmwzDWog+CTGIftOmC0xnk="
+    "version": "2.0.6",
+    "hash": "sha256-BNURkQqMopmpQSl33dOTK1ldsHSVVZeg/cP8zc3wvvM="
   },
   {
     "pname": "securifybv.PropertyStore",
@@ -636,9 +636,9 @@
     "hash": "sha256-+K7ObC9ucilwWY+Tlf9KcrAVoTFS65V6Di7JDWDSZTg="
   },
   {
-    "pname": "SharpZipLib",
-    "version": "1.4.2",
-    "hash": "sha256-/giVqikworG2XKqfN9uLyjUSXr35zBuZ2FX2r8X/WUY="
+    "pname": "SharpCompress",
+    "version": "0.47.4",
+    "hash": "sha256-mH0R+al2GUomIYkieYudTmF1mAnIUiifQPTp13eUFg8="
   },
   {
     "pname": "ShimSkiaSharp",

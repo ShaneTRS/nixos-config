@@ -18,7 +18,7 @@
         },
         "options": {
           "nixos": {
-            "expr": "(builtins.getFlake \"${builtins.getEnv \"PWD\"}\").nixosConfigurations.\"${builtins.getEnv \"TUNDRA_ID\" or \"persephone\"}\".options"
+            "expr": "(builtins.getFlake (builtins.getEnv \"PWD\")).nixosConfigurations.${let a = builtins.getEnv \"TUNDRA_ID\"; in if a == \"\" then \"persephone\" else a}.options"
           }
         }
       }

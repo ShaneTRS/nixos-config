@@ -15,9 +15,11 @@ in {
     shanetrs = {
       shell = {
         enable = mkStrongDefault true;
-        doas.enable = mkStrongDefault true;
+        doas = {
+          enable = mkStrongDefault true;
+          noPassCmds = ["defer-su" "ionice" "nix-collect-garbage"];
+        };
       };
-      # tundra.enable = mkStrongDefault true;
     };
 
     boot = {
@@ -98,7 +100,7 @@ in {
     time.timeZone = mkStrongDefault "America/Phoenix";
 
     tundra = {
-      packages = with pkgs; [gitFull openssh];
+      packages = with pkgs; [shanetrs.defer-su gitFull openssh];
       environment.variables = {
         TUNDRA_ID = config.tundra.id;
         TUNDRA_SOURCE = config.tundra.paths.source;

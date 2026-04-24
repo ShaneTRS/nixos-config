@@ -25,7 +25,7 @@ in {
     };
     fonts = mkOption {
       type = types.listOf types.package;
-      default = with pkgs; [nerd-fonts.hack];
+      default = with pkgs; [nerd-fonts.hack ipafont];
     };
     logo = mkOption {
       type = types.nullOr types.str;

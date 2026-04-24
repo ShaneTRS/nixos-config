@@ -9,7 +9,7 @@
 stdenvNoCC.mkDerivation rec {
   pname = "jfa-go";
   inherit version;
-  buildInputs = [unzip];
+  nativeBuildInputs = [unzip];
   meta.mainProgram = pname;
   unpackPhase = "unzip $src";
   installPhase = ''

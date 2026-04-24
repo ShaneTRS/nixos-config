@@ -17,7 +17,7 @@
     inherit (tundra) getOverlays mkDrvChecks mkTree getSystems;
     inherit (nixpkgs.lib) collect;
 
-    tundra = (import ./overlays/lib.nix specialArgs {} {}).lib.tundra;
+    inherit ((import ./overlays/lib.nix specialArgs {} {}).lib) tundra;
 
     tree = mkTree self;
     specialArgs = {inherit self pkgs lib tree;};

@@ -32,7 +32,7 @@ in {
     tundra.packages = [cfg.package];
     services.gvfs = {
       enable = true; # virtual mounts daemon
-      package = cfg.gvfs.package;
+      inherit (cfg.gvfs) package;
     };
   };
 }

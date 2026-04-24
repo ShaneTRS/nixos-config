@@ -36,7 +36,7 @@ in {
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = with pkgs; [shanetrs.uri-open];
-      example = with pkgs; [flite];
+      example = with pkgs; [xdg-utils];
     };
   };
 
@@ -47,7 +47,7 @@ in {
       services = {
         displayManager.autoLogin = {
           enable = mkDefault true;
-          user = config.tundra.user;
+          inherit (config.tundra) user;
         };
         udev.packages = [pkgs.brightnessctl];
       };

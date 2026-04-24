@@ -5,7 +5,7 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
-  chicago95 = pkgs.shanetrs.chicago95;
+  inherit (pkgs.shanetrs) chicago95;
 
   pcfg = config.shanetrs.desktop;
   cfg = pcfg.xfce;

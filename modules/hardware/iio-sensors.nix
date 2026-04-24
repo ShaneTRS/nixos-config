@@ -43,7 +43,7 @@ in {
   config = mkIf cfg.enable {
     hardware.sensor.iio = {
       enable = true;
-      package = cfg.package;
+      inherit (cfg) package;
     };
     systemd.user.services.iio-sensors = let
       skipVert = optionalString (cfg.accel.enable == "vertical") "continue;";

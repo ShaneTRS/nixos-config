@@ -1,162 +1,133 @@
 {
   lib,
   buildDotnetModule,
-  cctools,
-  darwin,
   dotnetCorePackages,
   fetchurl,
-  libx11,
-  libgdiplus,
-  moltenvk,
   ffmpeg,
-  openal,
-  libsoundio,
-  sndio,
-  stdenv,
-  pulseaudio,
-  vulkan-loader,
   glew,
+  gtk3,
+  icu,
+  libgdiplus,
   libGL,
   libice,
   libsm,
+  libsoundio,
+  libx11,
   libxcursor,
   libxext,
   libxi,
   libxrandr,
-  udev,
+  openal,
+  pulseaudio,
   SDL2,
   SDL2_mixer,
-  gtk3,
+  sndio,
+  stdenvNoCC,
+  udev,
+  unzip,
+  vulkan-loader,
   wrapGAppsHook3,
-  version ? "Canary-1.3.272",
-  hash ? "sha256-OrBAOyQkEZhFjZXlPP7UHOQh9Yt6cmdrsJPBT885Mug=",
+  version ? "1.3.277",
+  versionFirm ? "22.1.0",
+  hash ? "sha256-oPULYKVPvHWtsj92B3fyqiFKy2ieCEUZRbNFsJx1O7Y=",
+  hashFirm ? "sha256-2M1yhpqTy/e46c6vE12HYPH/iqoAGiwCkyENyVjS+zQ=",
+  hashKeys ? "sha256-Sh9uY8Sg0POF7OkNiF1T/r1lSXQq1k79ob9yHTozZCk=",
   dotnetRuntime ? dotnetCorePackages.runtime_10_0,
   dotnetSdk ? dotnetCorePackages.sdk_10_0,
   nugetDeps ? ./deps.json,
   ...
 }:
-buildDotnetModule {
-  pname = "ryubing";
-  version = builtins.replaceStrings ["Canary-"] [""] version;
-
+(buildDotnetModule rec {
+  pname = "ryujinx";
+  inherit version;
   src = fetchurl {
-    url = "https://git.ryujinx.app/projects/Ryubing/archive/${version}.tar.gz";
-    inherit hash;
+    url = "https://git.ryujinx.app/projects/Ryubing/archive/Canary-${version}.tar.gz";
+    hash = hash;
   };
-
-  nativeBuildInputs =
-    lib.optional stdenv.hostPlatform.isLinux [
-      wrapGAppsHook3
-    ]
-    ++ lib.optional stdenv.hostPlatform.isDarwin [
-      cctools
-      darwin.sigtool
-    ];
-
+  nativeBuildInputs = [wrapGAppsHook3];
   enableParallelBuilding = false;
-
+  runtimeDeps = [
+    ffmpeg
+    glew
+    gtk3
+    icu
+    libgdiplus
+    libGL
+    libice
+    libsm
+    libsoundio
+    libx11
+    libxcursor
+    libxext
+    libxi
+    libxrandr
+    openal
+    pulseaudio
+    SDL2
+    SDL2_mixer
+    sndio
+    udev
+    vulkan-loader
+  ];
   dotnet-sdk = dotnetSdk;
   dotnet-runtime = dotnetRuntime;
-
   inherit nugetDeps;
-
-  runtimeDeps =
-    [
-      libx11
-      libgdiplus
-      SDL2_mixer
-      openal
-      libsoundio
-      sndio
-      vulkan-loader
-      ffmpeg
-
-      # Avalonia UI
-      glew
-      libice
-      libsm
-      libxcursor
-      libxext
-      libxi
-      libxrandr
-      gtk3
-
-      # Headless executable
-      libGL
-      SDL2
-    ]
-    ++ lib.optional (!stdenv.hostPlatform.isDarwin) [
-      udev
-      pulseaudio
-    ]
-    ++ lib.optional stdenv.hostPlatform.isDarwin [moltenvk];
-
   projectFile = "Ryujinx.sln";
   testProjectFile = "src/Ryujinx.Tests/Ryujinx.Tests.csproj";
-
-  # Tests on Darwin currently fail because of Ryujinx.Tests.Unicorn
-  doCheck = !stdenv.hostPlatform.isDarwin;
-
-  dotnetFlags = [
-    "/p:ExtraDefineConstants=DISABLE_UPDATER%2CFORCE_EXTERNAL_BASE_DIR"
-  ];
-
-  executables = [
-    "Ryujinx"
-  ];
-
-  makeWrapperArgs = lib.optional stdenv.hostPlatform.isLinux [
-    # Without this Ryujinx fails to start on wayland. See https://github.com/Ryujinx/Ryujinx/issues/2714
-    "--set SDL_VIDEODRIVER x11"
-  ];
-
-  preInstall = lib.optionalString stdenv.hostPlatform.isLinux ''
-    # workaround for https://github.com/Ryujinx/Ryujinx/issues/2349
+  dotnetFlags = ["/p:ExtraDefineConstants=DISABLE_UPDATER%2CFORCE_EXTERNAL_BASE_DIR"];
+  executables = ["Ryujinx"];
+  makeWrapperArgs = ["--set SDL_VIDEODRIVER x11"];
+  preInstall = ''
     mkdir -p $out/lib/sndio-6
     ln -s ${sndio}/lib/libsndio.so $out/lib/sndio-6/libsndio.so.6
   '';
-
   preFixup = ''
-    ${lib.optionalString stdenv.hostPlatform.isLinux ''
-      mkdir -p $out/share/{applications,icons/hicolor/scalable/apps,mime/packages}
-
-      pushd ./distribution/linux
-
-      install -D ./Ryujinx.desktop  $out/share/applications/Ryujinx.desktop
-      install -D ./Ryujinx.sh       $out/bin/Ryujinx.sh
-      install -D ./mime/Ryujinx.xml $out/share/mime/packages/Ryujinx.xml
-      install -D ../misc/Logo.svg   $out/share/icons/hicolor/scalable/apps/Ryujinx.svg
-
-      popd
-    ''}
-
-    # Don't make a softlink on OSX because of its case insensitivity
-    ${lib.optionalString (!stdenv.hostPlatform.isDarwin) "ln -s $out/bin/Ryujinx $out/bin/ryujinx"}
+    mkdir -p $out/share/{applications,icons/hicolor/scalable/apps,mime/packages}
+    pushd distribution/linux
+    sed 's:Exec=[^ ]*:Exec=ryujinx:' ./Ryujinx.desktop > $out/share/applications/Ryujinx.desktop
+    install -D ./mime/Ryujinx.xml $out/share/mime/packages/Ryujinx.xml
+    install -D ../misc/Logo.svg   $out/share/icons/hicolor/scalable/apps/Ryujinx.svg
+    popd
+    mv $out/bin/Ryujinx $out/bin/ryujinx
   '';
-
   meta = {
     homepage = "https://ryujinx.app";
     changelog = "https://git.ryujinx.app/ryubing/ryujinx/-/wikis/changelog";
     description = "Experimental Nintendo Switch Emulator written in C# (community fork of Ryujinx)";
-    longDescription = ''
-      Ryujinx is an open-source Nintendo Switch emulator, created by gdkchan,
-      written in C#. This emulator aims at providing excellent accuracy and
-      performance, a user-friendly interface and consistent builds. It was
-      written from scratch and development on the project began in September
-      2017. The project has since been abandoned on October 1st 2024 and QoL
-      updates are now managed under a fork.
-    '';
     license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [
-      jk
-      artemist
-      willow
-    ];
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "aarch64-darwin"
-    ];
-    mainProgram = "Ryujinx";
+    platforms = ["x86_64-linux"];
+    mainProgram = "ryujinx";
+  };
+})
+// {
+  firmware = stdenvNoCC.mkDerivation {
+    pname = "nx-firmware";
+    version = versionFirm;
+    nativeBuildInputs = [unzip];
+    src = fetchurl {
+      url = "https://github.com/THZoria/NX_Firmware/releases/download/${versionFirm}/Firmware.${versionFirm}.zip";
+      hash = hashFirm;
+    };
+    unpackPhase = "unzip $src";
+    installPhase = ''
+      mkdir -p $out
+      for i in *.nca; do
+        mkdir "$out/$i"
+        cp $i "$out/$i/00"
+      done
+    '';
+  };
+  keys = stdenvNoCC.mkDerivation {
+    pname = "nx-keys";
+    version = versionFirm;
+    nativeBuildInputs = [unzip];
+    src = fetchurl {
+      url = "https://files.prodkeys.net/ProdKeys.NET-v${versionFirm}.zip";
+      hash = hashKeys;
+    };
+    installPhase = ''
+      mkdir -p $out
+      cp * $out
+    '';
   };
 }

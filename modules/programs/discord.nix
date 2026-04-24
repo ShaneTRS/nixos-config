@@ -37,12 +37,13 @@ in {
           ptb = discord-ptb;
         };
         m = cfg.mods;
-      in (branches.${cfg.branch}.override {
-        withOpenASAR = m.enable && m.openasar;
-        withEquicord = m.enable && m.provider == "equicord";
-        withMoonlight = m.enable && m.provider == "moonlight";
-        withVencord = m.enable && m.provider == "vencord";
-      });
+      in
+        branches.${cfg.branch}.override {
+          withOpenASAR = m.enable && m.openasar;
+          withEquicord = m.enable && m.provider == "equicord";
+          withMoonlight = m.enable && m.provider == "moonlight";
+          withVencord = m.enable && m.provider == "vencord";
+        };
     };
   };
 

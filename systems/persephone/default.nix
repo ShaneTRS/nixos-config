@@ -6,6 +6,7 @@
 }: let
   inherit (lib) getExe mkOptionDefault;
 in {
+  services.flatpak.enable = true;
   shanetrs = {
     enable = true;
     browser.firefox = {
@@ -79,10 +80,7 @@ in {
     };
     gaming = {
       epic.enable = true;
-      emulation = {
-        enable = true;
-        switch.package = pkgs.shanetrs.ryubing;
-      };
+      emulation.enable = true;
       lutris.enable = true;
       mangohud.enable = true;
       minecraft = {
@@ -113,7 +111,7 @@ in {
       default = "zsh";
       bash.enable = true;
       zsh.enable = true;
-      doas.noPassCmds = mkOptionDefault ["chrt" "iptables"];
+      doas.noPassCmds = ["chrt" "iptables"];
     };
     shell.enable = true;
   };

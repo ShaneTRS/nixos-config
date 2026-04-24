@@ -219,7 +219,7 @@ in {
 
     filesystem = fsOption {};
     home = fsOption {
-      user = cfg.user;
+      inherit (cfg) user;
       target = x: "${cfg.paths.home}/${x.name}";
     };
     secret = fsOption {
@@ -233,7 +233,7 @@ in {
     };
     xdg =
       mapAttrs (k: v: (fsOption {
-        user = cfg.user;
+        inherit (cfg) user;
         target = x: "${v}/${x.name}";
       }))
       cfg.paths.xdg;
@@ -257,24 +257,25 @@ in {
   };
 
   config = {
-    systemd.user = {
-      services = {
-        tundra-notifier = {
-          environment = {
-            INTERACTIVE = "false";
-            DISPLAY = ":0";
+    systemd = {
+      services = let
+        mkTundraService = x: {
+          script = ''
+            export DSU_KEYFILES DSU_PATH="${config.nix.package}/bin" XDG_RUNTIME_DIR="/run/user/$(id -u ${config.tundra.user})"
+            source <(${pkgs.shanetrs.defer-su}/bin/defer-su.init nix-env /nix/var/nix/profiles/system/bin/switch-to-configuration)
+            ${pkgs.su}/bin/su ${config.tundra.user} /bin/sh -c '${getExe pkgs.shanetrs.tundra} ${x}'
+          '';
+          serviceConfig = {
+            PrivateTmp = "yes";
+            Type = "oneshot";
           };
-          script = "${getExe pkgs.shanetrs.tundra} notify";
-          serviceConfig.Type = "oneshot";
         };
-        tundra-updater = {
-          environment.INTERACTIVE = "false";
-          script = "${getExe pkgs.shanetrs.tundra} notify";
-          serviceConfig.Type = "oneshot";
-        };
+      in {
+        tundra-notifier = mkTundraService "notify";
+        tundra-updater = mkTundraService "update";
       };
       timers.tundra-updater = {
-        enable = cfg.updater.enable;
+        inherit (cfg.updater) enable;
         wantedBy = ["timers.target"];
         timerConfig = {
           OnCalendar =

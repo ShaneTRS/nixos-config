@@ -33,7 +33,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    warnings = mkIf (config.shanetrs.desktop.keymap.enable) ["sidewinderd doesn't properly record macros when xremap is running!"];
+    warnings = mkIf config.shanetrs.desktop.keymap.enable ["sidewinderd doesn't properly record macros when xremap is running!"];
     environment.etc."sidewinderd.conf".text = with cfg; ''
       user = "${user}";
       capture_delays = ${

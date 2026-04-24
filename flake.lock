@@ -2,11 +2,11 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1775423009,
-        "narHash": "sha256-vPKLpjhIVWdDrfiUM8atW6YkIggCEKdSAlJPzzhkQlw=",
+        "lastModified": 1776877367,
+        "narHash": "sha256-EHq1/OX139R1RvBzOJ0aMRT3xnWyqtHBRUBuO1gFzjI=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+        "rev": "0726a0ecb6d4e08f6adced58726b95db924cef57",
         "type": "github"
       },
       "original": {
@@ -18,11 +18,11 @@
     },
     "nixpkgs-master": {
       "locked": {
-        "lastModified": 1775601563,
-        "narHash": "sha256-vnYud0aKZgDUilKtal1erWGUKcNuGL93KlvAwe07lGU=",
+        "lastModified": 1777152564,
+        "narHash": "sha256-PnK+w8psPUHXG2PbQ91RcEcbaZxE3DeQbQPf5r355aY=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "d5fa38c6a641ab3b17b1a805a889d65ef53462a3",
+        "rev": "ffcf69a37f6ef773667492fc84d7420d93c2d422",
         "type": "github"
       },
       "original": {
@@ -57,10 +57,10 @@
     },
     "secrets": {
       "locked": {
-        "lastModified": 1776791706,
-        "narHash": "sha256-GBXj3X4SiWaf1EGa9UuyldSfiqWK6bU8n6uRchqA1qg=",
+        "lastModified": 1777167149,
+        "narHash": "sha256-QPoehMunT0vJPC1xUEQlgh4fQRwMcyPuI9AhguyoMR4=",
         "ref": "refs/heads/main",
-        "rev": "5f464aea9bcb2dde9124eec2cd9ebc8962d24d8a",
+        "rev": "202c84f1300e5db0a28e6f8ea2113a6667683441",
         "revCount": 22,
         "type": "git",
         "url": "https://github.com/shanetrs/nixos-secrets"

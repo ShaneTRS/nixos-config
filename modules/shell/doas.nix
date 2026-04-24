@@ -13,7 +13,7 @@ in {
     package = mkPackageOption pkgs "doas" {};
     noPassCmds = mkOption {
       type = types.listOf types.str;
-      default = ["ionice" "nix-collect-garbage" "true"];
+      default = [];
     };
     extraRules = mkOption {
       type = types.listOf types.attrs;
@@ -28,6 +28,7 @@ in {
   };
 
   config = mkIf enabled {
+    shanetrs.shell.doas.noPassCmds = ["true"];
     environment.systemPackages = with pkgs; [doas-sudo-shim];
     security = {
       sudo.enable = false;
@@ -39,7 +40,7 @@ in {
             users = [config.tundra.user];
             keepEnv = true;
             noPass = true;
-            cmd = cmd;
+            inherit cmd;
           })
           cfg.doas.noPassCmds;
       };

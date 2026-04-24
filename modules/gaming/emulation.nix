@@ -6,7 +6,6 @@
 }: let
   inherit (builtins) attrValues concatMap;
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf;
-  inherit (lib.tundra) mkIfConfig;
   cfg = config.shanetrs.gaming.emulation;
 in {
   options.shanetrs.gaming.emulation = let
@@ -53,7 +52,7 @@ in {
     "3ds" = mkEmuOption {package = pkgs.libretro.citra;};
     ds = mkEmuOption {package = pkgs.libretro.desmume;};
     switch = mkEmuOption {
-      package = pkgs.ryubing;
+      package = pkgs.shanetrs.ryubing;
       isCore = false;
     };
     wii = mkEmuOption {package = pkgs.libretro.dolphin;};
@@ -66,10 +65,14 @@ in {
 
   config = mkIf cfg.enable {
     tundra = {
-      xdg.config."Ryujinx/system/prod.keys" = mkIfConfig "emulation/switch.keys" (x:
-        mkIf cfg.switch.enable {
-          source = x;
-        });
+      xdg.config = {
+        "Ryujinx/bis/system/Contents/registered".source =
+          mkIf (cfg.switch.package ? firmware) cfg.switch.package.firmware;
+        "Ryujinx/system/prod.keys".source =
+          mkIf (cfg.switch.package ? keys) "${cfg.switch.package.keys}/prod.keys";
+        "Ryujinx/system/title.keys".source =
+          mkIf (cfg.switch.package ? keys) "${cfg.switch.package.keys}/title.keys";
+      };
       packages = let
         r = cfg.retroarch;
         emuValues = attrValues (removeAttrs cfg ["enable" "extraPackages" "retroarch"]);

@@ -13,14 +13,14 @@ in rec {
     meta.description = "Build the relevant tundraSystem by ID";
     program = getExe (writeShellApplication {
       name = "flake-build";
-      runtimeInputs = with pkgs; [coreutils openssh nix-output-monitor nixVersions.latest];
+      runtimeInputs = with pkgs; [coreutils shanetrs.defer-su openssh nix-output-monitor nixVersions.latest];
       text = ''
         INTERACTIVE="''${INTERACTIVE:-[ -t 0 ]}"
         SUDO="''${SUDO:-sudo}"
 
         build() {
-          out="$(nom build ${nixArgs} --no-link --print-out-paths \
-            "${self}#nixosConfigurations.$1.config.system.build.''${2:-toplevel}")"
+          out="$("''${BUILDER:-$(eval "$INTERACTIVE" && echo nom || echo nix)}" build ${nixArgs} \
+            --no-link --print-out-paths "${self}#nixosConfigurations.$1.config.system.build.''${2:-toplevel}")"
           echo "$out"
         }
         input() {
@@ -35,14 +35,22 @@ in rec {
             exit 2
           fi
         }
+        as-root() {
+          if [ -e "''${DSU_KEYFILES:-}" ]; then
+            "$SUDO" defer-su "$@" || { [ "$?" -eq 22 ] && "$SUDO" "$@"; }
+          else
+            "$SUDO" "$@"
+          fi
+        }
 
         run() { case "''${1:-build}" in
           boot|switch|test)
             input TUNDRA_ID
             build "$TUNDRA_ID"
             [ -z "$out" ] && return
-            [ "$1" != test ] && "$SUDO" nix-env -p /nix/var/nix/profiles/system --set "$out"
-            "$SUDO" "$out/bin/switch-to-configuration" "$@"
+            [ "$1" != test ] && as-root nix-env -p /nix/var/nix/profiles/system --set "$out" &&
+              out=/nix/var/nix/profiles/system
+            as-root "$out/bin/switch-to-configuration" "$@"
           ;;
           build)
             input TUNDRA_ID
@@ -88,7 +96,7 @@ in rec {
         nix ${nixArgs} flake update --override-input nixpkgs-pin 'github:nixos/nixpkgs/${self.inputs.nixpkgs.rev}'
         nix ${nixArgs} flake check --no-build
         [ -z "''${TUNDRA_ID:-}" ] && exit
-        "${build.program}" "''${@:-build}"
+        nix run "''${TUNDRA_SOURCE:-$PWD}#build" "''${@:-build}"
       '';
     });
     type = "app";

@@ -28,10 +28,7 @@ in {
     };
     gaming = {
       epic.enable = true;
-      emulation = {
-        enable = true;
-        switch.package = pkgs.shanetrs.ryubing;
-      };
+      emulation.enable = true;
       lutris.enable = true;
       mangohud.enable = true;
       minecraft.enable = true;

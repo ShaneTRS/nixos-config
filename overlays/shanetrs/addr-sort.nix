@@ -1,20 +1,13 @@
 {
-  writeShellApplication,
+  writeShellScriptBin,
   coreutils,
   inetutils,
   ...
 }:
-writeShellApplication {
-  name = "addr-sort";
-  runtimeInputs = [coreutils inetutils];
-  text = ''
-    set +o errexit
-    (read -ra arr <<< "$@"
-    for i in "''${arr[@]}"; do
-      if ping "$i" -c1 -W1 &>/dev/null; then
-        echo "$i"
-      fi &
-    done
-    sleep 0.25) | head -n1
-  '';
-}
+writeShellScriptBin "addr-sort" ''
+  { for i in "$@"; do if ${inetutils}/bin/ping "$i" -c1 -W1 &>/dev/null; then
+      printf "%s\n" "$i"
+    fi & done
+    wait -n
+  } | ${coreutils}/bin/head -n1
+''
