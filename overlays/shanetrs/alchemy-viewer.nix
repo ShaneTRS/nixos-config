@@ -76,7 +76,6 @@ in
         libxfixes
         libxrandr
       ];
-      multiPkgs = pkgs: [];
     };
     desktopItem = makeDesktopItem {
       name = pname;

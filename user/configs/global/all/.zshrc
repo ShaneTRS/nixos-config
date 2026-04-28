@@ -1,43 +1,40 @@
 ## Prompt Building
+
 setopt prompt_subst
-PS1_SHORTEN() { [ $((COLUMNS - ${#PS1})) -lt 5 ]; }
-PS1_NIX_SHELL() {(
-	[ -z "$IN_NIX_SHELL" ] && return
-  DIRS=(${(s/:/)PATH}) PKGS=()
-  for i in "${DIRS[@]}"; do
+
+PS_LENGTH() { print -P "$*" | sed 's:\x1B\[[0-9;]*[a-zA-Z]::g' | wc -L; }
+PS_PRINT() { echo -ne "${*@P}"; }
+
+PS1_MULTILINE() {
+  [ $((COLUMNS - $(PS_LENGTH "${PS1//\$\(PS1_MULTILINE\)}"))) -lt ${PS1_SHORTEN:-60} ] &&
+    echo "\n$PS1_ROOT%f "
+}
+PS1_NIX_SHELL() {
+	[ -n "$IN_NIX_SHELL" ] || return
+	local pkgs
+  for i in "${(s/:/)PATH}"; do
     [[ $i =~ /nix/store ]] ||
-      if [ -n "$PKGS" ]; then break; else continue; fi
-    PKG=${${i:44:-4}%-[[:digit:]]*}
-    [[ $PKGS =~ $PKG ]] || PKGS+=$PKG
-  done 2> /dev/null
-  [ -n "$PKGS" ] && echo "%F{5}${(j: :)PKGS} "
-)}
+      if [ -n "$pkgs" ]; then break; else continue; fi
+    i=${i:44:-4} i=${i%-[[:digit:]]*}
+    [[ $pkgs =~ $i ]] || pkgs+=($i)
+  done
+  [ -n "$pkgs" ] && echo "%F{5}${pkgs[@]}"
+}
 
 PS1_ROOT='%B%(!:%F{1}#:%F{2}$)%b'
-PS1_MULTILINE() { PS1_SHORTEN && echo "\n$PS1_ROOT%f "; }
+PS1="$PS1_ROOT$(PS1_NIX_SHELL) %F{8}[%f%m %~%F{8}]%f \$(PS1_MULTILINE)";
 
-PS1="$PS1_ROOT $(PS1_NIX_SHELL)%F{8}[%f%m %~%F{8}]%f \$(PS1_MULTILINE)";
-
-preexec() { RPS1_TIME_START="$(date +%s%3N)"; }
+preexec() { RPS1_TIME_START=$(date +%s%3N); }
 precmd() {
-  RPS1_EXIT="$?"
-
-  # Save and restore original right-handed prompt
-  [ -z "$RPS1_ORIGINAL" ] && RPS1_ORIGINAL="${RPS1:- }"
+  RPS1_ERR=$? RPS1_ORIGINAL="${RPS1_ORIGINAL:-${RPS1:- }}"
   RPS1="$RPS1_ORIGINAL"
 
-  # Add execution timings for entries that last longer than RPS1_TIME_MIN
-  [ -n "$RPS1_TIME_START" ] &&
-    RPS1_TIME_ELAPSED="$(($(date +%s%3N) - RPS1_TIME_START))"
+  [ -n "$RPS1_TIME_START" ] && RPS1_TIME_ELAPSED=$(($(date +%s%3N) - RPS1_TIME_START))
   [ "$RPS1_TIME_ELAPSED" -gt "${RPS1_TIME_MIN:-800}" ] &&
-     RPS1="⏳%B%F{3}$(printf '%.3f' $((RPS1_TIME_ELAPSED / 1000.0)))s%b%f  $RPS1"
+    RPS1="⏳%B%F{3}$(printf '%.3f' "$((RPS1_TIME_ELAPSED / 1000.0))")s%b%f  $RPS1"
   unset RPS1_TIME_START RPS1_TIME_ELAPSED
 
-  # Add an error code for entries with an exit code besides 0
-  [ "$RPS1_EXIT" -ne 0 ] &&
-    RPS1="%B%F{1}❌$RPS1_EXIT%b%f  $RPS1"
-
-  # Trim trailing whitespace
+  [ $RPS1_ERR -ne 0 ] && RPS1="%B%F{1}❌$RPS1_ERR%b%f  $RPS1"
   RPS1="${(*)RPS1/% #}"
 }
 

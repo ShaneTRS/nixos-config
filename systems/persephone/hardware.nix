@@ -9,7 +9,7 @@
       gpu = "intel";
     };
     desktop.audio.autoSwitchOrder = {
-      "bluez_output_internal.*" = 1;
+      "bluez_output.*" = 1;
       "alsa_output.pci-0000_04_00.0.hdmi*" = 2;
     };
   };

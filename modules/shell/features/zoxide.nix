@@ -16,8 +16,9 @@ in {
 
   config = mkIf enabled {
     shanetrs.shell = {
-      shared.aliases = {
-        ccd = "builtin cd";
+      shared = {
+        aliases.ccd = "builtin cd";
+        extraRc = "_ZO_DOCTOR=0";
       };
       features.fzf.enable = true;
     };

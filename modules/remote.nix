@@ -288,6 +288,7 @@ in {
         in "${getExe pkgs.shanetrs.not-nice} ${pkgs.tigervnc}/bin/x0vncserver Geometry=2732x1536 ${
           optionalString (attempt != null) ''-rfbauth "${attempt}"''
         } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+        wantedBy = ["graphical-session.target"];
       };
       services = {
         xserver.enable = true;

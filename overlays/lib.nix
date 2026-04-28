@@ -208,14 +208,17 @@
         else dir + "/${name}")
       (readDir dir);
 
-    exprToFakeDrv = name: expr:
+    exprToDrv = name: expr: let
+      blankDrv = derivation {
+        inherit name;
+        builder = "/bin/sh";
+        system = "x86_64-linux";
+        args = ["-c" "echo > $out"];
+      };
+    in
       if expr.type or null == "derivation"
       then expr
-      else {
-        inherit name expr;
-        drvPath = deepSeq expr "/nix/store/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-${name}.drv";
-        type = "derivation";
-      };
+      else blankDrv // {drvPath = deepSeq expr blankDrv.drvPath;};
 
     # self, nixosConfig, nixpkgs
     getConfig' = extra: file: let
@@ -274,7 +277,7 @@
         then {${name} = mapAttrs (k: final) (prev value);}
         else concatMapAttrs (k2: v2: {"${name}-${k2}" = final v2;}) (prev value))
       set;
-    mkDrvChecks = outputs: set: mapAttrs exprToFakeDrv (mkChecks outputs set);
+    mkDrvChecks = outputs: set: mapAttrs exprToDrv (mkChecks outputs set);
 
     mkIfConfig = file: fn: let attempt = getConfig file; in mkIf (attempt != null) (fn attempt);
 
@@ -337,7 +340,7 @@
               tundra.id = name;
               environment.etc."nix/inputs/pkgs".source = nixpkgs;
               nix = {
-                package = pkgs.nixVersions.latest;
+                package = pkgs.shanetrs.nix-wrapped;
                 registry.pkgs.to = {
                   type = "git";
                   url = "file:" + config.tundra.paths.source;

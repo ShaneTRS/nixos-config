@@ -17,7 +17,7 @@ in {
         enable = mkStrongDefault true;
         doas = {
           enable = mkStrongDefault true;
-          noPassCmds = ["defer-su" "ionice" "nix-collect-garbage"];
+          noPassCmds = ["defer-su" "nix-collect-garbage"];
         };
       };
     };
@@ -49,7 +49,6 @@ in {
 
     nix.settings = {
       auto-optimise-store = mkStrongDefault true;
-      substituters = ["https://nix-community.cachix.org"];
       trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
       trusted-users = [config.tundra.user];
       use-xdg-base-directories = mkStrongDefault true;

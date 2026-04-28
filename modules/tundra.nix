@@ -188,6 +188,10 @@ in {
         default = {};
       };
   in {
+    enable = mkOption {
+      type = types.bool;
+      default = true;
+    };
     activation = {
       tundraEarly = linesOption {default = "";};
       tundraEarlySecrets = linesOption {default = "";};
@@ -256,7 +260,7 @@ in {
     };
   };
 
-  config = {
+  config = mkIf cfg.enable {
     systemd = {
       services = let
         mkTundraService = x: {
@@ -351,6 +355,7 @@ in {
         for i in "''${tundraDeferred[@]}"; do eval "$i"; done
         tundraDeferred=()
       '';
+      # todo: sort cleanup by depth, for removing folders more reliably in the future
       runCleanup = ''
         source <(sort -nr <(comm -23 <(sort /var/lib/tundra/last-system) <(sort /var/lib/tundra/current-system))) || true
       '';
