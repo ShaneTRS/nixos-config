@@ -1,12 +1,14 @@
 {
+  nixosConfig ? null,
   symlinkJoin,
   writeShellApplication,
   dbus,
   gawk,
   git,
   libnotify,
-  shanetrs,
-  nixPackage ? shanetrs.nix-wrapped,
+  nixVersions,
+  nixArgs ? "--extra-experimental-features 'flakes nix-command'",
+  nixPackage ? nixosConfig.nix.package or nixVersions.latest,
   ...
 }:
 symlinkJoin rec {
@@ -20,6 +22,7 @@ symlinkJoin rec {
       text = ''
         set +o errexit
         SUDO="''${SUDO:-sudo}"
+        nix() { command nix ${nixArgs} "$@"; }
 
         current() { readlink /nix/var/nix/profiles/system/source | awk -F'[-/ ]+' '{print $4}' 2>/dev/null; }
         garbage() {

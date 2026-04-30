@@ -35,40 +35,6 @@ in {
       engines = mkOption {
         type = types.attrsOf types.attrs;
         default = {
-          "Home Manager" = {
-            urls = [
-              {
-                template = "https://home-manager-options.extranix.com";
-                params = [
-                  {
-                    name = "query";
-                    value = "{searchTerms}";
-                  }
-                  {
-                    name = "release";
-                    value = "master";
-                  }
-                ];
-              }
-            ];
-            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-            definedAliases = ["!homeopt" "!homeopts"];
-          };
-          "MyNixOS" = {
-            urls = [
-              {
-                template = "https://mynixos.com/search";
-                params = [
-                  {
-                    name = "q";
-                    value = "{searchTerms}";
-                  }
-                ];
-              }
-            ];
-            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake-white.svg";
-            definedAliases = ["!mynix" "!mynixos"];
-          };
           "NixOS Wiki" = {
             urls = [
               {
@@ -82,7 +48,37 @@ in {
               }
             ];
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-            definedAliases = ["!nix" "!nixos"];
+            definedAliases = ["!nix"];
+          };
+          "nix.dev" = {
+            urls = [
+              {
+                template = "https://nix.dev/search.html";
+                params = [
+                  {
+                    name = "q";
+                    value = "{searchTerms}";
+                  }
+                ];
+              }
+            ];
+            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            definedAliases = ["!nixdev"];
+          };
+          "Noogle" = {
+            urls = [
+              {
+                template = "https://noogle.dev/q/";
+                params = [
+                  {
+                    name = "term";
+                    value = "{searchTerms}";
+                  }
+                ];
+              }
+            ];
+            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            definedAliases = ["!noogle"];
           };
           "NixOS Options" = {
             urls = [
@@ -101,7 +97,7 @@ in {
               }
             ];
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-            definedAliases = ["!nixopt" "!nixopts"];
+            definedAliases = ["!nixopt"];
           };
           "NixOS Packages" = {
             urls = [
@@ -118,7 +114,7 @@ in {
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
             definedAliases = ["!nixpkgs"];
           };
-          "Nixpkgs Repo" = {
+          "Nixpkgs Issues" = {
             urls = [
               {
                 template = "https://github.com/search";
@@ -136,6 +132,25 @@ in {
             ];
             icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
             definedAliases = ["!nixrepo"];
+          };
+          "Nix Code" = {
+            urls = [
+              {
+                template = "https://github.com/search";
+                params = [
+                  {
+                    name = "q";
+                    value = "lang%3Anix+{searchTerms}";
+                  }
+                  {
+                    name = "type";
+                    value = "code";
+                  }
+                ];
+              }
+            ];
+            icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+            definedAliases = ["!nixcode"];
           };
         };
       };

@@ -340,7 +340,7 @@
               tundra.id = name;
               environment.etc."nix/inputs/pkgs".source = nixpkgs;
               nix = {
-                package = pkgs.shanetrs.nix-wrapped;
+                package = pkgs.nixVersions.latest;
                 registry.pkgs.to = {
                   type = "git";
                   url = "file:" + config.tundra.paths.source;

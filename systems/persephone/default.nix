@@ -32,24 +32,25 @@ in {
         extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kdenlive];
       };
       keymap = let
-        xdotool = getExe pkgs.xdotool;
-        launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
+        launch = cmd: {launch = [(pkgs.writeShellScript "xremap-launch" cmd)];};
       in {
         keymap = [
           {
             name = "global";
             remap = {
-              super-p = launch "ssh shanetrs.remote.client systemctl --user restart audio-fix";
               super-shift-s = launch ''
-                [[ "$(ls /tmp/clipboard-*.png | wc -l)" -gt 24 ]] && rm /tmp/clipboard-*.png
+                export PATH="${pkgs.coreutils}/bin:$PATH"
+                saved=(/tmp/clipboard-*.png)
+                [[ "''${#saved[@]}" -gt 24 ]] && rm "''${saved[0]}"
                 file="/tmp/clipboard-$RANDOM.png"
-                spectacle -brno "$file"
+                ( exec -a keymap-screenshot ${getExe pkgs.kdePackages.spectacle} -brno "$file" )
                 sleep 0.1
-                [ ! -f "$file" ] && exit 1
+                [ -f "$file" ] || exit 1
                 ${getExe pkgs.xclip} -sel c -t image/png -i < "$file"
               '';
               super-space = launch ''
-                p=$(${xdotool} getwindowpid $(${xdotool} getactivewindow))
+                export PATH="${pkgs.coreutils}/bin:${pkgs.xdotool}/bin:$PATH"
+                p=$(xdotool getwindowpid $(xdotool getactivewindow))
                 ps=($(cat /proc/$p/stat)); s=9
                 [ ''${ps[2]} == 'T' ] && ((s-=1))
                 kill -1$s $p
@@ -62,15 +63,14 @@ in {
             name = "menu";
             remap = {
               leftmeta = {
-                press = launch ''
-                  date +%s%N > /tmp/xremap.menu
-                '';
+                press = launch "date +%s%N > /tmp/xremap.menu";
                 release = launch ''
+                  export PATH="${pkgs.coreutils}/bin:$PATH"
+                  ${pkgs.procps}/bin/pgrep -f keymap-screenshot && exit 0
                   since=$(( ( $(date +%s%N) - $(cat /tmp/xremap.menu || echo 0) ) / 1000000 ))
-                  if [[ $since -lt 150 || $since -gt 12500 ]]; then
-                    ${pkgs.kdePackages.qttools}/bin/qdbus org.kde.kglobalaccel /component/kwin \
-                      org.kde.kglobalaccel.Component.invokeShortcut Overview
-                  fi
+                  [[ $since -lt 150 || $since -gt 12500 ]] &&
+                    ${pkgs.dbus}/bin/dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin \
+                      org.kde.kglobalaccel.Component.invokeShortcut string:Overview
                 '';
               };
             };

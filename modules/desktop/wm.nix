@@ -22,7 +22,7 @@ in {
   config = mkIf enabled (mkMerge [
     {
       shanetrs.desktop.keymap = let
-        launch = cmd: {launch = [(getExe (pkgs.writeShellScriptBin "xremap-launch" cmd))];};
+        launch = cmd: {launch = [(pkgs.writeShellScript "xremap-launch" cmd)];};
 
         wpctl = "${pkgs.wireplumber}/bin/wpctl";
         playerctl = getExe pkgs.playerctl;

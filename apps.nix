@@ -96,7 +96,7 @@ in rec {
         nix ${nixArgs} flake update --override-input nixpkgs-pin 'github:nixos/nixpkgs/${self.inputs.nixpkgs.rev}'
         nix ${nixArgs} flake check --no-build
         [ -z "''${TUNDRA_ID:-}" ] && exit
-        nix run "''${TUNDRA_SOURCE:-$PWD}#build" "''${@:-build}"
+        nix ${nixArgs} run "''${TUNDRA_SOURCE:-$PWD}#build" "''${@:-build}"
       '';
     });
     type = "app";
