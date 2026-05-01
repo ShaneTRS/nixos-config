@@ -6,7 +6,7 @@
   pkgs,
   ...
 }: let
-  inherit (builtins) attrValues concatMap elem filter groupBy isFunction listToAttrs mapAttrs match replaceStrings sort substring toJSON toPath warn;
+  inherit (builtins) attrValues concatMap elem filter groupBy isFunction length listToAttrs mapAttrs match replaceStrings sort split substring toJSON warn;
   inherit (lib) concatLines escapeShellArgs flatten getExe mapAttrsToList mkIf mkOption mkOptionType mkOverride optionalString types unique;
   inherit (lib.tundra) decryptSecret decryptTemplate deepDirOf;
   inherit (pkgs) buildEnv runCommandLocal writeText;
@@ -27,20 +27,21 @@
   fsToActivate = x: let
     e = mapAttrs (k: v: escapeShellArgs [v]) x;
     defer = optionalString (x.order < 0) "tundraDefer ";
+    depth = toString (length (split "/" x.target));
   in
     if x.type == "execute"
     then ''
       ${e.source} ${e.target} ${writeText "${x.meta.name}-json" (fsToJSON x)}
       ${defer}chown -RPh ${fsToChown x} ${e.target}
       ${optionalString (x.mode != "symlink") "chmod -RPh ${toString x.mode} ${e.target}"}
-      tundraDeactivate '[ -e ${e.target} ] && rm ${e.target}'
+      tundraDeactivate '${depth}) [ -e ${e.target} ] && rm -r ${e.target}'
     ''
     else if x.type == "directory" && x.source == ""
     then ''
       [ -d ${e.target} ] || mkdir ${e.target}
       ${defer}chown ${fsToChown x} ${e.target}
       ${optionalString (x.mode != "symlink") "chmod ${toString x.mode} ${e.target}"}
-      tundraDeactivate ': -500; [ -d ${e.target} ] && rmdir ${e.target}'
+      tundraDeactivate '${depth}) [ -d ${e.target} ] && rmdir ${e.target}'
     ''
     else if x.mode != "symlink"
     then ''
@@ -50,7 +51,7 @@
       [ ! -e ${e.target} ] || mv -fT ${e.target} ${e.target}.old
       mv -T ${e.target}.tmp ${e.target}
       [ ! -e ${e.target}.old ] || rm -fr ${e.target}.old
-      tundraDeactivate '[ -e ${e.source} ] && rm -fr ${e.target}'
+      tundraDeactivate '${depth}) [ -e ${e.target} ] && rm -fr ${e.target}'
     ''
     else if x.type == "recursive"
     then ''
@@ -58,19 +59,24 @@
         parents=() p="$(dirname ${e.target}"$file")"
         while [ "$p" != "/" ]; do parents+=("$p") p="$(dirname "$p")"; done
         for ((i=''${#parents[@]}-1; i>=0; i--)); do
-          mkdir "''${parents[$i]}" 2>/dev/null &&
-            ${defer}tundraInheritStats "''${parents[$i]}"
+          parent="''${parents[$i]}"
+          if mkdir "$parent" 2>/dev/null; then
+            ${defer}tundraInheritStats "$parent"
+            IFS=/ read -ra idepth <<< "$parent"
+            tundraDeactivate '%s) [ -d %q ] && rmdir %q' "''${#idepth[@]}" "$parent" "$parent"
+          fi
         done
         ln -sfn ${e.source}"$file" ${e.target}"$file".tmp
         mv -fT ${e.target}"$file".tmp ${e.target}"$file"
-        tundraDeactivate '[ -L ${e.target}%q ] && rm ${e.target}%q' "$file" "$file"
+        IFS=/ read -ra fdepth <<< "$file"
+        tundraDeactivate '%s) [ -L ${e.target}%q ] && rm ${e.target}%q' "$(( ${depth} + ''${#fdepth[@]} ))" "$file" "$file"
       done < <(${findutils "find"} ${e.source} -mindepth 1 -type f -printf '/%P\0')
     ''
     else if x.type == "regular"
     then ''
       ln -sfn ${e.source} ${e.target}.tmp
       mv -fT ${e.target}.tmp ${e.target}
-      tundraDeactivate '[ -L ${e.target} ] && rm ${e.target}'
+      tundraDeactivate '${depth}) [ -L ${e.target} ] && rm ${e.target}'
     ''
     else warn "toFsActivate for '${x.type}-${toString x.mode}' is not implemented!" "# wip: ${x.type}-${toString x.mode} ${e.target}";
   findutils = bin: "${pkgs.findutils}/bin/${bin}";
@@ -164,7 +170,7 @@ in {
           };
           target = mkOption {
             type = types.anything;
-            apply = x: toPath (applyArgs x);
+            apply = x: toString (/. + (applyArgs x));
             default = default.target or (x: x.name);
           };
           text = mkOption {
@@ -355,9 +361,9 @@ in {
         for i in "''${tundraDeferred[@]}"; do eval "$i"; done
         tundraDeferred=()
       '';
-      # todo: sort cleanup by depth, for removing folders more reliably in the future
       runCleanup = ''
-        source <(sort -nr <(comm -23 <(sort /var/lib/tundra/last-system) <(sort /var/lib/tundra/current-system))) || true
+        source <(comm -23 <(sort /var/lib/tundra/last-system) \
+          <(sort /var/lib/tundra/current-system) | sort -nr | cut -d\  -f2-) || true
       '';
       wrapTraps = ''
         tundraTrapDebug="$(trap -P DEBUG)"
@@ -372,11 +378,15 @@ in {
         eval "''${tundraTrapErrCmd:-trap - ERR}"
       '';
       inheritExempt = map (x: x.target) enabled;
-      mkInheritDir = defer: track: x: let
+      mkInheritDir = doDefer: doTrack: x: let
         e = escapeShellArgs [x];
-        deferStr = optionalString defer "tundraDefer ";
-        trackStr = optionalString track " && ${deferStr}tundraInheritStats ${e}";
-      in "[ -d ${e} ] || mkdir ${e}${trackStr}";
+        depth = toString (length (split "/" x));
+        defer = optionalString doDefer "tundraDefer ";
+        track = optionalString doTrack " && ${defer}tundraInheritStats ${e}";
+      in ''
+        [ -d ${e} ] || { mkdir ${e}${track} &&
+          tundraDeactivate '${depth}) [ -d ${e} ] && rmdir ${e}'; }
+      '';
       mkInheritParents = defer: list:
         concatLines (map (x: mkInheritDir defer (!elem x inheritExempt) x)
           (unique (concatMap (x: (deepDirOf x.target)) list)));

@@ -26,7 +26,7 @@ in rec {
       ''
         cd "$TMPDIR"
         git clone '${lock.nodes.secrets.original.url}' "$TMPDIR"
-        trap "rm -rf $TMPDIR" EXIT
+        trap "rm -rf '$TMPDIR'" EXIT
       ''
       + old.shellHook;
   });

@@ -6,10 +6,10 @@
 
 A tree-driven flake that implicitly imports and defines its modules, systems, and overlays.
 
-- Custom activation scripts for generating, linking, and merging config files declaratively [<sup>1](https://github.com/ShaneTRS/nixos-config/blob/e32d90f4477f2db4ce83a9aea34d19e4dd33dee6/modules/tundra.nix#L384-L418)
-- Natively supported secrets via the declarative file generation scripts [<sup>2](https://github.com/ShaneTRS/nixos-config/blob/e32d90f4477f2db4ce83a9aea34d19e4dd33dee6/overlays/lib.nix#L18-L53)
+- Custom activation scripts for generating, linking, and merging config files declaratively [<sup>1](https://github.com/ShaneTRS/nixos-config/blob/81789209f95bc3be16cc27d0172c58f2c3fb1ebe/modules/tundra.nix#L394-L428)
+- Natively supported secrets via the declarative file generation scripts [<sup>2](https://github.com/ShaneTRS/nixos-config/blob/81789209f95bc3be16cc27d0172c58f2c3fb1ebe/overlays/lib.nix#L18-L53)
 - Overlaid Nixpkgs exposed via `legacyPackages.x86_64-linux`, for running any patched packages
-- Custom flake evaluation checks via `deepSeq` derivations [<sup>3](https://github.com/ShaneTRS/nixos-config/blob/e32d90f4477f2db4ce83a9aea34d19e4dd33dee6/overlays/lib.nix#L268-L280)
+- Custom flake evaluation checks via `deepSeq` derivations [<sup>3](https://github.com/ShaneTRS/nixos-config/blob/81789209f95bc3be16cc27d0172c58f2c3fb1ebe/overlays/lib.nix#L268-L280)
 
 ```
 nixos-config
@@ -28,11 +28,11 @@ nixos-config
 │   ├── hotfixes.nix
 │   └── lib.nix
 ├── systems
-│   └── example
-│       ├── default.nix
-│       └── hardware.nix
+│   ├── example.nix
+│   └── other-example
+│       └── nested.nix
 ├── user
-│   ├── configs<user>/<system>
+│   ├── configs/<user>/<system>
 │   │   └── example.md    
 │   └── homes/<user>/<system>
 │       └── example.md    
@@ -41,4 +41,4 @@ nixos-config
 ```
 
 ---
-1. [`tundra.nix#L384-L418`](https://github.com/ShaneTRS/nixos-config/blob/e32d90f4477f2db4ce83a9aea34d19e4dd33dee6/modules/tundra.nix#L384-L418) &nbsp; 2. [`lib.nix#L18-L53`](https://github.com/ShaneTRS/nixos-config/blob/e32d90f4477f2db4ce83a9aea34d19e4dd33dee6/overlays/lib.nix#L18-L53) &nbsp; 3. [`lib.nix#L268-L280`](https://github.com/ShaneTRS/nixos-config/blob/e32d90f4477f2db4ce83a9aea34d19e4dd33dee6/overlays/lib.nix#L268-L280)
+1. [`tundra.nix#L394-L428`](https://github.com/ShaneTRS/nixos-config/blob/81789209f95bc3be16cc27d0172c58f2c3fb1ebe/modules/tundra.nix#L394-L428) &nbsp; 2. [`lib.nix#L18-L53`](https://github.com/ShaneTRS/nixos-config/blob/81789209f95bc3be16cc27d0172c58f2c3fb1ebe/overlays/lib.nix#L18-L53) &nbsp; 3. [`lib.nix#L268-L280`](https://github.com/ShaneTRS/nixos-config/blob/81789209f95bc3be16cc27d0172c58f2c3fb1ebe/overlays/lib.nix#L268-L280)
