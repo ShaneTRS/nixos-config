@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
@@ -8,6 +9,7 @@
   inherit (lib) mkDefault mkEnableOption mkIf mkMerge mkOption types;
   inherit (lib.tundra) mergeFormat;
   cfg = config.shanetrs.desktop;
+  opt = options.shanetrs.desktop;
 in {
   options.shanetrs.desktop = {
     enable = mkEnableOption "Desktop environment and display manager configuration";
@@ -36,12 +38,12 @@ in {
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = with pkgs; [shanetrs.uri-open];
-      example = with pkgs; [xdg-utils];
     };
   };
 
   config = mkIf cfg.enable (mkMerge [
     {
+      shanetrs.desktop.extraPackages = opt.extraPackages.default;
       hardware.bluetooth.enable = true;
       security.rtkit.enable = true; # Interactive privilege escalation
       services = {

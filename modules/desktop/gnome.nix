@@ -1,13 +1,14 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOption types;
-
   pcfg = config.shanetrs.desktop;
   cfg = pcfg.gnome;
+  opt = options.shanetrs.desktop.gnome;
   enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.desktop.gnome = {
@@ -15,10 +16,12 @@ in {
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = [];
+      example = [pkgs.gnome-calculator];
     };
   };
 
   config = mkIf enabled {
+    shanetrs.desktop.gnome.extraPackages = opt.extraPackages.default;
     environment.gnome.excludePackages = with pkgs; [
       gnome-contacts
       gnome-logs

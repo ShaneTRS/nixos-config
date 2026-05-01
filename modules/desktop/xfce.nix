@@ -1,14 +1,15 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkMerge mkOption types;
-  inherit (pkgs.shanetrs) chicago95;
-
+  inherit (pkgs.shanetrs) s_chicago95;
   pcfg = config.shanetrs.desktop;
   cfg = pcfg.xfce;
+  opt = options.shanetrs.desktop.xfce;
   enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.desktop.xfce = {
@@ -29,39 +30,40 @@ in {
         displayManager.defaultSession = "xfce";
         xserver.desktopManager.xfce.enable = true;
       };
+      shanetrs.desktop.xfce.extraPackages = opt.extraPackages.default;
+      tundra.packages = cfg.extraPackages;
     }
     (mkIf cfg.presets.win95.enable {
+      shanetrs.desktop.xfce.extraPackages = with pkgs; [s_chicago95 xfce4-xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin];
       fonts = {
-        packages = [chicago95];
+        packages = [s_chicago95];
         fontconfig.allowBitmaps = true;
       };
-      environment.systemPackages = with pkgs.xfce; [xfce4-whiskermenu-plugin xfce4-pulseaudio-plugin];
 
       tundra = {
         home = {
-          ".gtkrc-2.0".source = "${chicago95}/import/.gtkrc-2.0";
+          ".gtkrc-2.0".source = "${s_chicago95}/import/.gtkrc-2.0";
           ".moonchild productions" = {
             type = "recursive";
-            source = "${chicago95}/import/.moonchild productions/";
+            source = "${s_chicago95}/import/.moonchild productions/";
           };
           ".xinitrc".text = ''
-            pw-play "${chicago95}/share/sounds/Chicago95/startup.ogg" & true
+            pw-play "${s_chicago95}/share/sounds/Chicago95/startup.ogg" & true
           '';
         };
         xdg.config = {
           "gtk-3.0" = {
             type = "recursive";
-            source = "${chicago95}/import/gtk-3.0/";
+            source = "${s_chicago95}/import/gtk-3.0/";
           };
           "xfce4" = {
             type = "recursive";
-            source = "${chicago95}/import/xfce4/";
+            source = "${s_chicago95}/import/xfce4/";
           };
         };
-        packages = [chicago95];
       };
       systemd.user.services.chicago95 = {
-        script = "${chicago95}/import/install.sh";
+        script = "${s_chicago95}/import/install.sh";
         wantedBy = ["default.target"];
       };
     })

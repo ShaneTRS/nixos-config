@@ -1,11 +1,13 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf;
   cfg = config.shanetrs.gaming.steam;
+  opt = options.shanetrs.gaming.steam;
 in {
   options.shanetrs.gaming = {
     steam = {
@@ -30,6 +32,10 @@ in {
   };
 
   config = mkIf cfg.enable {
+    shanetrs.gaming.steam = {
+      extraCompatPackages = opt.extraCompatPackages.default;
+      extraPackages = opt.extraPackages.default;
+    };
     programs.steam = {
       inherit (cfg) enable package extraCompatPackages extraPackages;
       remotePlay.openFirewall = true; # 27031..27036

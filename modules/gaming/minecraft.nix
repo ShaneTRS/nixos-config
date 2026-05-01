@@ -1,11 +1,13 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf;
   cfg = config.shanetrs.gaming.minecraft;
+  opt = options.shanetrs.gaming.minecraft;
 in {
   options.shanetrs.gaming.minecraft = {
     enable = mkEnableOption "Minecraft configuration and installation";
@@ -16,12 +18,13 @@ in {
     };
     extraPackages = mkOption {
       type = types.listOf types.package;
-      example = with pkgs; [flite];
+      example = [pkgs.flite];
       default = [];
     };
   };
 
   config = mkIf cfg.enable {
+    shanetrs.gaming.minecraft.extraPackages = opt.extraPackages.default;
     tundra.packages =
       cfg.extraPackages
       ++ [(cfg.package.override {jdks = cfg.java;})];

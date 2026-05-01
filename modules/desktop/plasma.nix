@@ -1,13 +1,14 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (lib) mkEnableOption mkIf mkOption types;
-
   pcfg = config.shanetrs.desktop;
   cfg = pcfg.plasma;
+  opt = options.shanetrs.desktop.plasma;
   enabled = pcfg.enable && cfg.enable;
 in {
   options.shanetrs.desktop.plasma = {
@@ -26,19 +27,22 @@ in {
   };
 
   config = mkIf enabled {
-    shanetrs.desktop.mime = {
-      added = {
-        "inode/directory" = ["org.kde.dolphin.desktop"];
-      };
-      default = {
-        "application/java-archive" = ["org.kde.ark.desktop"];
-        "application/vnd.debian.binary-package" = ["org.kde.ark.desktop"];
-        "inode/directory" = ["org.kde.dolphin.desktop"];
-      };
-      removed = {
-        "application/octet-stream" = ["org.kde.kdeconnect_open.desktop"];
-        "x-scheme-handler/http" = ["org.kde.kdeconnect_open.desktop"];
-        "x-scheme-handler/https" = ["org.kde.kdeconnect_open.desktop"];
+    shanetrs.desktop = {
+      plasma.extraPackages = opt.extraPackages.default;
+      mime = {
+        added = {
+          "inode/directory" = ["org.kde.dolphin.desktop"];
+        };
+        default = {
+          "application/java-archive" = ["org.kde.ark.desktop"];
+          "application/vnd.debian.binary-package" = ["org.kde.ark.desktop"];
+          "inode/directory" = ["org.kde.dolphin.desktop"];
+        };
+        removed = {
+          "application/octet-stream" = ["org.kde.kdeconnect_open.desktop"];
+          "x-scheme-handler/http" = ["org.kde.kdeconnect_open.desktop"];
+          "x-scheme-handler/https" = ["org.kde.kdeconnect_open.desktop"];
+        };
       };
     };
     programs = {

@@ -1,12 +1,14 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (builtins) attrValues concatMap;
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf;
   cfg = config.shanetrs.gaming.emulation;
+  opt = options.shanetrs.gaming.emulation;
 in {
   options.shanetrs.gaming.emulation = let
     mkEmuOption = {
@@ -36,6 +38,7 @@ in {
     extraPackages = mkOption {
       type = types.listOf types.package;
       default = [];
+      example = [pkgs.shanetrs.schud];
     };
     retroarch = {
       enable = mkOption {
@@ -64,6 +67,10 @@ in {
   };
 
   config = mkIf cfg.enable {
+    shanetrs.gaming.emulation = {
+      extraPackages = opt.extraPackages.default;
+      retroarch.cores = opt.retroarch.cores.default;
+    };
     tundra = {
       xdg.config = {
         "Ryujinx/bis/system/Contents/registered".source =

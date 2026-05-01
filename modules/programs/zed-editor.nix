@@ -1,13 +1,15 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
   inherit (builtins) elem;
-  inherit (lib) mkAfter mkEnableOption mkIf mkMerge mkOption mkOptionDefault mkPackageOption types;
-  inherit (lib.tundra) mergeFormat resolveList;
+  inherit (lib) mkAfter mkEnableOption mkIf mkMerge mkOption mkPackageOption types;
+  inherit (lib.tundra) mergeFormat;
   cfg = config.shanetrs.programs.zed-editor;
+  opt = options.shanetrs.programs.zed-editor;
 in {
   options.shanetrs.programs.zed-editor = {
     enable = mkEnableOption "Zed configuration and integration";
@@ -18,7 +20,12 @@ in {
     package = mkPackageOption pkgs "zed-editor" {};
     extraPackages = mkOption {
       type = types.listOf types.package;
-      default = [];
+      default = with pkgs; [
+        shanetrs.devcontainer
+        gcc
+        clang-tools
+        package-version-server
+      ];
     };
     settings = mkOption {
       type = types.attrsOf types.anything;
@@ -133,6 +140,11 @@ in {
 
   config = mkIf cfg.enable (mkMerge [
     {
+      shanetrs.programs.zed-editor = {
+        extraPackages = opt.extraPackages.default;
+        settings = opt.settings.default;
+        keymap = opt.keymap.default;
+      };
       shanetrs.desktop.mime = {
         added."inode/directory" = mkAfter ["dev.zed.Zed.desktop"];
         default = {
@@ -165,14 +177,7 @@ in {
             nativeBuildInputs = with pkgs; [makeWrapper];
             postBuild = ''
               wrapProgram $out/bin/zeditor \
-              --suffix PATH : ${lib.makeBinPath (cfg.extraPackages
-                ++ (with pkgs;
-                  resolveList [
-                    shanetrs.devcontainer
-                    gcc
-                    clang-tools
-                    package-version-server
-                  ]))}
+              --suffix PATH : ${lib.makeBinPath cfg.extraPackages}
             '';
           })
         ];
@@ -182,7 +187,7 @@ in {
     (mkIf (elem "nix" cfg.features) {
       shanetrs.programs.zed-editor = {
         extraPackages = with pkgs; [nixd alejandra];
-        settings = mkOptionDefault {
+        settings = {
           auto_install_extensions = {
             nix = true;
             toml = true;
@@ -206,7 +211,7 @@ in {
     (mkIf (elem "rust" cfg.features) {
       shanetrs.programs.zed-editor = {
         extraPackages = with pkgs; [rustup];
-        settings = mkOptionDefault {
+        settings = {
           auto_install_extensions.toml = true;
           languages.Rust = {
             formatter.external = {

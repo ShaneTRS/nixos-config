@@ -4,7 +4,7 @@
   lib,
   ...
 }: let
-  inherit (lib) getExe mkOptionDefault;
+  inherit (lib) getExe;
 in {
   services.flatpak.enable = true;
   shanetrs = {
@@ -29,7 +29,7 @@ in {
       };
       plasma = {
         enable = true;
-        extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kdenlive];
+        extraPackages = with pkgs; [kdePackages.wacomtablet kdePackages.kdenlive];
       };
       keymap = let
         launch = cmd: {launch = [(pkgs.writeShellScript "xremap-launch" cmd)];};

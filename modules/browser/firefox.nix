@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  options,
   pkgs,
   ...
 }: let
@@ -8,6 +9,7 @@
   inherit (lib.tundra) mergeFormat;
   inherit (builtins) elemAt listToAttrs split;
   cfg = config.shanetrs.browser.firefox;
+  opt = options.shanetrs.browser.firefox;
 in {
   options.shanetrs.browser.firefox = {
     enable = mkEnableOption "Firefox configuration and integration";
@@ -173,28 +175,32 @@ in {
         "xpinstall.signatures.required" = false;
       };
     };
-    _ = {
-      nativeMessagingHosts = mkOption {
-        type = types.listOf types.package;
-        default = [(mkIf cfg.pwa.enable cfg.pwa.package)];
-      };
+    nativeMessagingHosts = mkOption {
+      type = types.listOf types.package;
+      default = [(mkIf cfg.pwa.enable cfg.pwa.package)];
     };
   };
 
   config = mkIf cfg.enable {
-    shanetrs.desktop.mime = let
-      firefoxpwa-mime =
-        if cfg.pwa.enable
-        then ["firefoxpwa.desktop"]
-        else [];
-    in {
-      default = {
-        "application/xhtml+xml" = ["firefox.desktop"];
-        "text/html" = ["firefox.desktop"];
+    shanetrs = {
+      browser.firefox = {
+        extensions = opt.extensions.default;
+        nativeMessagingHosts = opt.nativeMessagingHosts.default;
       };
-      removed = {
-        "x-scheme-handler/http" = ["firefox.desktop"] ++ firefoxpwa-mime;
-        "x-scheme-handler/https" = ["firefox.desktop"] ++ firefoxpwa-mime;
+      desktop.mime = let
+        firefoxpwa-mime =
+          if cfg.pwa.enable
+          then ["firefoxpwa.desktop"]
+          else [];
+      in {
+        default = {
+          "application/xhtml+xml" = ["firefox.desktop"];
+          "text/html" = ["firefox.desktop"];
+        };
+        removed = {
+          "x-scheme-handler/http" = ["firefox.desktop"] ++ firefoxpwa-mime;
+          "x-scheme-handler/https" = ["firefox.desktop"] ++ firefoxpwa-mime;
+        };
       };
     };
     tundra = {
@@ -241,7 +247,7 @@ in {
     programs.firefox = {
       enable = true;
       inherit (cfg) package preferences;
-      nativeMessagingHosts.packages = cfg._.nativeMessagingHosts;
+      nativeMessagingHosts.packages = cfg.nativeMessagingHosts;
       policies.ExtensionSettings = listToAttrs (map (x: let
           addon = split ":" x;
         in {

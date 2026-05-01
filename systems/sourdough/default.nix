@@ -2,9 +2,7 @@
   pkgs,
   lib,
   ...
-}: let
-  inherit (lib) mkOptionDefault;
-in {
+}: {
   services = {
     flatpak.enable = true;
     sunshine = {
@@ -23,7 +21,7 @@ in {
       enable = true;
       plasma = {
         enable = true;
-        extraPackages = with pkgs; mkOptionDefault [kdePackages.wacomtablet kdePackages.kolourpaint];
+        extraPackages = with pkgs; [kdePackages.wacomtablet kdePackages.kolourpaint];
       };
     };
     gaming = {
