@@ -10,14 +10,12 @@ in {
   shanetrs = {
     enable = true;
     containers = {
-      services = {
-        enable = true;
-        after = ["run-media-${config.tundra.user}-Felix\\x2dPP.mount"];
-        preStart = ''
-          mkdir -p /tmp/1050368e08b494751a7fccc79f422a89 # Discord Bot
-        '';
-        uinput = true;
-      };
+      enable = true;
+      after = ["run-media-${config.tundra.user}-Felix\\x2dPP.mount"];
+      preStart = ''
+        mkdir -p /tmp/1050368e08b494751a7fccc79f422a89 # Discord Bot
+      '';
+      uinput = true;
     };
     browser.firefox = {
       enable = true;

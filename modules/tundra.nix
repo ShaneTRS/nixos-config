@@ -25,7 +25,7 @@
     };
 
   fsToActivate = x: let
-    e = mapAttrs (k: v: escapeShellArgs [v]) x;
+    e = mapAttrs (_: v: escapeShellArgs [v]) x;
     defer = optionalString (x.order < 0) "tundraDefer ";
     depth = toString (length (split "/" x.target));
   in
@@ -242,7 +242,7 @@ in {
       meta.secret = true;
     };
     xdg =
-      mapAttrs (k: v: (fsOption {
+      mapAttrs (_: v: (fsOption {
         inherit (cfg) user;
         target = x: "${v}/${x.name}";
       }))
@@ -257,7 +257,7 @@ in {
         key = strOption {default = "/etc/ssh/ssh_host_ed25519_key";};
       };
       source = strOption {default = "${cfg.paths.xdg.config}/nixos";};
-      xdg = mapAttrs (k: v: strOption {default = "${cfg.paths.home}/${v}";}) {
+      xdg = mapAttrs (_: v: strOption {default = "${cfg.paths.home}/${v}";}) {
         config = ".config";
         cache = ".cache";
         data = ".local/share";
@@ -431,7 +431,7 @@ in {
           name = x.target;
           value = x;
         }) (flatten ((map attrValues [cfg.home cfg.secret])
-            ++ attrValues (mapAttrs (k: attrValues) cfg.xdg)))
+            ++ attrValues (mapAttrs (_: attrValues) cfg.xdg)))
       );
       environment = {
         package = buildEnv {

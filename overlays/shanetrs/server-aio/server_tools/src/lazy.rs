@@ -423,24 +423,39 @@ mod server {
 		},
 		std::{
 			process::{exit, Command},
+			sync::Mutex,
 			time::Instant,
 		},
 		tokio::spawn,
 	};
-	static mut STARTUP: u32 = 0;
+	#[derive(PartialEq)]
+	enum ServerState {
+		Waiting,
+		Starting,
+		Started(u32),
+	}
+	static STARTUP: Mutex<ServerState> = Mutex::new(ServerState::Waiting);
 
 	pub fn startup(exe: Box<str>) {
-		if unsafe { STARTUP } != 0 {
-			return;
-		};
+		{
+			let mut guard = match STARTUP.lock() {
+				Ok(g) => g,
+				Err(_) => return,
+			};
+			if *guard != ServerState::Waiting {
+				return;
+			};
+			*guard = ServerState::Starting;
+		}
+
 		smsg!("Connection received. Starting the server.");
 		let exe_clone = exe.clone();
 		let child = spawn(async move { Command::new(exe_clone.as_ref()).spawn() });
 		spawn(async move {
 			match child.await.unwrap() {
 				Ok(mut child) => {
-					unsafe {
-						STARTUP = child.id();
+					if let Ok(mut guard) = STARTUP.lock() {
+						*guard = ServerState::Started(child.id());
 					};
 					exit(child.wait().unwrap_or_default().code().unwrap_or_default())
 				}
@@ -455,16 +470,17 @@ mod server {
 		});
 	}
 	pub fn signal(activity: &Activity) {
-		let guard = activity.0.lock().unwrap();
-		if guard.signal != 0
-			&& guard.count == 0
-			&& Instant::now() - guard.timestamp > guard.keep_alive
-			&& unsafe { STARTUP } != 0
-		{
-			let _ = Command::new("kill")
-				.args([format!("-{}", guard.signal), unsafe { STARTUP }.to_string()])
-				.spawn();
-		};
+		let activity_guard = activity.0.lock().unwrap();
+		if let Ok(ServerState::Started(pid)) = STARTUP.lock().as_deref() {
+			if activity_guard.signal != 0
+				&& activity_guard.count == 0
+				&& Instant::now() - activity_guard.timestamp > activity_guard.keep_alive
+			{
+				let _ = Command::new("kill")
+					.args([format!("-{}", activity_guard.signal), pid.to_string()])
+					.spawn();
+			};
+		}
 	}
 }
 

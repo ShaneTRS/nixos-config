@@ -86,6 +86,19 @@ in rec {
     });
     type = "app";
   };
+  lint = {
+    meta.description = "Run static analysis and lints";
+    program = getExe (writeShellApplication {
+      name = "flake-lint";
+      runtimeInputs = with pkgs; [statix deadnix alejandra];
+      text = ''
+        statix check --config ${self + /.zed/statix.toml}
+        deadnix --fail --hidden --no-lambda-arg
+        alejandra --check .
+      '';
+    });
+    type = "app";
+  };
   update = {
     meta.description = "Update flake.lock and run tests";
     program = getExe (writeShellApplication {

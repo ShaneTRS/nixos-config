@@ -7,5 +7,5 @@
 } @ args: final: prev: let
   inherit (builtins) mapAttrs;
 in {
-  shanetrs = mapAttrs (k: v: callPackage (v.default or v) args) shanetrs;
+  shanetrs = mapAttrs (_: v: callPackage (v.default or v) args) shanetrs;
 }

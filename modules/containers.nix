@@ -9,51 +9,35 @@
   inherit (lib) getExe escapeShellArgs mkEnableOption mkIf mkMerge mkOption optionalString remove types;
   cfg = config.shanetrs.containers;
   opt = options.shanetrs.containers;
-  enabled = cfg.development.enable || cfg.services.enable;
 in {
   options.shanetrs.containers = {
-    development = {
-      enable = mkEnableOption "Setup containers for software development";
-      # todo: devcontainers
+    enable = mkEnableOption "Setup containers for system services";
+    directory = mkOption {
+      type = types.str;
+      default = "${config.tundra.paths.home}/Containers";
     };
-    services = {
-      enable = mkEnableOption "Setup containers for system services";
-      directory = mkOption {
-        type = types.str;
-        default = "${config.tundra.paths.home}/Containers";
-      };
-      preStart = mkOption {
-        type = types.lines;
-        default = "";
-      };
-      autoStart = mkOption {
-        type = types.listOf types.str;
-        default = ["running"];
-      };
-      after = mkOption {
-        type = types.listOf types.str;
-        default = ["network-online.target"];
-      };
-      uinput = mkOption {
-        type = types.bool;
-        default = false;
-      };
+    preStart = mkOption {
+      type = types.lines;
+      default = "";
+    };
+    autoStart = mkOption {
+      type = types.listOf types.str;
+      default = ["running"];
+    };
+    after = mkOption {
+      type = types.listOf types.str;
+      default = ["network-online.target"];
+    };
+    uinput = mkOption {
+      type = types.bool;
+      default = false;
     };
   };
-  config = mkMerge [
-    (mkIf enabled {
-      virtualisation.podman = {
-        enable = true;
-        dockerCompat = true;
-        defaultNetwork.settings.dns_enabled = true;
-        extraPackages = [pkgs.slirp4netns];
-      };
-    })
-
-    (mkIf cfg.services.enable {
-      shanetrs.containers.services = {
-        autoStart = opt.services.autoStart.default;
-        after = opt.services.after.default;
+  config = mkIf cfg.enable (mkMerge [
+    {
+      shanetrs.containers = {
+        autoStart = opt.autoStart.default;
+        after = opt.after.default;
       };
       systemd.services.shanetrs-containers = let
         getRunning = ''
@@ -61,12 +45,11 @@ in {
             paste -sd' ' > .shanetrs/running;
         '';
       in {
-        inherit (cfg.services) preStart;
         script = ''
           export PATH="${pkgs.slirp4netns}/bin:$PATH"
           touch .shanetrs/running
-          containers=(${optionalString (elem "running" cfg.services.autoStart) "$(cat .shanetrs/running)"} \
-            ${escapeShellArgs (remove "running" cfg.services.autoStart)})
+          containers=(${optionalString (elem "running" cfg.autoStart) "$(cat .shanetrs/running)"} \
+            ${escapeShellArgs (remove "running" cfg.autoStart)})
           [ -z "$containers" ] || ${getExe pkgs.podman} start "''${containers[@]}"
           while true; do
             sleep 30m
@@ -80,32 +63,38 @@ in {
         serviceConfig = {
           PAMName = "login";
           User = config.tundra.user;
-          WorkingDirectory = cfg.services.directory;
+          WorkingDirectory = cfg.directory;
         };
         restartIfChanged = false;
-        after = cfg.services.after;
-        wants = cfg.services.after;
+        inherit (cfg) after preStart;
+        wants = cfg.after;
         requires = ["podman.socket"];
         wantedBy = ["default.target"];
       };
       tundra.filesystem = {
-        "${cfg.services.directory}" = {
+        "${cfg.directory}" = {
           type = "directory";
           inherit (config.tundra) user;
         };
-        "${cfg.services.directory}/.shanetrs" = {
+        "${cfg.directory}/.shanetrs" = {
           type = "directory";
           inherit (config.tundra) user;
         };
-        "${cfg.services.directory}/.shanetrs/aio" = {
+        "${cfg.directory}/.shanetrs/aio" = {
           inherit (config.tundra) user;
           source = getExe pkgs.shanetrs.server-aio;
           mode = "555";
         };
       };
-    })
+      virtualisation.podman = {
+        enable = true;
+        dockerCompat = true;
+        defaultNetwork.settings.dns_enabled = true;
+        extraPackages = [pkgs.slirp4netns];
+      };
+    }
 
-    (mkIf (enabled && cfg.services.uinput) {
+    (mkIf cfg.uinput {
       security.wrappers.vuinputd = {
         owner = "root";
         group = "root";
@@ -131,5 +120,5 @@ in {
         serviceConfig.DeviceAllow = "char-* rwm";
       };
     })
-  ];
+  ]);
 }

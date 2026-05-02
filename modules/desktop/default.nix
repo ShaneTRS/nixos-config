@@ -69,7 +69,7 @@ in {
         };
         xdg.config."mimeapps.list" = mkIf cfg.mime.enable {
           type = "execute";
-          source = mergeFormat.ini.mime (mapAttrs (k: mapAttrs (k: concatStringsSep ";")) {
+          source = mergeFormat.ini.mime (mapAttrs (_: mapAttrs (_: concatStringsSep ";")) {
             "Added Associations" = cfg.mime.added;
             "Default Applications" = cfg.mime.default;
             "Removed Associations" = cfg.mime.removed;

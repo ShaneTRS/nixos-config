@@ -48,7 +48,7 @@ in
     };
     fhs = buildFHSEnv {
       name = "alchemy-fhs";
-      targetPkgs = pkgs: [
+      targetPkgs = _: [
         alsa-lib
         at-spi2-atk
         cairo

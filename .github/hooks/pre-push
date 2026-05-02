@@ -1,0 +1,2 @@
+nix run '#lint' || echo lints exited with code $? >&2
+nix flake check --no-build || exit $?

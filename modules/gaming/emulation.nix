@@ -93,7 +93,7 @@ in {
           else [])
         emuValues)
         ++ [
-          (mkIf r.enable (r.package.withCores (cores:
+          (mkIf r.enable (r.package.withCores (_:
             r.cores
             ++ (concatMap (x:
               if x.enable && (x.isCore or false)

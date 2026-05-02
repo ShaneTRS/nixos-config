@@ -176,7 +176,7 @@ in {
             preferLocalBuild = true;
             nativeBuildInputs = with pkgs; [makeWrapper];
             postBuild = ''
-              wrapProgram $out/bin/zeditor \
+              wrapProgram $out/bin/zeditor --add-flag --dev-container \
               --suffix PATH : ${lib.makeBinPath cfg.extraPackages}
             '';
           })

@@ -29,8 +29,8 @@ in {
     };
     tundra.packages = [
       (cfg.package.override {
-        extraLibraries = pkgs: cfg.extraLibraries;
-        extraPkgs = pkgs: cfg.extraPackages;
+        extraLibraries = _: cfg.extraLibraries;
+        extraPkgs = _: cfg.extraPackages;
       })
     ];
   };

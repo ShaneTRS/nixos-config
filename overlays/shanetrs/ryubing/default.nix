@@ -42,7 +42,7 @@
   inherit version;
   src = fetchurl {
     url = "https://git.ryujinx.app/projects/Ryubing/archive/Canary-${version}.tar.gz";
-    hash = hash;
+    inherit hash;
   };
   nativeBuildInputs = [wrapGAppsHook3];
   enableParallelBuilding = false;

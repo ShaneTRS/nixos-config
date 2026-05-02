@@ -107,7 +107,7 @@ in {
       filesystem = let
         cfg = config.tundra;
       in
-        mapAttrs (k: v: {
+        mapAttrs (_: v: {
           type = "recursive";
           inherit (cfg) user;
           source = "${cfg.paths.source}/user/homes/${v}";
