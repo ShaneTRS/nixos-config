@@ -7,7 +7,6 @@
   inherit (builtins) readFile;
   inherit (lib) getExe mkIf optionalString;
   inherit (lib.tundra) getConfig' mkIfConfig;
-  inherit (pkgs) writeShellApplication;
 
   jfa-go-conf = getConfig' [] "jfa-go.ini";
 in {
@@ -58,113 +57,24 @@ in {
     };
   };
 
-  security.wrappers.vuinputd = {
-    owner = "root";
-    group = "root";
-    capabilities = "cap_sys_admin,cap_mknod,cap_dac_override,cap_fowner+eip";
-    source = getExe pkgs.shanetrs.vuinputd;
-  };
-
   environment.etc."keynavrc" = mkIfConfig "keynavrc" (x: {
     source = x;
   });
-  systemd = {
-    services = {
-      vuinputd = {
-        script = "${config.security.wrapperDir}/vuinputd --major 120 --minor 414795";
-        after = ["systemd-udevd.service"];
-        requires = ["systemd-udevd.service"];
-        wantedBy = ["multi-user.target"];
-        serviceConfig.DeviceAllow = "char-* rwm";
-      };
-      podman-autostart = {
-        environment.LOGGING = "--log-level=info";
-        restartIfChanged = false;
-        serviceConfig = {
-          RemainAfterExit = true;
-          ExecStart = getExe (writeShellApplication {
-            name = "podman-autostart.start";
-            runtimeInputs = with pkgs; [coreutils podman slirp4netns];
-            text = ''
-              set +o errexit
-              mkdir /tmp/1050368e08b494751a7fccc79f422a89 # Discord Bot
-              mkdir -p "${config.tundra.paths.home}/Containers/.shanetrs/.podman-autostart"
-              touch ps
-
-              export PATH="$PATH:/run/wrappers/bin"
-              pids=$(cat ps)
-              # shellcheck disable=SC2068
-              for i in ''${pids[@]}; do
-                podman "$LOGGING" start "$i" || (
-                  sleep 2
-                  podman "$LOGGING" start "$i"
-                )
-              done
-              exit 0
-            '';
-          });
-          ExecStop = getExe (writeShellApplication {
-            name = "podman-autostart.stop";
-            runtimeInputs = with pkgs; [coreutils podman];
-            text = ''
-              set +o errexit
-              podman container ps --filter restart-policy=unless-stopped -q |
-                paste -sd' ' > "ps";
-              podman "$LOGGING" stop --all --ignore
-            '';
-          });
-          Restart = "on-failure";
-          RestartSec = 5;
-          Type = "oneshot";
-          User = config.tundra.user;
-          WorkingDirectory = "${config.tundra.paths.home}/Containers/.shanetrs/.podman-autostart";
-        };
-        wants = ["network-online.target"];
-        after = ["network-online.target"];
-        wantedBy = ["graphical.target"];
-      };
-      podman-autostart-check = {
-        serviceConfig = {
-          ExecStart = getExe (writeShellApplication {
-            name = "podman-autostart-check";
-            runtimeInputs = with pkgs; [coreutils podman];
-            text = ''
-              set +o errexit
-              podman container ps --filter restart-policy=unless-stopped -q |
-                paste -sd' ' > "ps";
-            '';
-          });
-          Type = "oneshot";
-          User = config.tundra.user;
-          WorkingDirectory = "${config.tundra.paths.home}/Containers/.shanetrs/.podman-autostart";
-        };
-      };
+  systemd.user.services = {
+    shadowplay = {
+      script = getExe pkgs.shanetrs.shadowplay;
+      wantedBy = ["graphical-session.target"];
     };
-    timers = {
-      podman-autostart-check = {
-        wantedBy = ["timers.target"];
-        timerConfig = {
-          OnCalendar = "*-*-* *:30:00";
-          Unit = "podman-autostart-check.service";
-        };
-      };
+    keynav = {
+      script = getExe pkgs.keynav;
+      wantedBy = ["graphical-session.target"];
     };
-    user.services = {
-      shadowplay = {
-        script = getExe pkgs.shanetrs.shadowplay;
-        wantedBy = ["graphical-session.target"];
-      };
-      keynav = {
-        script = getExe pkgs.keynav;
-        wantedBy = ["graphical-session.target"];
-      };
-      jfa-go = {
-        script = ''
-          sleep 15
-          ${getExe pkgs.shanetrs.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.tundra.secret."jfa-go.ini".target}'"}
-        '';
-        wantedBy = ["graphical-session.target"];
-      };
+    jfa-go = {
+      script = ''
+        sleep 15
+        ${getExe pkgs.shanetrs.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.tundra.secret."jfa-go.ini".target}'"}
+      '';
+      wantedBy = ["graphical-session.target"];
     };
   };
 }

@@ -9,6 +9,16 @@ in {
   services.flatpak.enable = true;
   shanetrs = {
     enable = true;
+    containers = {
+      services = {
+        enable = true;
+        after = ["run-media-${config.tundra.user}-Felix\\x2dPP.mount"];
+        preStart = ''
+          mkdir -p /tmp/1050368e08b494751a7fccc79f422a89 # Discord Bot
+        '';
+        uinput = true;
+      };
+    };
     browser.firefox = {
       enable = true;
       pwa.enable = true;
@@ -142,21 +152,7 @@ in {
     };
   };
 
-  services = {
-    ddclient.enable = true;
-    udev = {
-      enable = true;
-      packages = [pkgs.shanetrs.vuinputd];
-      extraHwdb = ''
-        evdev:input:b0003v1209p5020e????-*
-         ID_VUINPUT=1
-
-        input:b0003v1209p5020e????-*
-         ID_VUINPUT=1
-      '';
-    };
-  };
-
+  services.ddclient.enable = true;
   systemd.user.services = {
     shadowplay.enable = true;
     keynav.enable = true;
@@ -171,12 +167,6 @@ in {
     #   enableExtensionPack = true;
     #   enableHardening = false;
     # };
-    podman = {
-      enable = true;
-      dockerCompat = true;
-      defaultNetwork.settings.dns_enabled = true;
-      extraPackages = [pkgs.slirp4netns];
-    };
   };
 
   tundra = {

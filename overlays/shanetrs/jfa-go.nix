@@ -11,7 +11,7 @@ stdenvNoCC.mkDerivation rec {
   inherit version;
   nativeBuildInputs = [unzip];
   meta.mainProgram = pname;
-  unpackPhase = "unzip $src";
+  sourceRoot = ".";
   installPhase = ''
     mkdir -p $out/bin
     cp --no-preserve=all -r ${pname} $out/bin

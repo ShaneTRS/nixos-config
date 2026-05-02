@@ -108,7 +108,7 @@
       url = "https://github.com/THZoria/NX_Firmware/releases/download/${versionFirm}/Firmware.${versionFirm}.zip";
       hash = hashFirm;
     };
-    unpackPhase = "unzip $src";
+    sourceRoot = ".";
     installPhase = ''
       mkdir -p $out
       for i in *.nca; do
