@@ -54,7 +54,7 @@ pub fn main(args: Vec<String>) -> Result<(), Box<dyn Error>> {
 			);
 			eta = *length;
 		}
-		eta = eta.checked_sub(*interval).unwrap_or_default();
+		eta = eta.saturating_sub(*interval);
 	}
 	smsg!("Silent for {length}, exiting.");
 
