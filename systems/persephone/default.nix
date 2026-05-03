@@ -111,7 +111,10 @@ in {
     programs = {
       discord.enable = true;
       easyeffects.enable = true;
-      zed-editor.enable = true;
+      zed-editor = {
+        enable = true;
+        features = ["java" "rust"];
+      };
       zerotier-one.enable = true;
       gimp.enable = true;
     };

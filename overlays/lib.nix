@@ -55,7 +55,7 @@
       # todo: add support for merging secrets
       # nixpkgs, pkgs
       mergeFormat = let
-        inherit (pkgs) jq dasel gnused hjson-go mozlz4a perl writeShellScript writeText;
+        inherit (pkgs) jq dasel gnused gawk hjson-go mozlz4a perl writeShellScript writeText;
         applyStats = x: ''chmod "$mode" "${x}"; chown "$uid:$gid" "${x}"'';
         getStats = x: ''mode="$(stat -c %a "${x}")" uid="$(stat -c %u "${x}")" gid="$(stat -c %g "${x}")"'';
         genericMerge = ''
@@ -183,6 +183,17 @@
                 ${getExe perl} -0777 -e 'exit !(index(<>, <>) >= 0)' "$1" ${c.file} && exit
                 ${getStats "$1"}
                 cat "$1" ${c.file} > "$1.tmp"
+                ${applyStats "$1.tmp"}
+              else
+                cat ${c.file} > "$1.tmp"
+              fi
+              mv -f "$1.tmp" "$1"
+            '');
+          concatLines = wrapContent (c:
+            writeShellScript "merge-lines" ''
+              if [ -f "$1" ]; then
+                ${getStats "$1"}
+                ${getExe gawk} 'NR==FNR { seen[$0]=1; print; next } !seen[$0] { print }' "$1" ${c.file} > "$1.tmp"
                 ${applyStats "$1.tmp"}
               else
                 cat ${c.file} > "$1.tmp"
