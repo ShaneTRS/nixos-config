@@ -162,12 +162,11 @@ in {
 
   boot.kernelParams = ["kvm.enable_virt_at_load=0"];
   virtualisation = {
-    # todo: fix regression
-    # virtualbox.host = {
-    #   enable = true;
-    #   enableExtensionPack = true;
-    #   enableHardening = false;
-    # };
+    virtualbox.host = {
+      enable = true;
+      enableExtensionPack = true;
+      enableHardening = false;
+    };
   };
 
   tundra = {

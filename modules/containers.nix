@@ -86,6 +86,11 @@ in {
           mode = "555";
         };
       };
+      boot.kernel.sysctl = {"net.ipv4.ip_forward" = 1;};
+      users.groups = {
+        docker.members = [config.tundra.user];
+        podman.members = [config.tundra.user];
+      };
       virtualisation.podman = {
         enable = true;
         dockerCompat = true;

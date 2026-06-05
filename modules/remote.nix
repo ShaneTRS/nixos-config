@@ -6,7 +6,6 @@
 }: let
   inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString toList types;
   inherit (lib.tundra) getConfig;
-  inherit (pkgs) writeShellApplication;
   inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs match toJSON;
   cfg = config.shanetrs.remote;
 in {
@@ -141,97 +140,60 @@ in {
           }) (attrNames input)));
       };
 
-      systemd = {
-        user.services.usbip = mkIf cfg.usb.enable {
-          serviceConfig.Restart = "on-failure";
-          environment = {
-            TARGET = "shanetrs.remote.host";
-            PORTS = "'${optionalString cfg.usb.enable concatStringsSep " " cfg.usb.ports}'";
-            DEVICES = toString cfg.usb.devices;
-          };
-          script = getExe (writeShellApplication {
-            name = "usbip.service";
-            runtimeInputs = with pkgs; [coreutils gash-utils libnotify openssh systemd util-linux];
-            text = ''
-              set +o errexit
-              if ! doas true; then
-                sleep 3
-                exit 1
-              fi
-
-              notify () {
-                [ "$1" == "disconnect" ] &&
-                  str="Disconnected port $2 from host at $3" ||
-                  str="Connected port $2 to host at $3";
-                notify-send -i network-"$1" -a usb-forwarding \
-                  'USB Port Forwarding' "$str" -t 1000
-              }
-
-              forward_port () {
-                read -ra arr <<< "$@"
-                for i in "''${arr[@]}"; do
-                  usb=$DEVICES''${i%-*}/''${i%.*}
-                  [[ "$i" == *"."* ]] && usb+="/$i"
-                  bus=''${usb//*\/}
-                  while :; do
-                    udevadm wait "$usb"
-                    sleep 0.2s
-                    doas usbip unbind -b"$bus" &>/dev/null
-                    doas usbip bind -b"$bus"
-                    sleep 0.2s
-                    # shellcheck disable=SC1083
-                    ssh "$TARGET" doas usbip attach -r"\''${SSH_CLIENT%% *}" -b"$bus"
-                    notify connect "$bus" "$TARGET"
-                    udevadm wait "$usb" --removed
-                    notify disconnect "$bus" "$TARGET"
-                  done &
-                  pids+=($!)
-                done
-                echo "''${pids[@]}"
-              }
-
-              detach_port () {
-                read -ra arr <<< "$@"
-                for i in "''${arr[@]}"; do
-                  ssh "$TARGET" doas usbip detach -p"$i"
-                done
-              }
-
-              handle_trap () { exit 2; }
-              trap handle_trap USR1
-
-              while true; do
-                ping "$TARGET" -c1 && break
-                sleep 1
-              done
-
-              detach_port 7 6 5 4 3 2 1 0
-              sleep 1
-              # shellcheck disable=SC2048 disable=SC2086
-              forward_port ''${PORTS[*]}
-              wait
-            '';
-          });
-          startLimitBurst = 32;
-          wantedBy = ["graphical-session.target"];
+      systemd.services.usbip = mkIf cfg.usb.enable (let
+        awk = getExe pkgs.gawk;
+        notify-send = getExe pkgs.libnotify;
+        ping = "${pkgs.inetutils}/bin/ping";
+        ssh = getExe pkgs.openssh;
+        su = "${pkgs.su}/bin/su";
+        udevadm = "${pkgs.systemd}/bin/udevadm";
+        usbip = "${config.boot.kernelPackages.usbip}/bin/usbip";
+      in {
+        serviceConfig.Restart = "on-failure";
+        environment = {
+          TARGET = "${config.tundra.user}@shanetrs.remote.host";
+          PORTS = "${concatStringsSep ":" cfg.usb.ports}";
+          DEVICES = toString cfg.usb.devices;
         };
-        services.usbip-resume = mkIf cfg.usb.enable {
-          after = ["suspend.target"];
-          serviceConfig = {
-            Type = "oneshot";
-            User = config.tundra.user;
-          };
-          script = getExe (writeShellApplication {
-            name = "usbip-resume";
-            runtimeInputs = with pkgs; [procps];
-            text = ''
-              pkill usbip.service -USR1
-              pkill -P "$(pgrep ml-launcher)" -KILL
-            '';
-          });
-          wantedBy = ["suspend.target"];
-        };
-      };
+        script = ''
+          export XDG_RUNTIME_DIR="/run/user/$(id -u ${config.tundra.user})"
+          as_user() { ${su} ${config.tundra.user} /bin/sh -c "$(printf '%q ' "$@")"; }
+
+          notify () {
+          [ "$1" == "disconnect" ] &&
+            str="Disconnected port $2 from host at $3" ||
+            str="Connected port $2 to host at $3";
+          as_user ${notify-send} -i "network-$1" -a usb-forwarding 'USB Port Forwarding' "$str" -t 1000
+          }
+
+          until ${ping} -qs1 -c1 -W1 "''${TARGET#*@}"; do sleep 1; done
+          for i in $(as_user ${ssh} "$TARGET" usbip port 2>/dev/null | ${awk} -F'[: ]' '/^Port /{print $2}'); do
+            detach+="doas usbip detach -p$i;"
+          done
+          [ -n "$detach" ] && as_user ${ssh} "$TARGET" "''${detach%:}"
+
+          IFS=: read -ra PORTS <<< "$PORTS"
+          for i in "''${PORTS[@]}"; do
+            usb="$DEVICES''${i%-*}/''${i%.*}"
+            [[ "$1" == *"."* ]] && usb+="/$1"
+            bus=''${usb//*\/}
+            while true; do
+              ${udevadm} wait "$usb"
+              sleep .2
+              ${usbip} unbind -b"$bus" &>/dev/null || true
+              ${usbip} bind -b"$bus"
+              sleep .2
+              as_user ${ssh} "$TARGET" doas usbip attach -r${"'"}''${SSH_CLIENT%% *}' -b"$bus"
+              notify connect "$bus" "$TARGET"
+              ${udevadm} wait "$usb" --removed
+              notify disconnect "$bus" "$TARGET"
+            done &
+          done
+          wait
+        '';
+        startLimitBurst = 32;
+        wantedBy = ["default.target"];
+      });
     })
 
     (mkIf (cfg.role == "host") {

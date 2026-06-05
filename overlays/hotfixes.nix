@@ -1,5 +1,5 @@
 {...}: final: prev: {
-  openldap = prev.openldap.overrideAttrs {
-    doCheck = !prev.stdenv.hostPlatform.isi686;
+  firefoxpwa-unwrapped = prev.firefoxpwa-unwrapped.overrideAttrs {
+    inherit (prev.master.firefoxpwa-unwrapped) postInstall;
   };
 }

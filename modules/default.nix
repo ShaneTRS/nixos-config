@@ -156,7 +156,6 @@ in {
       allowNoPasswordLogin = mkStrongDefault true;
       mutableUsers = mkStrongDefault false;
       groups = {
-        docker.members = [config.tundra.user];
         realtime.members = [config.tundra.user];
         networkmanager.members = [config.tundra.user];
       };
