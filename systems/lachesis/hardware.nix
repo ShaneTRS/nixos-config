@@ -14,27 +14,24 @@ in {
         {
           name = config.tundra.id + "-ungrab";
           remap = let
-            brightness = amount: direction: {
-              launch = [
-                (getExe (pkgs.writeShellApplication {
-                  name = "brightness-8b501";
-                  runtimeInputs = with pkgs; [brightnessctl procps];
-                  text = ''
-                    brightnessctl --class=backlight set "$(( ''${1:-1} * $(pgrep -fc "$0") ** 4))''${2:-+}"
-                    sleep 1
-                  '';
-                }))
-                amount
-                direction
-              ];
-            };
+            script = getExe (pkgs.writeShellApplication {
+              name = "brightness-8b501";
+              runtimeInputs = with pkgs; [brightnessctl procps];
+              text = ''
+                brightnessctl --class=backlight set "$(( ''${1:-1} * $(pgrep -fc "$0") ** ''${3:-1}))''${2:-+}"
+                sleep .5
+              '';
+            });
+            brightness = args: {launch = [script] ++ args;};
           in {
             pageup = "home";
             pagedown = "end";
             home = "pageup";
             end = "pagedown";
-            brightnessup = brightness "1" "+";
-            brightnessdown = brightness "1" "-";
+            brightnessup = brightness ["1" "%+"];
+            alt-f7 = brightness ["1" "+" "3"];
+            brightnessdown = brightness ["1" "%-"];
+            alt-f6 = brightness ["1" "-" "3"];
           };
         }
       ];

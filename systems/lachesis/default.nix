@@ -1,11 +1,14 @@
 {pkgs, ...}: {
-  services.earlyoom.enable = false;
   zramSwap.enable = false;
   programs = {
     noisetorch.enable = true;
     obs-studio.enable = true;
   };
 
+  services = {
+    earlyoom.enable = false;
+    flatpak.enable = true;
+  };
   shanetrs = {
     enable = true;
     browser.firefox.enable = true;

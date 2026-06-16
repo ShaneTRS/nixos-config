@@ -27,7 +27,6 @@
     cpu.amd.updateMicrocode = true;
     sensor.iio.enable = true;
   };
-  services.xserver.wacom.enable = true;
   fileSystems = {
     "/" = {
       device = "/dev/disk/by-label/ROOT";
