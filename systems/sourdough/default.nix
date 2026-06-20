@@ -19,6 +19,7 @@
         enable = true;
         extraPackages = with pkgs; [kdePackages.wacomtablet kdePackages.kolourpaint];
       };
+      type = "x11";
     };
     gaming = {
       epic.enable = true;

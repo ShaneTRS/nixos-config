@@ -52,7 +52,7 @@ in {
           }) ["defaultMode" "devices" "enable" "transforms" "virtualModifiers"];
         transformedYaml = transformAttrs cfg.transforms yaml;
         deviceString = concatStringsSep " " (map (x: "--device " + x) cfg.devices);
-      in "${getExe pkgs.xremap} --mouse ${deviceString} ${toYAML transformedYaml}";
+      in "${getExe pkgs.xremap} --output-device-name xremap --mouse ${deviceString} ${toYAML transformedYaml}";
       wantedBy = ["graphical-session.target"];
     };
   };

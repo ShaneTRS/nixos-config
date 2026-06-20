@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString toList types;
+  inherit (lib) getExe mkEnableOption mkOrder mkPackageOption mkIf mkMerge mkOption optionalString toList types;
   inherit (lib.tundra) getConfig;
   inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs match toJSON;
   cfg = config.shanetrs.remote;
@@ -143,7 +143,6 @@ in {
       systemd.services.usbip = mkIf cfg.usb.enable (let
         awk = getExe pkgs.gawk;
         notify-send = getExe pkgs.libnotify;
-        ping = "${pkgs.inetutils}/bin/ping";
         ssh = getExe pkgs.openssh;
         su = "${pkgs.su}/bin/su";
         udevadm = "${pkgs.systemd}/bin/udevadm";
@@ -166,7 +165,7 @@ in {
           as_user ${notify-send} -i "network-$1" -a usb-forwarding 'USB Port Forwarding' "$str" -t 1000
           }
 
-          until ${ping} -qs1 -c1 -W1 "''${TARGET#*@}"; do sleep 1; done
+          until echo > "/dev/tcp/''${TARGET#*@}/22"; do sleep 1; done
           for i in $(as_user ${ssh} "$TARGET" usbip port 2>/dev/null | ${awk} -F'[: ]' '/^Port /{print $2}'); do
             detach+="doas usbip detach -p$i;"
           done
@@ -241,17 +240,46 @@ in {
           name = "pipewire/pipewire.conf.d/${k}.conf";
           value = {text = toJSON input.${k};};
         }) (attrNames input)));
-      systemd.user.services.x0vncserver = {
+      systemd.user.services.vncserver = let
+        attempt = getConfig ".vnc/passwd";
+        vncserver = type: "${getExe pkgs.shanetrs.not-nice} ${pkgs.tigervnc}/bin/${type}0vncserver";
+        passwordFlag = optionalString (attempt != null) ''-PasswordFile "${attempt}"'';
+        sharedFlags = "${passwordFlag} -FrameRate 60 -CompareFB 2";
+        preAuthScript = ''
+          {
+            until echo > /dev/tcp/127.0.0.1/5900; do sleep 1; done
+            until [ -n "$XAUTHORITY" ]; do
+              for i in "$HOME/.Xauthority" "/run/user/$(id -u $${config.tundra.user})/xauth_"*; do
+                if [ -e "$i" ]; then export XAUTHORITY="$i"; break; fi
+              done
+              sleep 1
+            done
+            coproc VIEWER { exec ${getExe pkgs.tigervnc} ${passwordFlag} 127.0.0.1:5900 2>&1; }
+            sed /DesktopWindow/q <& "''${VIEWER[0]}"
+            [ -z "$VIEWER_PID" ] || kill -9 "$VIEWER_PID"
+          } &
+        '';
+        usingWayland = config.shanetrs.desktop.type == "wayland";
+      in {
         serviceConfig.Restart = "on-failure";
-        environment.DISPLAY = ":0";
+        environment = {
+          DISPLAY = ":0";
+          WAYLAND_DISPLAY = "wayland-0";
+        };
         startLimitBurst = 32;
-        script = let
-          attempt = getConfig ".vnc/passwd";
-        in "${getExe pkgs.shanetrs.not-nice} ${pkgs.tigervnc}/bin/x0vncserver Geometry=2732x1536 ${
-          optionalString (attempt != null) ''-rfbauth "${attempt}"''
-        } -FrameRate 60 -PollingCycle 60 -CompareFB 2 -MaxProcessorUsage 99 -PollingCycle 15";
+        # todo: make this less of a hack
+        script = ''
+          ${optionalString usingWayland preAuthScript}
+          ${
+            if usingWayland
+            then "${vncserver "w"} ${sharedFlags}"
+            else "${vncserver "x"} Geometry=2732x1536 ${sharedFlags} -PollingCycle 60 -MaxProcessorUsage 99 -PollingCycle 15"
+          }
+          wait
+        '';
         wantedBy = ["graphical-session.target"];
       };
+      security.wrappers.sunshine.capabilities = mkOrder 900 "cap_sys_nice";
       services = {
         xserver.enable = true;
         sunshine = {

@@ -15,7 +15,7 @@ in {
     enable = mkEnableOption "Desktop environment and display manager configuration";
     type = mkOption {
       type = types.enum ["x11" "wayland"];
-      default = "x11";
+      default = "wayland";
     };
     mime = {
       enable = mkOption {

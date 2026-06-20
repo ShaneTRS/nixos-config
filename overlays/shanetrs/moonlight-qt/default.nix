@@ -1,8 +1,8 @@
 {
   moonlight-qt,
   fetchFromGitHub,
-  rev ? "b6407492c7b87822f7fac3440e2bfedd2d48ed11",
-  hash ? "sha256-igBLsxzMB30FlzLZVv43StKwEJmHjfWZWWoVI+Kn7oc=",
+  rev ? "ca7d61f5281f0aa820ca0f4f3307b06c4f0d257d",
+  hash ? "sha256-qh/y4yASgoEwyGPssyBaBc6eFS6mPgXr2uDG5RRNqjk=",
   ...
 }:
 moonlight-qt.overrideAttrs (old: {
