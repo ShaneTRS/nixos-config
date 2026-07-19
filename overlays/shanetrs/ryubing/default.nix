@@ -27,9 +27,9 @@
   unzip,
   vulkan-loader,
   wrapGAppsHook3,
-  version ? "1.3.277",
+  version ? "1.3.338",
   versionFirm ? "22.1.0",
-  hash ? "sha256-oPULYKVPvHWtsj92B3fyqiFKy2ieCEUZRbNFsJx1O7Y=",
+  hash ? "sha256-AJJYbp/P8PYCm0TYkGHF6JWSQ9+enKT63iICFodJ7Pg=",
   hashFirm ? "sha256-2M1yhpqTy/e46c6vE12HYPH/iqoAGiwCkyENyVjS+zQ=",
   hashKeys ? "sha256-Sh9uY8Sg0POF7OkNiF1T/r1lSXQq1k79ob9yHTozZCk=",
   dotnetRuntime ? dotnetCorePackages.runtime_10_0,
@@ -77,16 +77,17 @@
   dotnetFlags = ["/p:ExtraDefineConstants=DISABLE_UPDATER%2CFORCE_EXTERNAL_BASE_DIR"];
   executables = ["Ryujinx"];
   makeWrapperArgs = ["--set SDL_VIDEODRIVER x11"];
+  patches = [./internal-font.patch];
   preInstall = ''
     mkdir -p $out/lib/sndio-6
     ln -s ${sndio}/lib/libsndio.so $out/lib/sndio-6/libsndio.so.6
   '';
   preFixup = ''
-    mkdir -p $out/share/{applications,icons/hicolor/scalable/apps,mime/packages}
+    mkdir -p $out/share/{applications,icons/hicolor/256x256/apps,mime/packages}
     pushd distribution/linux
-    sed 's:Exec=[^ ]*:Exec=ryujinx:' ./Ryujinx.desktop > $out/share/applications/Ryujinx.desktop
+    sed 's:Exec=[^ ]*:Exec=ryujinx:' ./app.ryujinx.Ryujinx.desktop > $out/share/applications/app.ryujinx.Ryujinx.desktop
     install -D ./mime/Ryujinx.xml $out/share/mime/packages/Ryujinx.xml
-    install -D ../misc/Logo.svg   $out/share/icons/hicolor/scalable/apps/Ryujinx.svg
+    install -D ../misc/Logo.png   $out/share/icons/hicolor/256x256/apps/app.ryujinx.Ryujinx.png
     popd
     mv $out/bin/Ryujinx $out/bin/ryujinx
   '';

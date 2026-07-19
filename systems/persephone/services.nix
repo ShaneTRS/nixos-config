@@ -4,11 +4,8 @@
   lib,
   ...
 }: let
-  inherit (builtins) readFile;
-  inherit (lib) getExe mkIf optionalString;
-  inherit (lib.tundra) getConfig' mkIfConfig;
-
-  jfa-go-conf = getConfig' [] "jfa-go.ini";
+  inherit (lib) getExe;
+  inherit (lib.tundra) mkIfConfig;
 in {
   boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
   networking.extraHosts = ''
@@ -16,9 +13,6 @@ in {
   '';
 
   tundra.secret = {
-    "jfa-go.ini" = mkIf (jfa-go-conf != null) {
-      text = readFile jfa-go-conf;
-    };
     "ddclient.conf".text = let
       cfg = config.services.ddclient;
       boolYN = x:
@@ -53,7 +47,7 @@ in {
       enable = true;
       openFirewall = true;
       port = 5698;
-      secretKeyFile = "/var/cache-priv-key.pem";
+      secretKeyFile = "/run/secret/persephone/nix-cache/priv";
     };
   };
 
@@ -67,13 +61,6 @@ in {
     };
     keynav = {
       script = getExe pkgs.keynav;
-      wantedBy = ["graphical-session.target"];
-    };
-    jfa-go = {
-      script = ''
-        sleep 15
-        ${getExe pkgs.shanetrs.jfa-go} ${optionalString (jfa-go-conf != null) "-c '${config.tundra.secret."jfa-go.ini".target}'"}
-      '';
       wantedBy = ["graphical-session.target"];
     };
   };

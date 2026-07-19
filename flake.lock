@@ -2,11 +2,11 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1780243769,
-        "narHash": "sha256-x5UQuRsH3MqI0U9afaXSNqzTPSeZlRLvFAav2Ux1pNw=",
+        "lastModified": 1781608713,
+        "narHash": "sha256-lnjXEicUk4xHGEyhVdPOo0P61B1LrPiEW0ZSaO0BUrw=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "331800de5053fcebacf6813adb5db9c9dca22a0c",
+        "rev": "4fc9f674ec728f0a61bde89f87c30263b5eedf24",
         "type": "github"
       },
       "original": {
@@ -18,11 +18,11 @@
     },
     "nixpkgs-master": {
       "locked": {
-        "lastModified": 1781941485,
-        "narHash": "sha256-hxS3TSXGDf/BEBYZrQtpV0LcgsuBx9cXMtMqnrioe2M=",
+        "lastModified": 1784438855,
+        "narHash": "sha256-cltBr/S0641ekoTSiOBT+mMDI+9VWA5guidPqGLWoik=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "ffd56a30289b0e9eddcaeb0830c44c3abf713845",
+        "rev": "7267c55255cdc13cfda3174fc4cc3a84ec37b3f8",
         "type": "github"
       },
       "original": {
@@ -33,11 +33,11 @@
     },
     "nixpkgs-pin": {
       "locked": {
-        "lastModified": 1775423009,
-        "narHash": "sha256-vPKLpjhIVWdDrfiUM8atW6YkIggCEKdSAlJPzzhkQlw=",
+        "lastModified": 1780243769,
+        "narHash": "sha256-x5UQuRsH3MqI0U9afaXSNqzTPSeZlRLvFAav2Ux1pNw=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "68d8aa3d661f0e6bd5862291b5bb263b2a6595c9",
+        "rev": "331800de5053fcebacf6813adb5db9c9dca22a0c",
         "type": "github"
       },
       "original": {
@@ -57,11 +57,11 @@
     },
     "secrets": {
       "locked": {
-        "lastModified": 1777853666,
-        "narHash": "sha256-QvXau7wx9xGSDdFYUcAUVzKxX5cfGA8KiYjE8fd4myE=",
+        "lastModified": 1784520128,
+        "narHash": "sha256-oSTgZdiRPDkK1clvISgq1gKhAgIS6ANLpj6Wh80aNpI=",
         "ref": "refs/heads/main",
-        "rev": "b3360145dd2e25d075610e8c3b809997a4babf93",
-        "revCount": 23,
+        "rev": "3fffc7bc42c91a3167d0a43490298bc36d91b015",
+        "revCount": 24,
         "type": "git",
         "url": "https://github.com/shanetrs/nixos-secrets"
       },

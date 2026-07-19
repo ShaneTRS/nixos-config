@@ -14,6 +14,171 @@
 
   tundra = rec {
     inherit (fsScripts) decryptSecret decryptTemplate mergeFormat;
+
+    deepDirOf = dir: let
+      recurse = dir:
+        if dir != "/"
+        then recurse (dirOf dir) ++ [dir]
+        else [];
+    in
+      recurse (dirOf dir);
+
+    deepReadDir = dir:
+      mapAttrs (name: type:
+        if type == "directory"
+        then deepReadDir (dir + "/${name}")
+        else dir + "/${name}")
+      (readDir dir);
+
+    exprToDrv = name: expr: let
+      blankDrv = derivation {
+        inherit name;
+        builder = "/bin/sh";
+        system = "x86_64-linux";
+        args = ["-c" "echo > $out"];
+      };
+    in
+      if expr.type or null == "derivation"
+      then expr
+      else blankDrv // {drvPath = deepSeq expr blankDrv.drvPath;};
+
+    # self, nixosConfig, nixpkgs
+    getConfig' = extra: file: let
+      inherit (nixosConfig.tundra) user id;
+      exists = x:
+        if pathExists x
+        then x
+        else null;
+    in
+      findFirst (x: x != null) (warn "no config was found for ${file}!" null) (extra
+        ++ [
+          (exists (self + "/user/configs/${user}/${id}/${file}"))
+          (exists (self + "/user/configs/${user}/all/${file}"))
+          (exists (self + "/user/configs/global/${id}/${file}"))
+          (exists (self + "/user/configs/global/all/${file}"))
+        ]);
+    # self, nixosConfig, nixpkgs
+    getConfig = file: let
+      inherit (nixosConfig.tundra) id secret;
+    in
+      getConfig' [
+        (secret."${id}/${file}".target or null)
+        (secret."all/${file}".target or null)
+        (secret.${file}.target or null)
+      ]
+      file;
+
+    # nixpkgs
+    getSystems = set:
+      concatMapAttrs (k: v:
+        optionalAttrs (any (x: let
+          this = x ({
+              config = {};
+              options = {};
+              nixosConfig = {};
+            }
+            // args);
+          tundra = this.tundra or this.config.tundra or {};
+        in
+          tundra ? id || tundra ? source || tundra ? user)
+        (collect isFunction v)) {${k} = tundraSystem k;})
+      set;
+
+    getOverlays' = list: args: map (x: x args) (filter isFunction list);
+    getOverlays = getOverlays' (attrValues tree.overlays); # tree
+
+    mkChecks = outputs: set:
+      concatMapAttrs (k: {
+        name ? k,
+        single ? false,
+        final ? x: x,
+        prev ? x: x,
+        value ? outputs.${name} or outputs.${k},
+      }:
+        if single
+        then {${name} = mapAttrs (k: final) (prev value);}
+        else concatMapAttrs (k2: v2: {"${name}-${k2}" = final v2;}) (prev value))
+      set;
+    mkDrvChecks = outputs: set: mapAttrs exprToDrv (mkChecks outputs set);
+
+    mkIfConfig = file: fn: let attempt = getConfig file; in mkIf (attempt != null) (fn attempt);
+
+    mkStrongDefault = mkOverride 900;
+
+    mkTree = dir: let
+      filterNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
+      convertFiles = tree:
+        listToAttrs (map (name: let
+          file = tree.${name};
+          regex = match "(.+)(\\.nix|\\.json|\\.toml)" name;
+          ext = elemAt regex 1;
+        in
+          if regex != null
+          then {
+            name = elemAt regex 0;
+            value =
+              if ext == ".nix"
+              then import file
+              else if ext == ".json"
+              then fromJSON (readFile file) // {__path = file;}
+              else fromTOML (readFile file) // {__path = file;};
+          }
+          else {
+            inherit name;
+            value =
+              if isAttrs file
+              then convertFiles file
+              else file;
+          }) (filterNames tree));
+    in
+      convertFiles (deepReadDir dir);
+
+    resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
+    sortPriorities = list: sort (a: b: (a.priority or 100) < (b.priority or 100)) list;
+
+    toYAML = (pkgs.formats.yaml {}).generate "toYAML"; # pkgs
+
+    transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
+
+    # self, tree
+    tundraSystem = name: let
+      systemArgs =
+        args
+        // {
+          inherit (systemArgs.pkgs) lib;
+          pkgs = pkgs.appendOverlays (getOverlays systemArgs);
+          nixosConfig = system.config;
+          inherit secrets;
+        };
+
+      system = nixosSystem {
+        specialArgs = removeAttrs systemArgs ["pkgs" "lib"];
+        inherit (systemArgs) pkgs lib;
+        modules =
+          collect isFunction tree.systems.${name}
+          ++ [
+            self.outputs.nixosModules.default
+            secrets.nixosModules.default
+            ({config, ...}: {
+              tundra.id = name;
+              environment.etc."nix/inputs/pkgs".source = nixpkgs;
+              nix = {
+                package = pkgs.nixVersions.latest;
+                registry.pkgs.to = {
+                  type = "git";
+                  url = "file:" + config.tundra.paths.source;
+                };
+                settings = {
+                  experimental-features = ["nix-command" "flakes"];
+                  nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
+                };
+              };
+            })
+          ];
+      };
+    in
+      system;
+
     fsScripts = {
       # nixpkgs, nixosConfig, pkgs
       decryptSecret = source: let
@@ -203,169 +368,6 @@
         };
       };
     };
-
-    deepDirOf = dir: let
-      recurse = dir:
-        if dir != "/"
-        then recurse (dirOf dir) ++ [dir]
-        else [];
-    in
-      recurse (dirOf dir);
-
-    deepReadDir = dir:
-      mapAttrs (name: type:
-        if type == "directory"
-        then deepReadDir (dir + "/${name}")
-        else dir + "/${name}")
-      (readDir dir);
-
-    exprToDrv = name: expr: let
-      blankDrv = derivation {
-        inherit name;
-        builder = "/bin/sh";
-        system = "x86_64-linux";
-        args = ["-c" "echo > $out"];
-      };
-    in
-      if expr.type or null == "derivation"
-      then expr
-      else blankDrv // {drvPath = deepSeq expr blankDrv.drvPath;};
-
-    # self, nixosConfig, nixpkgs
-    getConfig' = extra: file: let
-      inherit (nixosConfig.tundra) user id;
-      exists = x:
-        if pathExists x
-        then x
-        else null;
-    in
-      findFirst (x: x != null) (warn "no config was found for ${file}!" null) (extra
-        ++ [
-          (exists (self + "/user/configs/${user}/${id}/${file}"))
-          (exists (self + "/user/configs/${user}/all/${file}"))
-          (exists (self + "/user/configs/global/${id}/${file}"))
-          (exists (self + "/user/configs/global/all/${file}"))
-        ]);
-    # self, nixosConfig, nixpkgs
-    getConfig = file: let
-      inherit (nixosConfig.tundra) id secret;
-    in
-      getConfig' [
-        (secret."${id}/${file}".target or null)
-        (secret."all/${file}".target or null)
-        (secret.${file}.target or null)
-      ]
-      file;
-
-    # nixpkgs
-    getSystems = set:
-      concatMapAttrs (k: v:
-        optionalAttrs (any (x: let
-          this = x ({
-              config = {};
-              options = {};
-              nixosConfig = {};
-            }
-            // args);
-          tundra = this.tundra or this.config.tundra or {};
-        in
-          tundra ? id || tundra ? source || tundra ? user)
-        (collect isFunction v)) {${k} = tundraSystem k;})
-      set;
-
-    getOverlays' = list: args: map (x: x args) (filter isFunction list);
-    getOverlays = getOverlays' (attrValues tree.overlays); # tree
-
-    mkChecks = outputs: set:
-      concatMapAttrs (k: {
-        name ? k,
-        single ? false,
-        final ? x: x,
-        prev ? x: x,
-        value ? outputs.${name} or outputs.${k},
-      }:
-        if single
-        then {${name} = mapAttrs (k: final) (prev value);}
-        else concatMapAttrs (k2: v2: {"${name}-${k2}" = final v2;}) (prev value))
-      set;
-    mkDrvChecks = outputs: set: mapAttrs exprToDrv (mkChecks outputs set);
-
-    mkIfConfig = file: fn: let attempt = getConfig file; in mkIf (attempt != null) (fn attempt);
-
-    mkStrongDefault = mkOverride 900;
-
-    mkTree = dir: let
-      filterNames = attrs: filter (x: match "_.*" x == null) (attrNames attrs);
-      convertFiles = tree:
-        listToAttrs (map (name: let
-          file = tree.${name};
-          regex = match "(.+)(\\.nix|\\.json|\\.toml)" name;
-          ext = elemAt regex 1;
-        in
-          if regex != null
-          then {
-            name = elemAt regex 0;
-            value =
-              if ext == ".nix"
-              then import file
-              else if ext == ".json"
-              then fromJSON (readFile file) // {__path = file;}
-              else fromTOML (readFile file) // {__path = file;};
-          }
-          else {
-            inherit name;
-            value =
-              if isAttrs file
-              then convertFiles file
-              else file;
-          }) (filterNames tree));
-    in
-      convertFiles (deepReadDir dir);
-
-    resolveList = list: map (x: x.content or x) (filter (x: x.condition or true) list);
-    sortPriorities = list: sort (a: b: (a.priority or 100) < (b.priority or 100)) list;
-
-    toYAML = (pkgs.formats.yaml {}).generate "toYAML"; # pkgs
-
-    transformAttrs = rules: attrs: mapAttrs (k: v: foldl' (acc: this: this k acc) v rules) attrs;
-
-    # self, tree
-    tundraSystem = name: let
-      systemArgs =
-        args
-        // {
-          inherit (systemArgs.pkgs) lib;
-          pkgs = pkgs.appendOverlays (getOverlays systemArgs);
-          nixosConfig = system.config;
-        };
-
-      system = nixosSystem {
-        specialArgs = removeAttrs systemArgs ["pkgs" "lib"];
-        inherit (systemArgs) pkgs lib;
-        modules =
-          collect isFunction tree.systems.${name}
-          ++ [
-            self.outputs.nixosModules.default
-            secrets.nixosModules.default
-            ({config, ...}: {
-              tundra.id = name;
-              environment.etc."nix/inputs/pkgs".source = nixpkgs;
-              nix = {
-                package = pkgs.nixVersions.latest;
-                registry.pkgs.to = {
-                  type = "git";
-                  url = "file:" + config.tundra.paths.source;
-                };
-                settings = {
-                  experimental-features = ["nix-command" "flakes"];
-                  nix-path = "nixpkgs=/etc/nix/inputs/pkgs";
-                };
-              };
-            })
-          ];
-      };
-    in
-      system;
   };
 in {
   lib =

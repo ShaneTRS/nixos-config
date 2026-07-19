@@ -54,7 +54,7 @@
   };
   systemd.services.podman-autostart.after = ["run-media-${config.tundra.user}-Felix\\x2dPP.mount"];
   hardware.cpu.amd.updateMicrocode = true;
-
+  nix.settings.max-jobs = 3;
   swapDevices = [
     {
       device = "/var/lib/swapfile";

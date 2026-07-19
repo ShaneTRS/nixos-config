@@ -34,8 +34,6 @@
       # "all/.ssh/known_hosts".enable = false;
       # "all/.vnc/passwd".enable = false;
       # "all/passwd".enable = false;
-      # "persephone/jellyfin/jfa-go/password".enable = false;
-      # "persephone/jellyfin/jfa-go/public_server".enable = false;
       # "persephone/noip/domains".enable = false;
       # "persephone/noip/pass".enable = false;
       # "persephone/noip/user".enable = false;

@@ -28,6 +28,7 @@
       config = {
         allowUnfree = true;
         permittedInsecurePackages = [];
+        rewriteURL = url: url;
         inherit system;
       };
     };

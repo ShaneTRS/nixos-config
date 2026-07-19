@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  secrets,
   ...
 }: let
   inherit (builtins) mapAttrs;
@@ -49,7 +50,14 @@ in {
 
     nix.settings = {
       auto-optimise-store = mkStrongDefault true;
-      trusted-public-keys = ["nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="];
+      connect-timeout = 3;
+      download-attempts = 2;
+      keep-going = true;
+      substituters = ["${secrets.buildSecrets.nixCache.target}?priority=60"];
+      trusted-public-keys = [
+        "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "persephone:1QQih9lt68vIT/ACMymPAKJBFuUEXqfwCjPcPcniEEk="
+      ];
       trusted-users = [config.tundra.user];
       use-xdg-base-directories = mkStrongDefault true;
     };

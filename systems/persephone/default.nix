@@ -25,7 +25,9 @@ in {
       enable = true;
       mime = {
         default = {
-          "audio/ogg" = ["vlc.desktop"];
+          "audio/mp4" = ["audacity.desktop"];
+          "audio/ogg" = ["audacity.desktop"];
+          "audio/x-vorbis+ogg" = ["audacity.desktop"];
           "image/svg+xml" = ["org.inkscape.Inkscape.desktop"];
           "video/mp4" = ["vlc.desktop"];
           "x-scheme-handler/discord" = ["equibop.desktop"];
@@ -157,7 +159,6 @@ in {
   systemd.user.services = {
     shadowplay.enable = true;
     keynav.enable = true;
-    jfa-go.enable = true;
   };
 
   boot.kernelParams = ["kvm.enable_virt_at_load=0"];
@@ -198,7 +199,6 @@ in {
       tor-browser # private web browser
 
       shanetrs.alchemy-viewer # metaverse client
-      shanetrs.jfa-go # jellyfin temp. accounts
       shanetrs.schud # controller overlay
     ];
   };

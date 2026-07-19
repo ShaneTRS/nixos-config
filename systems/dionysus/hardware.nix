@@ -1,5 +1,5 @@
 # HP t530 Thin Client
-{...}: {
+{secrets, ...}: {
   shanetrs = {
     hardware.drivers.g710.enable = true;
     remote = {
@@ -24,11 +24,6 @@
     fsType = "ext4";
     neededForBoot = true;
   };
-  hardware = {
-    cpu.amd.updateMicrocode = true;
-  };
-  nix.settings = {
-    substituters = ["http://shanetrs.remote.host:5698"];
-    trusted-public-keys = ["shanetrs.remote.host:p4NJFHHtAvg/kfGELDDee1zOFETgGHLBqrT8HiiBnjQ="];
-  };
+  hardware.cpu.amd.updateMicrocode = true;
+  nix.settings.substituters = [secrets.buildSecrets.nixCache.target];
 }

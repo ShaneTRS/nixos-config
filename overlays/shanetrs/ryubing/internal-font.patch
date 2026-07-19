@@ -1,0 +1,26 @@
+diff --git a/src/Ryujinx/Program.cs b/src/Ryujinx/Program.cs
+index 5011cd6..c1f1af8 100644
+--- a/src/Ryujinx/Program.cs
++++ b/src/Ryujinx/Program.cs
+@@ -1,4 +1,5 @@
+ using Avalonia;
++using Avalonia.Media;
+ using Avalonia.Threading;
+ using DiscordRPC;
+ using Gommon;
+@@ -203,7 +204,14 @@ namespace Ryujinx.Ava
+                 // https://github.com/AvaloniaUI/Avalonia/issues/19378
+                 // https://github.com/AvaloniaUI/Avalonia/issues/9610
+                 // X11RenderingMode.Glx && X11RenderingMode.Egl, Win32RenderingMode.Vulkan have these issues.
+-                
++                .With(new FontManagerOptions
++                {
++                    DefaultFamilyName = "avares://Ryujinx/Assets/Fonts/Mono#JetBrains Mono NL",
++                    FontFallbacks = new[]
++                    {
++                        new Avalonia.Media.FontFallback { FontFamily = "avares://Ryujinx/Assets/Fonts/Mono#JetBrains Mono NL" }
++                    }
++                })
+                 .With(new X11PlatformOptions
+                 {
+                     EnableMultiTouch = true,

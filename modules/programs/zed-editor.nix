@@ -170,6 +170,7 @@ in {
           "application/csv" = ["dev.zed.Zed.desktop"];
           "application/json" = ["dev.zed.Zed.desktop"];
           "application/xml" = ["dev.zed.Zed.desktop"];
+          "application/yaml" = ["dev.zed.Zed.desktop"];
           "text/plain" = ["dev.zed.Zed.desktop"];
         };
       };
