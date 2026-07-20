@@ -30,7 +30,6 @@ in {
           "audio/x-vorbis+ogg" = ["audacity.desktop"];
           "image/svg+xml" = ["org.inkscape.Inkscape.desktop"];
           "video/mp4" = ["vlc.desktop"];
-          "x-scheme-handler/discord" = ["equibop.desktop"];
         };
         removed = {
           "x-scheme-handler/http" = ["torbrowser.desktop"];
@@ -177,7 +176,6 @@ in {
       krita # drawing
       inkscape-with-extensions # vector editor
       libreoffice-still # office suite
-      equibop # discord client
 
       crosspipe # patchbay
       spicetify-cli # spotify mods

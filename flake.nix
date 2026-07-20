@@ -40,6 +40,7 @@
         single = true;
         value = self.lib.tundra;
       };
+      nixosConfigurations.final = x: x.config.system.build.toplevel;
     };
     devShells.${system} = tree.shells specialArgs;
     formatter.${system} = pkgs.alejandra;
