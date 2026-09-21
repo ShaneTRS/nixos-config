@@ -32,8 +32,8 @@ in {
           "video/mp4" = ["vlc.desktop"];
         };
         removed = {
-          "x-scheme-handler/http" = ["torbrowser.desktop"];
-          "x-scheme-handler/https" = ["torbrowser.desktop"];
+          "x-scheme-handler/http" = ["tor-browser.desktop"];
+          "x-scheme-handler/https" = ["tor-browser.desktop"];
         };
       };
       plasma = {
@@ -57,31 +57,6 @@ in {
                 [ -f "$file" ] || exit 1
                 ${getExe pkgs.xclip} -sel c -t image/png -i < "$file"
               '';
-              super-space = launch ''
-                export PATH="${pkgs.coreutils}/bin:${pkgs.xdotool}/bin:$PATH"
-                p=$(xdotool getwindowpid $(xdotool getactivewindow))
-                ps=($(cat /proc/$p/stat)); s=9
-                [ ''${ps[2]} == 'T' ] && ((s-=1))
-                kill -1$s $p
-              '';
-            };
-          }
-        ];
-        modmap = [
-          {
-            name = "menu";
-            remap = {
-              leftmeta = {
-                press = launch "date +%s%N > /tmp/xremap.menu";
-                release = launch ''
-                  export PATH="${pkgs.coreutils}/bin:$PATH"
-                  ${pkgs.procps}/bin/pgrep -f keymap-screenshot && exit 0
-                  since=$(( ( $(date +%s%N) - $(cat /tmp/xremap.menu || echo 0) ) / 1000000 ))
-                  [[ $since -lt 150 || $since -gt 12500 ]] &&
-                    ${pkgs.dbus}/bin/dbus-send --session --type=method_call --dest=org.kde.kglobalaccel /component/kwin \
-                      org.kde.kglobalaccel.Component.invokeShortcut string:Overview
-                '';
-              };
             };
           }
         ];
@@ -175,7 +150,7 @@ in {
       audacity # audio editor
       krita # drawing
       inkscape-with-extensions # vector editor
-      libreoffice-still # office suite
+      libreoffice-stable # office suite
 
       crosspipe # patchbay
       spicetify-cli # spotify mods
@@ -185,7 +160,7 @@ in {
       vlc # media player
 
       vscodium # misc. dev
-      jetbrains.idea-oss # java dev
+      jetbrains.idea # java dev
       podman-desktop # container management
       podman-compose # declarative containers
       distrobox # incompetence

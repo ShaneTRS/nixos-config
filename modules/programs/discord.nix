@@ -4,9 +4,8 @@
   pkgs,
   ...
 }: let
-  inherit (lib) getExe mkEnableOption mkIf mkOption types;
+  inherit (lib) mkEnableOption mkIf mkOption types;
   inherit (lib.tundra) mergeFormat;
-  inherit (pkgs) symlinkJoin writeShellScriptBin;
   cfg = config.shanetrs.programs.discord;
 in {
   options.shanetrs.programs.discord = {
@@ -138,27 +137,7 @@ in {
           source = mergeFormat.text.concatLines cfg.mods.quickCss;
         };
       };
-      packages = [
-        (symlinkJoin {
-          name = "discord-wrapped";
-          paths = [
-            cfg.package
-            (writeShellScriptBin "discord" ''
-              pre_exec="$(date +%s)"
-              "${getExe cfg.package}"
-              [ $(($(date +%s) - pre_exec)) -lt 3 ] && exec "${
-                getExe (cfg.package.override {withOpenASAR = false;})
-              }"
-            '')
-          ];
-          postBuild = ''
-            desktopFile=$(readlink -f $out/share/applications/discord*.desktop)
-            rm $out/share/applications
-            mkdir -p $out/share/applications
-            sed 's:Exec=.*:Exec=discord:' $desktopFile > $out/share/applications/discord.desktop
-          '';
-        })
-      ];
+      packages = [cfg.package];
     };
   };
 }

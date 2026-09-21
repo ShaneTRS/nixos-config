@@ -51,7 +51,7 @@
     inkscape-with-extensions # vector editor
 
     crosspipe # patchbay
-    libreoffice-still # office suite
+    libreoffice-stable # office suite
     r2modman # mod manager
     shanetrs.spotify # music player
     vlc # media player

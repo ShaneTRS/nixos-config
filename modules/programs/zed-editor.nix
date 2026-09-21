@@ -97,6 +97,7 @@ in {
         };
         auto_update = false;
         buffer_line_height.custom = 1.5;
+        cli_default_open_behavior = "existing_window";
         diagnostics.inline = {
           enabled = true;
           padding = 6;
@@ -108,6 +109,7 @@ in {
         "experimental.theme_overrides"."editor.invisible" = "#fff";
         extend_comment_on_newline = false;
         file_types.JSONC = ["*.json"];
+        format_on_save = "on";
         git.inline_blame.show_commit_summary = true;
         git_panel = {
           file_icons = true;
@@ -129,6 +131,7 @@ in {
         lsp.clangd.binary.path = "clangd";
         middle_click_paste = false;
         minimap.show = "always";
+        on_new_window = "empty_tab";
         outline_panel.indent_size = 15;
         preferred_line_length = 120;
         prettier.allowed = false;
@@ -143,6 +146,11 @@ in {
         tab_bar.show_pinned_tabs_in_separate_row = true;
         tab_size = 2;
         tabs.git_status = true;
+        telemetry = {
+          diagnostics = false;
+          metrics = false;
+          anthropic_retention = false;
+        };
         terminal.working_directory = "current_project_directory";
         theme = "Ayu Dark";
         use_system_path_prompts = false;
