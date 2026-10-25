@@ -17,9 +17,8 @@
       enable = true;
       plasma = {
         enable = true;
-        extraPackages = with pkgs; [kdePackages.wacomtablet kdePackages.kolourpaint];
+        extraPackages = with pkgs; [kdePackages.kolourpaint];
       };
-      type = "x11";
     };
     gaming = {
       epic.enable = true;

@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  inherit (lib) getExe mkEnableOption mkOrder mkPackageOption mkIf mkMerge mkOption optionalString toList types;
+  inherit (lib) getExe mkEnableOption mkPackageOption mkIf mkMerge mkOption optionalString toList types;
   inherit (lib.tundra) getConfig;
   inherit (builtins) attrNames concatStringsSep isAttrs listToAttrs match toJSON;
   cfg = config.shanetrs.remote;
@@ -279,12 +279,10 @@ in {
         '';
         wantedBy = ["graphical-session.target"];
       };
-      security.wrappers.sunshine.capabilities = mkOrder 900 "cap_sys_nice";
       services = {
         xserver.enable = true;
         sunshine = {
           enable = true;
-          capSysAdmin = true;
           package = pkgs.shanetrs.sunshine;
         };
       };

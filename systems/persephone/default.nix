@@ -38,7 +38,7 @@ in {
       };
       plasma = {
         enable = true;
-        extraPackages = with pkgs; [kdePackages.wacomtablet kdePackages.kdenlive];
+        extraPackages = with pkgs; [kdePackages.kdenlive];
       };
       keymap = let
         launch = cmd: {launch = [(pkgs.writeShellScript "xremap-launch" cmd)];};
@@ -64,7 +64,10 @@ in {
     };
     gaming = {
       epic.enable = true;
-      emulation.enable = true;
+      emulation = {
+        enable = true;
+        switch.package = pkgs.shanetrs.ryubing.override {emuPkg = pkgs.ryubing;}; # hotfix
+      };
       lutris.enable = true;
       mangohud.enable = true;
       minecraft = {
@@ -130,10 +133,7 @@ in {
   };
 
   services.ddclient.enable = true;
-  systemd.user.services = {
-    shadowplay.enable = true;
-    keynav.enable = true;
-  };
+  systemd.user.services.keynav.enable = true;
 
   boot.kernelParams = ["kvm.enable_virt_at_load=0"];
   virtualisation = {
@@ -165,7 +165,6 @@ in {
       podman-compose # declarative containers
       distrobox # incompetence
 
-      shanetrs.shadowplay # instant replays
       shanetrs.backups # incremental backup wrapper
 
       qbittorrent # download client
@@ -173,6 +172,7 @@ in {
 
       shanetrs.alchemy-viewer # metaverse client
       shanetrs.schud # controller overlay
+      shanetrs."3dco-plus" # controller overlay
     ];
   };
 }

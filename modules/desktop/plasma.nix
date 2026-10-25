@@ -57,7 +57,7 @@ in {
         };
         defaultSession =
           if pcfg.type == "x11"
-          then "plasmax11"
+          then throw "plasmax11 was deprecated"
           else "plasma";
       };
       desktopManager.plasma6.enable = true;

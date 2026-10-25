@@ -54,14 +54,8 @@ in {
   environment.etc."keynavrc" = mkIfConfig "keynavrc" (x: {
     source = x;
   });
-  systemd.user.services = {
-    shadowplay = {
-      script = getExe pkgs.shanetrs.shadowplay;
-      wantedBy = ["graphical-session.target"];
-    };
-    keynav = {
-      script = getExe pkgs.keynav;
-      wantedBy = ["graphical-session.target"];
-    };
+  systemd.user.services.keynav = {
+    script = getExe pkgs.keynav;
+    wantedBy = ["graphical-session.target"];
   };
 }

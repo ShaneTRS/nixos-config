@@ -105,7 +105,6 @@ in rec {
       name = "flake-update";
       runtimeInputs = with pkgs; [git nixVersions.latest];
       text = ''
-        trap '[ "$?" -ne 0 ] && git restore flake.lock; exit' exit
         nix ${nixArgs} flake update --override-input nixpkgs-pin 'github:nixos/nixpkgs/${self.inputs.nixpkgs.rev}'
         nix ${nixArgs} flake check --no-build
         [ -z "''${TUNDRA_ID:-}" ] && exit
