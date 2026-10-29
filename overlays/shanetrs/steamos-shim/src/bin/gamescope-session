@@ -1,0 +1,3 @@
+#!/bin/sh
+export GAMESCOPE_MODE_SAVE_FILE="$HOME/.config/gamescope/modes.cfg"
+exec gamescope -efw"${GAMESCOPE_HEIGHT:-1920}" -h"${GAMESCOPE_WIDTH:-1080}" $GAMESCOPE_EXTRA_ARGS -- steam ${STEAM_ARGS:--steamos3}

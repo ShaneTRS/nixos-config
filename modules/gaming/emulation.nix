@@ -58,6 +58,10 @@ in {
       package = pkgs.shanetrs.ryubing;
       isCore = false;
     };
+    ps3 = mkEmuOption {
+      package = pkgs.shanetrs.rpcs3;
+      isCore = false;
+    };
     wii = mkEmuOption {package = pkgs.libretro.dolphin;};
     wii-u = mkEmuOption {
       package = pkgs.cemu;

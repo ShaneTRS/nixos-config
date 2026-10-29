@@ -6,7 +6,8 @@
   ...
 }: let
   inherit (lib) mkEnableOption mkPackageOption mkOption types mkIf;
-  cfg = config.shanetrs.gaming.steam;
+  pcfg = config.shanetrs.gaming;
+  cfg = pcfg.steam;
   opt = options.shanetrs.gaming.steam;
 in {
   options.shanetrs.gaming = {
@@ -26,7 +27,7 @@ in {
       };
       extraPackages = mkOption {
         type = types.listOf types.package;
-        default = [];
+        default = with pkgs; [pulseaudio shanetrs.steamos-shim];
       };
     };
   };
@@ -37,7 +38,17 @@ in {
       extraPackages = opt.extraPackages.default;
     };
     programs.steam = {
-      inherit (cfg) enable package extraCompatPackages extraPackages;
+      inherit (cfg) enable extraCompatPackages extraPackages;
+      package =
+        if pcfg.mangohud.enable
+        then
+          cfg.package.override {
+            extraEnv = {
+              MANGOHUD = "1";
+              MANGOHUD_DLSYM = "1";
+            };
+          }
+        else cfg.package;
       remotePlay.openFirewall = true; # 27031..27036
       dedicatedServer.openFirewall = true; # 27015
       protontricks = {inherit (cfg.protontricks) enable package;};

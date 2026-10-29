@@ -23,7 +23,10 @@ in {
   };
 
   config = mkIf cfg.enable {
-    shanetrs.gaming.gamescope.args = opt.args.default;
+    shanetrs.gaming = {
+      gamescope.args = opt.args.default;
+      steam.extraPackages = [cfg.package];
+    };
     programs.gamescope = {
       inherit (cfg) enable args env package;
       capSysNice = false; # doesn't work in fhs when true
