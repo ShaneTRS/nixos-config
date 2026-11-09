@@ -21,7 +21,7 @@ in {
       };
       openasar = mkOption {
         type = types.bool;
-        default = true;
+        default = false;
       };
       plugins = mkOption {
         type = types.attrs;

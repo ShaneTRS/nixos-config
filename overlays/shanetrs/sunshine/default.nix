@@ -6,30 +6,33 @@
   fetchFromGitHub,
   qt6,
   libappindicator,
+  version ? "2026.914.233613",
+  depsVersion ? "2026.910.121303",
+  hash ? "sha256-HqbswLvX/UiY3nOwxSesBMqnFAF0zKP1ueE6PwDtTNs=",
+  depsHash ? "sha256-1S57XfkJa+qEYQLmifWyT9ul0SASFhSk1lkk2timnOY=",
+  uiHash ? "sha256-/uY+zvYxQG0Yb8kygwF48YfS+Km0bcQBW4poaqkeJXs=",
   ...
 }: let
   inherit (lib) cmakeFeature remove;
 in
   sunshine.overrideAttrs (old: rec {
-    version = "2026.914.233613";
-
-    depsVersion = "2026.910.121303";
+    inherit version depsVersion;
     ffmpeg = fetchzip {
       url = "https://github.com/LizardByte/build-deps/releases/download/v${depsVersion}/Linux-x86_64-ffmpeg.tar.gz";
-      hash = "sha256-1S57XfkJa+qEYQLmifWyT9ul0SASFhSk1lkk2timnOY=";
+      hash = depsHash;
     };
 
     src = fetchFromGitHub {
       owner = "LizardByte";
       repo = "Sunshine";
       tag = "v${version}";
-      hash = "sha256-HqbswLvX/UiY3nOwxSesBMqnFAF0zKP1ueE6PwDtTNs=";
+      inherit hash;
       fetchSubmodules = true;
     };
     ui = buildNpmPackage {
       inherit src version;
       pname = "sunshine-ui";
-      npmDepsHash = "sha256-/uY+zvYxQG0Yb8kygwF48YfS+Km0bcQBW4poaqkeJXs=";
+      npmDepsHash = uiHash;
       installPhase = ''
         runHook preInstall
         mkdir -p "$out"

@@ -6,8 +6,9 @@
   fuse,
   libclang,
   lib,
-  rev ? "aea990946de936a075cd42458c2988372b952210",
-  hash ? "sha256-dOb4Sq2nInLK02DJlXmO/9mn08C6C1h7FbvIxmU83dw=",
+  rev ? "b9b4d1a07b3d56041208ffdfee884d195e7cbd51",
+  hash ? "sha256-eatTqd7A8ZQ7+CeEgGE8J7OAILCXshgq1GUm/Byeeok=",
+  cargoHash ? "sha256-5+A73HyCgyFy2gHpCbZV+Tlx5rUpUkLGVPxYvDEwVmc=",
   ...
 }:
 rustPlatform.buildRustPackage rec {
@@ -23,8 +24,7 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [pkg-config rustPlatform.bindgenHook];
   buildInputs = [udev fuse libclang];
 
-  patches = [./fuse2.patch];
-  cargoHash = "sha256-nJw9bRh6Yn9g1H5SeoT6zxgZLCqV3AtAs9gMfE+P+CU=";
+  inherit cargoHash;
   postInstall = ''
     mkdir -p $out/opt/vuinputd/bin
     install -D {$src/vuinputd/udev,$out/lib/udev/rules.d}/90-vuinputd-protect.rules

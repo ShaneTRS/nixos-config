@@ -25,7 +25,6 @@ in {
       alsa.enable = true;
       alsa.support32Bit = true;
       pulse.enable = true;
-      jack.enable = true;
       wireplumber = mkIf (cfg.autoSwitchOrder != {}) {
         extraConfig."51-shanetrs-always-switch" = {
           "wireplumber.components" = [
